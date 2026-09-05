@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html data-theme="<%= @theme || "default" %>">
+  <head>
+    <meta charset="utf-8">
+    <link rel="icon" href="data:,">
+    <style><%= raw InlineAssets.css("render.css") %></style>
+  </head>
+  <body><%= yield %></body>
+</html>
+

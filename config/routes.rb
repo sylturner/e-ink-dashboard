@@ -11,4 +11,6 @@ Rails.application.routes.draw do
 
   # Defines the root path route ("/")
   # root "posts#index"
+  get "render/dashboard", to: "renders#dashboard"
+  get "dashboard.bmp", to: "frames#show"
 end

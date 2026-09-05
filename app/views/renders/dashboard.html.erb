@@ -1,0 +1,48 @@
+<div class="grid">
+  <div class="card col-3 row-3 card--center">
+    <div class="card-body">
+      <div class="t-xl"><%= @now.strftime("%-I:%M") %></div>
+      <div class="t-sm"><%= @now.strftime("%A") %></div>
+    </div>
+    <div class="card-footer"><%= @now.strftime("%B %-d, %Y") %></div>
+  </div>
+
+  <div class="card col-5 row-3">
+    <div class="card-header">Today</div>
+    <div class="card-body">
+      <ul class="rows">
+        <li><span>Standup</span><span>9:00</span></li>
+        <li><span>Design review</span><span>11:30</span></li>
+        <li><span>Lunch with Dana</span><span>13:00</span></li>
+        <li><span>Deploy window</span><span>16:00</span></li>
+      </ul>
+    </div>
+    <div class="card-footer">4 events</div>
+  </div>
+
+  <div class="card col-3 row-3 card--invert card--center">
+    <div class="card-header">Weather</div>
+    <div class="card-body">
+      <div class="t-lg">72&deg;</div>
+      <div class="t-sm">Clear</div>
+    </div>
+    <div class="card-footer">H 78 &middot; L 61</div>
+  </div>
+
+  <div class="card col-5 row-3">
+    <div class="card-header">Headlines</div>
+    <div class="card-body">
+      <ul class="rows">
+        <li class="t-clip t-clip-1">Local transit board approves extension</li>
+        <li class="t-clip t-clip-1">Researchers map deep ocean currents</li>
+        <li class="t-clip t-clip-1">Second bridge reopens after repairs</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card col-8 row-2 card--bare">
+    <div class="card-footer">
+      Updated <%= @now.strftime("%-I:%M %p") %> &middot; battery 84%
+    </div>
+  </div>
+</div>

@@ -1,0 +1,347 @@
+@font-face {
+  font-family: "Silkscreen";
+  src: url("Silkscreen-Regular.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "Silkscreen";
+  src: url("Silkscreen-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "PressStart2P";
+  src: url("PressStart2P-Regular.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "Spleen";
+  src: url("spleen.otf") format("opentype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "VHS Gothic";
+  src: url("vhs-gothic.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "VHS VCR OSD";
+  src: url("vhs-vcr-osd.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+
+/* ============================================================
+   1-bit dashboard framework — 800x480, no grays
+   ============================================================ */
+
+:root {
+  /* Panel geometry */
+  --screen-w: 800px;
+  --screen-h: 480px;
+  --grid-cols: 8;
+  --grid-rows: 8;
+
+  /* Valid gaps are multiples of 8 only (0, 8, 16, 24).
+     Anything else makes track sizes fractional. */
+  --grid-gap: 8px;
+
+  /* Ink and paper. Swap these two to invert a whole theme. */
+  --ink: #000;
+  --paper: #fff;
+
+  /* Type. Every line-height is an integer px value. */
+  --font: "Spleen", monospace;
+  --header-font: "VHS Gothic", monospace;
+  --body-font: "Spleen", monospace;
+  --footer-font: "Silkscreen", monospace;
+
+  --fs-xs: 8px;    --lh-xs: 12px;
+  --fs-sm: 16px;   --lh-sm: 24px;
+  --fs-md: 24px;   --lh-md: 32px;
+  --fs-lg: 32px;   --lh-lg: 40px;
+  --fs-xl: 64px;   --lh-xl: 64px;
+
+  /* Spacing — multiples of 4 keep baselines on pixel boundaries */
+  --pad-tight: 4px;
+  --pad: 8px;
+  --pad-loose: 16px;
+
+  /* Structure */
+  --rule: 1px;
+  --card-border: var(--rule) solid var(--ink);
+  --card-fill: var(--paper);
+
+  /* Header treatment */
+  --header-fill: var(--ink);
+  --header-text: var(--paper);
+  --header-fs: var(--fs-sm);
+  --header-lh: var(--lh-sm);
+  --header-pad: var(--pad);
+  --header-rule: none;
+
+  /* Body treatment */
+  --body-fs: var(--fs-sm);
+  --body-lh: var(--lh-sm);
+  --body-pad: var(--pad);
+
+  /* Footer treatment */
+  --footer-fill: var(--paper);
+  --footer-text: var(--ink);
+  --footer-fs: var(--fs-xs);
+  --footer-lh: var(--lh-xs);
+  --footer-pad: var(--pad);
+  --footer-rule: var(--rule) solid var(--ink);
+}
+
+/* ---------- Reset ---------- */
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  border-radius: 0;
+}
+
+html,
+body {
+  width: var(--screen-w);
+  height: var(--screen-h);
+  overflow: hidden;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-sm);
+  font-synthesis: none;
+  -webkit-font-smoothing: none;
+  font-smooth: never;
+  text-rendering: geometricPrecision;
+}
+
+/* ---------- Grid ---------- */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-cols), 1fr);
+  grid-template-rows: repeat(var(--grid-rows), 1fr);
+  gap: var(--grid-gap);
+  width: var(--screen-w);
+  height: var(--screen-h);
+}
+
+.col-1 { grid-column: span 1; }
+.col-2 { grid-column: span 2; }
+.col-3 { grid-column: span 3; }
+.col-4 { grid-column: span 4; }
+.col-5 { grid-column: span 5; }
+.col-6 { grid-column: span 6; }
+.col-7 { grid-column: span 7; }
+.col-8 { grid-column: span 8; }
+
+.row-1 { grid-row: span 1; }
+.row-2 { grid-row: span 2; }
+.row-3 { grid-row: span 3; }
+.row-4 { grid-row: span 4; }
+.row-5 { grid-row: span 5; }
+.row-6 { grid-row: span 6; }
+.row-7 { grid-row: span 7; }
+.row-8 { grid-row: span 8; }
+
+/* ---------- Card ---------- */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: var(--card-border);
+  background: var(--card-fill);
+}
+
+.card-header {
+  flex: 0 0 auto;
+  padding: var(--header-pad);
+  background: var(--header-fill);
+  color: var(--header-text);
+  font-family: var(--header-font);
+  font-size: var(--header-fs);
+  line-height: var(--header-lh);
+  border-bottom: var(--header-rule);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.card-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: var(--body-pad);
+  font-family: var(--body-font);
+  font-size: var(--body-fs);
+  line-height: var(--body-lh);
+  overflow: hidden;
+}
+
+.card-footer {
+  flex: 0 0 auto;
+  padding: var(--footer-pad);
+  background: var(--footer-fill);
+  color: var(--footer-text);
+  font-family: var(--footer-font);
+  font-size: var(--footer-fs);
+  line-height: var(--footer-lh);
+  border-top: var(--footer-rule);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* ---------- Card variants ---------- */
+
+.card--bare {
+  border: none;
+}
+
+.card--invert {
+  background: var(--ink);
+  color: var(--paper);
+  --header-fill: var(--paper);
+  --header-text: var(--ink);
+  --footer-fill: var(--ink);
+  --footer-text: var(--paper);
+  --footer-rule: var(--rule) solid var(--paper);
+}
+
+.card--center .card-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.card--thick {
+  --rule: 2px;
+}
+
+/* ---------- Fills ----------
+   Horizontal hairlines only. Diagonal and radial patterns
+   antialias and threshold into mush. Never put body text
+   on these — use them for bars, rules, and empty states. */
+
+.fill-50 {
+  background-image: repeating-linear-gradient(
+    180deg, var(--ink) 0 1px, var(--paper) 1px 2px
+  );
+}
+
+.fill-25 {
+  background-image: repeating-linear-gradient(
+    180deg, var(--ink) 0 1px, var(--paper) 1px 4px
+  );
+}
+
+.fill-12 {
+  background-image: repeating-linear-gradient(
+    180deg, var(--ink) 0 1px, var(--paper) 1px 8px
+  );
+}
+
+/* ---------- Type utilities ---------- */
+
+.t-xs { font-size: var(--fs-xs); line-height: var(--lh-xs); }
+.t-sm { font-size: var(--fs-sm); line-height: var(--lh-sm); }
+.t-md { font-size: var(--fs-md); line-height: var(--lh-md); }
+.t-lg { font-size: var(--fs-lg); line-height: var(--lh-lg); }
+.t-xl { font-size: var(--fs-xl); line-height: var(--lh-xl); }
+
+.t-left   { text-align: left; }
+.t-center { text-align: center; }
+.t-right  { text-align: right; }
+
+.t-clip {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.t-clip-1 { -webkit-line-clamp: 1; }
+.t-clip-2 { -webkit-line-clamp: 2; }
+.t-clip-3 { -webkit-line-clamp: 3; }
+.t-clip-4 { -webkit-line-clamp: 4; }
+
+/* ---------- Lists ---------- */
+
+.rows {
+  list-style: none;
+}
+
+.rows > li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--pad);
+  padding: var(--pad-tight) 0;
+  border-bottom: var(--rule) solid var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.rows > li:last-child {
+  border-bottom: none;
+}
+
+/* ============================================================
+   Themes — set data-theme on <html>
+   ============================================================ */
+
+/* Quiet: no boxes, headers as hairline-ruled labels */
+[data-theme="quiet"] {
+  --card-border: none;
+  --header-fill: transparent;
+  --header-text: var(--ink);
+  --header-fs: var(--fs-xs);
+  --header-lh: var(--lh-xs);
+  --header-rule: var(--rule) solid var(--ink);
+  --header-pad: 0 0 var(--pad-tight) 0;
+  --body-pad: var(--pad) 0;
+  --footer-rule: none;
+  --footer-pad: 0;
+}
+
+/* Night: whole panel inverted */
+[data-theme="night"] {
+  --ink: #fff;
+  --paper: #000;
+  --header-fill: var(--ink);
+  --header-text: var(--paper);
+}
+
+/* Dense: smaller type, tighter padding, more fits on screen */
+[data-theme="dense"] {
+  --body-fs: var(--fs-xs);
+  --body-lh: var(--lh-xs);
+  --header-fs: var(--fs-xs);
+  --header-lh: var(--lh-xs);
+  --pad: 4px;
+  --header-pad: var(--pad-tight);
+  --body-pad: var(--pad-tight);
+  --footer-pad: var(--pad-tight);
+}
+
