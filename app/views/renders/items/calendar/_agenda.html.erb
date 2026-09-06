@@ -1,0 +1,26 @@
+<% window = (0...days).map { |offset| now.to_date + offset } %>
+<% shown = window.select { |date| EventFeed.on_day(events, date).any? } %>
+
+<% if shown.empty? %>
+  <div class="t-xs">Nothing in the next <%= days %> days</div>
+<% else %>
+  <div class="agenda">
+    <% shown.each do |date| %>
+      <div class="agenda-day">
+        <div class="agenda-date t-xs">
+          <%= date == now.to_date ? "Today" : date.strftime("%a %-d") %>
+        </div>
+        <ul class="rows">
+          <% EventFeed.on_day(events, date).each do |event| %>
+            <li>
+              <span class="t-clip t-clip-1"><%= event.title %></span>
+              <% if times %>
+                <span class="t-xs nowrap"><%= event.time_label %></span>
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+  </div>
+<% end %>

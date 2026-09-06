@@ -36,6 +36,10 @@ Rails.application.configure do
   # ActionMailer::Base.deliveries array.
   config.action_mailer.delivery_method = :test
 
+  # Fixtures are written straight to the database, bypassing the model,
+  # so encrypted attributes have to be encrypted as they load.
+  config.active_record.encryption.encrypt_fixtures = true
+
   # Set host to be used by links generated in mailer templates.
   config.action_mailer.default_url_options = { host: "example.com" }
 

@@ -102,4 +102,99 @@ class DashboardItemsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to builder_dashboard_url(dashboard)
     assert_match(/No room/, flash[:alert])
   end
+
+  test "edit renders the layouts and settings for the item's kind" do
+    get edit_dashboard_item_url(@dashboard_item) # weather
+
+    assert_response :success
+    assert_select "select[name=?] option", "dashboard_item[view]", 3
+    assert_select "option[value=?]", "forecast"
+    assert_select "option[value=?]", "month", 0, "calendar layouts must not leak in"
+    assert_select "input[name=?]", "dashboard_item[settings][day_count]"
+  end
+
+  test "edit previews another kind without saving it" do
+    get edit_dashboard_item_url(@dashboard_item, kind: "calendar")
+
+    assert_response :success
+    assert_select "option[value=?]", "month"
+    assert_select "input[name=?]", "dashboard_item[settings][show_times]"
+    assert_equal "weather", @dashboard_item.reload.kind, "the preview must not persist"
+  end
+
+  test "edit ignores an unknown kind" do
+    get edit_dashboard_item_url(@dashboard_item, kind: "Kernel")
+
+    assert_response :success
+    assert_select "option[value=?][selected]", "current"
+  end
+
+  test "the source select offers only the kind's provider type" do
+    get edit_dashboard_item_url(@dashboard_item, kind: "news")
+
+    assert_response :success
+    assert_select "select[name=?] option", "dashboard_item[source_ids][]" do |options|
+      names = options.map(&:text).reject(&:blank?)
+      assert_includes names, sources(:three).name  # RSS
+      assert_not_includes names, sources(:one).name # weather
+      assert_not_includes names, sources(:two).name # iCal
+    end
+  end
+
+  test "a kind with no sources renders no source select" do
+    get edit_dashboard_item_url(@dashboard_item, kind: "clock")
+
+    assert_response :success
+    assert_select "select[name=?]", "dashboard_item[source_ids][]", 0
+  end
+
+  test "settings round-trip through the form" do
+    patch dashboard_item_url(@dashboard_item), params: {
+      dashboard_item: { kind: "weather", view: "forecast", title: "Week",
+                        settings: { "day_count" => "7", "hour_count" => "6" } }
+    }
+
+    assert_redirected_to builder_dashboard_url(@dashboard_item.dashboard)
+    @dashboard_item.reload
+    assert_equal "forecast", @dashboard_item.view
+    assert_equal 7, @dashboard_item.setting("day_count")
+  end
+
+  test "a boolean setting can be switched off through the form" do
+    item = dashboard_items(:two) # calendar, show_times defaults to true
+    assert_equal true, item.setting("show_times")
+
+    patch dashboard_item_url(item), params: {
+      dashboard_item: { kind: "calendar", view: "today",
+                        settings: { "show_times" => "0" } }
+    }
+
+    assert_redirected_to builder_dashboard_url(item.dashboard)
+    assert_equal false, item.reload.setting("show_times")
+  end
+
+  test "an incompatible layout is rejected with an error" do
+    patch dashboard_item_url(@dashboard_item), params: {
+      dashboard_item: { kind: "weather", view: "month" }
+    }
+
+    assert_response :unprocessable_content
+    assert_select "ul.errors li", /isn't available for Weather/
+    assert_equal "current", @dashboard_item.reload.view
+  end
+
+  test "attaching two sources to a single-source kind is rejected" do
+    second = Source.create!(
+      name: "Other weather", refresh_seconds: 900,
+      providable: WeatherProvider.new(latitude: 1, longitude: 2, units: "metric")
+    )
+
+    patch dashboard_item_url(@dashboard_item), params: {
+      dashboard_item: { kind: "weather", view: "current",
+                        source_ids: [ sources(:one).id, second.id ] }
+    }
+
+    assert_response :unprocessable_content
+    assert_select "ul.errors li", /only one is allowed for Weather/
+  end
 end

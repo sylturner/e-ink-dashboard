@@ -387,3 +387,49 @@ body {
   display: flex;
   align-items: center;
 }
+
+/* ============================================================
+   Calendar views
+   ============================================================ */
+
+.nowrap { white-space: nowrap; }
+
+.agenda { display: flex; flex-direction: column; gap: var(--pad-tight); }
+.agenda-date { border-bottom: var(--rule) solid var(--ink); }
+
+.month { display: flex; flex-direction: column; height: 100%; }
+
+.month-head,
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.month-head { text-align: center; border-bottom: var(--rule) solid var(--ink); }
+
+.month-grid { flex: 1 1 auto; }
+
+.month-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 1px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.month-cell--today {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* No grays available, so "outside this month" has to be a pattern.
+   Hairlines are the only fill that thresholds cleanly. */
+.month-cell--outside {
+  background-image: repeating-linear-gradient(
+    180deg, var(--ink) 0 1px, var(--paper) 1px 4px
+  );
+}
+
+.month-dots { font-size: var(--fs-xs); line-height: var(--lh-xs); }

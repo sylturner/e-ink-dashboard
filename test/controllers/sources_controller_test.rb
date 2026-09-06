@@ -179,16 +179,40 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
     assert_nil @spare.fetched_at
   end
 
-  # IcalProvider inherits Providable#fetch!, which raises
-  # NotImplementedError -- a ScriptError, not a StandardError.
-  test "test reports an unbuilt provider instead of raising" do
+  ICS = <<~ICS
+    BEGIN:VCALENDAR
+    VERSION:2.0
+    X-WR-CALNAME:Work
+    BEGIN:VEVENT
+    UID:a
+    DTSTAMP:20260901T120000Z
+    DTSTART:20260907T140000Z
+    DTEND:20260907T150000Z
+    SUMMARY:Standup
+    END:VEVENT
+    END:VCALENDAR
+  ICS
+
+  test "test fetches a calendar and reports the event count" do
     ical = sources(:two)
 
-    post test_source_url(ical)
+    travel_to Time.utc(2026, 9, 5, 12) do
+      stub_method(Http, :get, returns: ICS) do
+        post test_source_url(ical)
+      end
+    end
 
     assert_redirected_to sources_path
-    assert_match(/not built yet/, flash[:alert])
-    assert_equal 0, ical.reload.failure_count
+    assert_match(/1 events/, flash[:notice])
+    assert_equal 1, ical.reload.payload["events"].size
+  end
+
+  # Providable#fetch! raises NotImplementedError, which descends from
+  # ScriptError rather than StandardError -- so `rescue StandardError`
+  # alone would turn a provider without a fetch! into a 500.
+  test "NotImplementedError is not a StandardError" do
+    assert_not NotImplementedError.ancestors.include?(StandardError)
+    assert_includes NotImplementedError.ancestors, ScriptError
   end
 
   test "geocode returns normalized places" do

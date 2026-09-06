@@ -3,7 +3,7 @@
 one:
   dashboard: one
   kind: weather
-  view: today
+  view: current
   title: Weather
   col: 1
   row: 1

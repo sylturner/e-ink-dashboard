@@ -1,0 +1,31 @@
+<%
+  first = now.to_date.beginning_of_month
+  start = first.beginning_of_week(:sunday)
+  last  = now.to_date.end_of_month.end_of_week(:sunday)
+%>
+
+<div class="month">
+  <div class="month-head">
+    <% %w[S M T W T F S].each do |initial| %>
+      <div class="t-xs"><%= initial %></div>
+    <% end %>
+  </div>
+
+  <div class="month-grid">
+    <% (start..last).each do |date| %>
+      <%
+        outside = date.month != first.month
+        today   = date == now.to_date
+        count   = EventFeed.on_day(events, date).size
+      %>
+      <div class="month-cell<%= " month-cell--today" if today %><%= " month-cell--outside" if outside %>">
+        <span class="t-xs"><%= date.day %></span>
+        <% if count.positive? && !outside %>
+          <span class="month-dots">
+            <%= "•" * [ count, 3 ].min %>
+          </span>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>

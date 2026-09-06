@@ -1,72 +1,98 @@
-<%= form_with(model: dashboard_item) do |form| %>
-  <% if dashboard_item.errors.any? %>
-    <div style="color: red">
-      <h2><%= pluralize(dashboard_item.errors.count, "error") %> prohibited this dashboard_item from being saved:</h2>
+<%= form_with model: item, data: { controller: "item-form",
+                                   turbo_frame: item.new_record? ? nil : "_top" } do |f| %>
 
-      <ul>
-        <% dashboard_item.errors.each do |error| %>
-          <li><%= error.full_message %></li>
-        <% end %>
-      </ul>
+  <% if item.errors.any? %>
+    <ul class="errors">
+      <% item.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+    </ul>
+  <% end %>
+
+  <% if item.new_record? %>
+    <div class="field">
+      <%= f.label :dashboard_id, "Dashboard" %>
+      <%= f.collection_select :dashboard_id, Dashboard.order(:name), :id, :name %>
     </div>
   <% end %>
 
-  <div>
-    <%= form.label :dashboard_id, style: "display: block" %>
-    <%= form.text_field :dashboard_id %>
+  <div class="field">
+    <%= f.label :kind, "Component" %>
+    <%= f.select :kind,
+                 Component::KINDS.map { |k| [ Component.label(k), k ] },
+                 {},
+                 data: { action: "change->item-form#kindChanged" } %>
   </div>
 
-  <div>
-    <%= form.label :kind, style: "display: block" %>
-    <%= form.text_field :kind %>
+  <div class="field">
+    <%= f.label :view, "Layout" %>
+    <%= f.select :view,
+                 Component.views(item.kind).map { |value, label| [ label, value ] },
+                 {},
+                 data: { action: "change->item-form#viewChanged",
+                         item_form_target: "view" } %>
   </div>
 
-  <div>
-    <%= form.label :view, style: "display: block" %>
-    <%= form.text_field :view %>
+  <div class="field">
+    <%= f.label :title, "Header (blank for none)" %>
+    <%= f.text_field :title %>
   </div>
 
-  <div>
-    <%= form.label :title, style: "display: block" %>
-    <%= form.text_field :title %>
+  <% allowed = Component.source_types(item.kind) %>
+  <% if allowed.any? %>
+    <div class="field">
+      <%= f.label :source_ids,
+                  Component.multi_source?(item.kind) ? "Sources" : "Source" %>
+      <%= f.collection_select :source_ids,
+                              Source.where(providable_type: allowed).order(:name),
+                              :id, :name,
+                              { include_blank: !Component.multi_source?(item.kind) },
+                              { multiple: Component.multi_source?(item.kind),
+                                size: Component.multi_source?(item.kind) ? 4 : 1 } %>
+      <% if Component.multi_source?(item.kind) %>
+        <p class="hint">Select several to combine them into one view.</p>
+      <% end %>
+      <p class="hint"><%= link_to "Manage sources", sources_path %></p>
+    </div>
+  <% end %>
+
+  <% settings = Component.settings(item.kind) %>
+  <% if settings.any? %>
+    <fieldset>
+      <legend>Options</legend>
+      <% settings.each do |setting| %>
+        <div class="field setting"
+             data-item-form-target="setting"
+             data-views="<%= Array(setting.views).join(" ") %>">
+          <% name = "dashboard_item[settings][#{setting.key}]" %>
+          <% id   = "setting_#{setting.key}" %>
+          <% case setting.type %>
+          <% when :boolean %>
+            <%# The hidden partner is what lets a box be turned back off:
+                settings are assigned as a whole hash, so an omitted key
+                would silently fall back to the registry default. %>
+            <%= hidden_field_tag name, "0", id: nil %>
+            <%= checkbox_tag name, "1", item.setting(setting.key), id: id %>
+            <%= label_tag id, setting.label %>
+          <% when :integer %>
+            <%= label_tag id, setting.label %>
+            <%= number_field_tag name, item.setting(setting.key), min: 1, id: id %>
+          <% when :text %>
+            <%= label_tag id, setting.label %>
+            <%= text_area_tag name, item.setting(setting.key), rows: 3, id: id %>
+          <% else %>
+            <%= label_tag id, setting.label %>
+            <%= text_field_tag name, item.setting(setting.key), id: id %>
+          <% end %>
+        </div>
+      <% end %>
+    </fieldset>
+  <% end %>
+
+  <div class="field">
+    <%= f.checkbox :visible %>
+    <%= f.label :visible, "Show on dashboard" %>
   </div>
 
-  <div>
-    <%= form.label :col, style: "display: block" %>
-    <%= form.number_field :col %>
-  </div>
-
-  <div>
-    <%= form.label :row, style: "display: block" %>
-    <%= form.number_field :row %>
-  </div>
-
-  <div>
-    <%= form.label :col_span, style: "display: block" %>
-    <%= form.number_field :col_span %>
-  </div>
-
-  <div>
-    <%= form.label :row_span, style: "display: block" %>
-    <%= form.number_field :row_span %>
-  </div>
-
-  <div>
-    <%= form.label :position, style: "display: block" %>
-    <%= form.number_field :position %>
-  </div>
-
-  <div>
-    <%= form.label :settings, style: "display: block" %>
-    <%= form.text_field :settings %>
-  </div>
-
-  <div>
-    <%= form.label :visible, style: "display: block" %>
-    <%= form.checkbox :visible %>
-  </div>
-
-  <div>
-    <%= form.submit %>
-  </div>
+  <%= f.submit "Save" %>
 <% end %>

@@ -69,3 +69,6 @@ gem "ferrum", "~> 0.18.0"
 gem "chunky_png", "~> 1.4"
 
 gem "feedjira", "~> 4.0"
+
+gem "icalendar", "~> 2.12"
+gem "icalendar-recurrence", "~> 1.2"

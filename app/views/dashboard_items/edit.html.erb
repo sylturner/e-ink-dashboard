@@ -1,48 +1,12 @@
 <%# Wrapped in a Turbo Frame so selecting a tile swaps the inspector in
-    place. Saving and deleting break out to _top instead: both change the
-    canvas (a new label, or one fewer tile), and a frame-scoped response
-    would leave the tiles behind it stale. It still renders standalone on
-    a direct visit. %>
+    place. The form itself targets _top, because saving changes the
+    canvas (a new label, a different layout) and a frame-scoped response
+    would leave the tiles behind it stale. Still renders standalone on a
+    direct visit. %>
 <turbo-frame id="inspector">
-  <h2><%= @dashboard_item.kind.to_s.titleize %></h2>
+  <h2><%= Component.label(@dashboard_item.kind) %></h2>
 
-  <% if @dashboard_item.errors.any? %>
-    <ul class="errors">
-      <% @dashboard_item.errors.each do |error| %>
-        <li><%= error.full_message %></li>
-      <% end %>
-    </ul>
-  <% end %>
-
-  <%= form_with model: @dashboard_item, data: { turbo_frame: "_top" } do |f| %>
-    <p>
-      <%= f.label :title %>
-      <%= f.text_field :title %>
-    </p>
-
-    <p>
-      <%= f.label :view %>
-      <%= f.text_field :view %>
-    </p>
-
-    <p>
-      <%= f.label :source_ids, "Sources" %>
-      <%= f.collection_select :source_ids, Source.order(:name), :id, :name,
-                              {}, { multiple: true, size: 4 } %>
-    </p>
-
-    <p class="hint">
-      <%= link_to "Manage sources", sources_path %>
-      — add a weather location, RSS feed, or calendar.
-    </p>
-
-    <p>
-      <%= f.label :visible %>
-      <%= f.checkbox :visible %>
-    </p>
-
-    <%= f.submit "Save" %>
-  <% end %>
+  <%= render "form", item: @dashboard_item %>
 
   <%= button_to "Delete", @dashboard_item, method: :delete,
                 form: { data: { turbo_frame: "_top" } } %>

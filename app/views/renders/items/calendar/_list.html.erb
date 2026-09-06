@@ -1,0 +1,14 @@
+<% if events.empty? %>
+  <div class="t-xs"><%= empty %></div>
+<% else %>
+  <ul class="rows">
+    <% events.each do |event| %>
+      <li>
+        <span class="t-clip t-clip-1"><%= event.title %></span>
+        <% if times %>
+          <span class="t-xs nowrap"><%= event.time_label %></span>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+<% end %>
