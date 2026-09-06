@@ -72,7 +72,7 @@
   --body-font: "Spleen", monospace;
   --footer-font: "Silkscreen", monospace;
 
-  --fs-xs: 8px;    --lh-xs: 12px;
+  --fs-xs: 12px;   --lh-xs: 14px;
   --fs-sm: 16px;   --lh-sm: 24px;
   --fs-md: 24px;   --lh-md: 32px;
   --fs-lg: 32px;   --lh-lg: 40px;
@@ -99,7 +99,7 @@
   /* Body treatment */
   --body-fs: var(--fs-sm);
   --body-lh: var(--lh-sm);
-  --body-pad: var(--pad);
+  --body-pad: var(--pad-tight);
 
   /* Footer treatment */
   --footer-fill: var(--paper);

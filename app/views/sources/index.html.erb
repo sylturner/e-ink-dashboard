@@ -18,16 +18,7 @@
       <tr>
         <td><%= link_to source.name, edit_source_path(source) %></td>
         <td><%= source.kind_label %></td>
-        <td class="detail">
-          <% case source.providable_type %>
-          <% when "WeatherProvider" %>
-            <%= source.providable.latitude %>,
-            <%= source.providable.longitude %>
-          <% when "RssProvider" %>
-            <%= source.providable.feed_url.truncate(50) %>
-          <% when "IcalProvider" %>
-            <%= source.providable.ical_url.truncate(50) %>
-          <% end %>
+        <td class="detail"><%= source.providable.detail %>
         </td>
         <td>
           <%= source.fetched_at ? time_ago_in_words(source.fetched_at) + " ago" : "never" %>

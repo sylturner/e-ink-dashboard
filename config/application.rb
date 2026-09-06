@@ -16,6 +16,11 @@ module EInkDashboard
     # Common ones are `templates`, `generators`, or `middleware`, for example.
     config.autoload_lib(ignore: %w[assets tasks])
 
+    # app/models/providers holds one file per Source provider. It groups
+    # them on disk without introducing a Providers:: namespace, so the
+    # class names stay put -- they are persisted in sources.providable_type.
+    Rails.autoloaders.main.collapse("#{root}/app/models/providers")
+
     # Configuration for the application, engines, and railties goes here.
     #
     # These settings can be overridden in specific environments using the files

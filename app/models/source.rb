@@ -1,18 +1,8 @@
 class Source < ApplicationRecord
-  PROVIDERS = %w[WeatherProvider RssProvider IcalProvider].freeze
-
-  # Attributes each provider type accepts from a form.
-  PROVIDER_ATTRIBUTES = {
-    "WeatherProvider" => %i[latitude longitude units time_zone],
-    "RssProvider"     => %i[feed_url max_items],
-    "IcalProvider"    => %i[ical_url include_all_day]
-  }.freeze
-
-  PROVIDER_LABELS = {
-    "WeatherProvider" => "Weather",
-    "RssProvider"     => "RSS feed",
-    "IcalProvider"    => "Calendar (iCal)"
-  }.freeze
+  # Discovered from app/models/providers rather than listed here. Adding
+  # a provider is adding a file; each one declares its own label, form
+  # attributes and refresh interval via Providable.provides.
+  PROVIDERS = Providable.provider_names
 
   delegated_type :providable, types: PROVIDERS, dependent: :destroy
 
@@ -31,20 +21,23 @@ class Source < ApplicationRecord
     )
   }
 
-  # Resolved by an explicit case rather than constantize: the input is
-  # allowlisted, but reflection on a param value is a real hazard and
-  # this keeps it off the table entirely. Returns nil for anything not
-  # in PROVIDERS.
+  # No constantize on user input: a type is only resolved if it matches a
+  # name the registry found on disk, and the lookup itself never touches
+  # a parameter. Returns nil for anything unknown.
   def self.provider_class(type)
-    case type.to_s
-    when "WeatherProvider" then WeatherProvider
-    when "RssProvider"     then RssProvider
-    when "IcalProvider"    then IcalProvider
-    end
+    provider_classes[type.to_s]
+  end
+
+  def self.provider_classes
+    @provider_classes ||= PROVIDERS.index_with { |name| Object.const_get(name) }.freeze
+  end
+
+  def self.provider_label(type)
+    provider_class(type)&.label || type
   end
 
   def kind_label
-    PROVIDER_LABELS.fetch(providable_type, providable_type)
+    Source.provider_label(providable_type)
   end
 
   def healthy?
@@ -70,5 +63,9 @@ class Source < ApplicationRecord
     update!(attempted_at: Time.current,
             last_error: error.message.truncate(500),
             failure_count: failure_count.to_i + 1)
+  end
+
+  def tag
+    name.to_s.first(3).upcase
   end
 end

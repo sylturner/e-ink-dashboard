@@ -2,8 +2,8 @@
   fetched = item.sources.filter_map(&:fetched_at).min
   failing = item.sources.any? { |s| s.failure_count.to_i > 2 }
 %>
-<% if fetched.present? %>
+<% if failing %>
   <div class="card-footer">
-    <%= fetched.in_time_zone(now.time_zone).strftime("%-l:%M %p") %><%= " · stale" if failing %>
+    <%= fetched.in_time_zone(now.time_zone).strftime("%-l:%M %p") %><%= " · stale" %>
   </div>
 <% end %>

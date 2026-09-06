@@ -5,7 +5,7 @@
 <ul class="type-list">
   <% Source::PROVIDERS.each do |type| %>
     <li>
-      <%= link_to Source::PROVIDER_LABELS[type],
+      <%= link_to Source.provider_label(type),
                   new_source_path(type: type), class: "btn" %>
     </li>
   <% end %>

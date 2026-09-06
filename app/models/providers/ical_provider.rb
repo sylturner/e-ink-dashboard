@@ -6,12 +6,24 @@ class IcalProvider < ApplicationRecord
   # nothing ever queries by it.
   encrypts :ical_url
 
+  provides label:           "Calendar (iCal)",
+           attributes:      %i[ical_url include_all_day],
+           refresh_seconds: 900
+
   WINDOW_BACK    = 1.day
   WINDOW_FORWARD = 60.days
   MAX_EVENTS     = 500
 
   validates :ical_url, presence: true,
             format: { with: %r{\A(https?|webcal)://\S+\z} }
+
+  def self.defaults
+    { include_all_day: true }
+  end
+
+  def detail
+    ical_url.to_s.truncate(50)
+  end
 
   # Recurrence is expanded here rather than at render time: renders run
   # on the hot path under the BrowserPool mutex, and expanding RRULEs

@@ -92,4 +92,74 @@ class SourceTest < ActiveSupport::TestCase
     assert_nil Source.provider_class("Kernel")
     assert_nil Source.provider_class(nil)
   end
+
+  # --- the provider registry ---
+
+  test "PROVIDERS is generated from app/models/providers" do
+    on_disk = Rails.root.join("app/models/providers").glob("*.rb")
+                  .map { |f| f.basename(".rb").to_s.camelize }.sort
+
+    assert_equal on_disk, Source::PROVIDERS
+    assert_operator Source::PROVIDERS.size, :>=, 3
+  end
+
+  test "every provider resolves to a class that includes Providable" do
+    Source::PROVIDERS.each do |name|
+      klass = Source.provider_class(name)
+
+      assert_equal name, klass.name
+      assert_includes klass.ancestors, Providable
+      assert_operator klass, :<, ApplicationRecord
+    end
+  end
+
+  # The registry is only as good as the declarations, so a provider that
+  # forgets `provides` should fail here rather than in a form.
+  test "every provider declares its label, attributes and refresh interval" do
+    Source::PROVIDERS.each do |name|
+      klass = Source.provider_class(name)
+
+      assert klass.label.present?, "#{name} declares no label"
+      assert klass.form_attributes.present?, "#{name} declares no form attributes"
+      assert_operator klass.default_refresh_seconds.to_i, :>=, 60,
+                      "#{name} declares no usable refresh interval"
+      assert_kind_of Hash, klass.defaults
+    end
+  end
+
+  test "declared form attributes are real columns" do
+    Source::PROVIDERS.each do |name|
+      klass = Source.provider_class(name)
+      klass.form_attributes.each do |attribute|
+        assert_includes klass.column_names, attribute.to_s,
+                        "#{name} offers #{attribute}, which is not a column"
+      end
+    end
+  end
+
+  test "declared defaults only set attributes the form offers" do
+    Source::PROVIDERS.each do |name|
+      klass = Source.provider_class(name)
+      assert_empty klass.defaults.keys.map(&:to_sym) - klass.form_attributes,
+                   "#{name} defaults an attribute its form cannot edit"
+    end
+  end
+
+  test "provider_class refuses anything not in the registry" do
+    assert_nil Source.provider_class("Kernel")
+    assert_nil Source.provider_class("ApplicationRecord")
+    assert_nil Source.provider_class(nil)
+    assert_nil Source.provider_class("")
+  end
+
+  test "provider_label falls back to the raw type for an unknown provider" do
+    assert_equal "Weather", Source.provider_label("WeatherProvider")
+    assert_equal "Nope", Source.provider_label("Nope")
+  end
+
+  test "each provider summarises itself for the source list" do
+    assert_equal "https://example.com/feed.xml", @spare.providable.detail
+    assert_match(/47\.6062, -122\.3321/, @weather.providable.detail)
+    assert_equal "https://example.com/calendar.ics", ical_providers(:one).detail
+  end
 end

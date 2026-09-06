@@ -1,6 +1,6 @@
-<% content_for :title, "Add #{Source::PROVIDER_LABELS[@type]}" %>
+<% content_for :title, "Add #{Source.provider_label(@type)}" %>
 
-<h1>Add <%= Source::PROVIDER_LABELS[@type] %></h1>
+<h1>Add <%= Source.provider_label(@type) %></h1>
 
 <%= render "form", source: @source, type: @type %>
 

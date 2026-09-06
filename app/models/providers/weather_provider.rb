@@ -1,10 +1,22 @@
 class WeatherProvider < ApplicationRecord
   include Providable
 
+  provides label:           "Weather",
+           attributes:      %i[latitude longitude units time_zone],
+           refresh_seconds: 900
+
   ENDPOINT = "https://api.open-meteo.com/v1/forecast".freeze
 
   validates :latitude, :longitude, presence: true
   validates :units, inclusion: { in: %w[imperial metric] }
+
+  def self.defaults
+    { units: "imperial", time_zone: Time.zone.name }
+  end
+
+  def detail
+    "#{latitude}, #{longitude}"
+  end
 
   def fetch!
     data = Http.get_json(url)

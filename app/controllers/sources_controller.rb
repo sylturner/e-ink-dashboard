@@ -14,9 +14,10 @@ class SourcesController < ApplicationController
     if @type.nil?
       render :choose_type
     else
-      @source = Source.new(
-        providable: Source.provider_class(@type).new(defaults_for(@type)),
-        refresh_seconds: default_interval(@type)
+      provider = Source.provider_class(@type)
+      @source  = Source.new(
+        providable: provider.new(provider.defaults),
+        refresh_seconds: provider.default_refresh_seconds
       )
     end
   end
@@ -125,29 +126,10 @@ class SourcesController < ApplicationController
     end
 
     def provider_params(type)
-      allowed = Source::PROVIDER_ATTRIBUTES.fetch(type, [])
+      allowed = Source.provider_class(type)&.form_attributes || []
       params.require(:source)
             .fetch(:provider, ActionController::Parameters.new)
             .permit(*allowed)
-    end
-
-    def defaults_for(type)
-      case type
-      when "WeatherProvider"
-        { units: "imperial", time_zone: Time.zone.name }
-      when "RssProvider"
-        { max_items: 10 }
-      when "IcalProvider"
-        { include_all_day: true }
-      else
-        {}
-      end
-    end
-
-    def default_interval(type)
-      { "WeatherProvider" => 900,
-        "RssProvider" => 1800,
-        "IcalProvider" => 900 }.fetch(type, 900)
     end
 
     def summarize(payload)

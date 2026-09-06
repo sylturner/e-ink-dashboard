@@ -22,7 +22,7 @@
   </div>
 
   <fieldset>
-    <legend><%= Source::PROVIDER_LABELS[type] %></legend>
+    <legend><%= Source.provider_label(type) %></legend>
     <%# fields_for :provider names the inputs source[provider][...], which
         is what provider_params reads. It deliberately does not match the
         association name, so Rails never tries to auto-assign it. %>
