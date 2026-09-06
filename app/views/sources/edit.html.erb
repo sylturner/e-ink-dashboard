@@ -1,12 +1,7 @@
-<% content_for :title, "Editing source" %>
+<% content_for :title, @source.name %>
 
-<h1>Editing source</h1>
+<h1><%= @source.name %></h1>
 
-<%= render "form", source: @source %>
+<%= render "form", source: @source, type: @source.providable_type %>
 
-<br>
-
-<div>
-  <%= link_to "Show this source", @source %> |
-  <%= link_to "Back to sources", sources_path %>
-</div>
+<p><%= link_to "Back to sources", sources_path %></p>

@@ -6,7 +6,10 @@ class FetchSourceJob < ApplicationJob
     source.record_success(source.providable.fetch!)
 
     enqueue_renders(source) if checksum(source.payload) != before
-  rescue Http::Error, StandardError => e
+  # NotImplementedError descends from ScriptError rather than
+  # StandardError, so a provider that has no fetch! yet (IcalProvider,
+  # until Phase 6) has to be named explicitly or the job crash-loops.
+  rescue NotImplementedError, StandardError => e
     source.record_failure(e)
     Rails.logger.warn("[Fetch] #{source.name}: #{e.class}: #{e.message}")
   end

@@ -1,0 +1,34 @@
+<div data-controller="geocode">
+  <div class="field">
+    <label>Find a place</label>
+    <div class="lookup">
+      <input type="text" data-geocode-target="query"
+             placeholder="Clarkston, GA"
+             data-action="keydown.enter->geocode#search">
+      <button type="button" data-action="geocode#search">Look up</button>
+    </div>
+    <ul class="results" data-geocode-target="results"></ul>
+  </div>
+
+  <div class="field">
+    <%= f.label :latitude %>
+    <%= f.number_field :latitude, step: "any",
+                       data: { geocode_target: "latitude" } %>
+  </div>
+
+  <div class="field">
+    <%= f.label :longitude %>
+    <%= f.number_field :longitude, step: "any",
+                       data: { geocode_target: "longitude" } %>
+  </div>
+
+  <div class="field">
+    <%= f.label :time_zone %>
+    <%= f.text_field :time_zone, data: { geocode_target: "timeZone" } %>
+  </div>
+
+  <div class="field">
+    <%= f.label :units %>
+    <%= f.select :units, [ [ "Fahrenheit", "imperial" ], [ "Celsius", "metric" ] ] %>
+  </div>
+</div>

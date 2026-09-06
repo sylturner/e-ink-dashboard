@@ -1,57 +1,35 @@
-<%= form_with(model: source) do |form| %>
-  <% if source.errors.any? %>
-    <div style="color: red">
-      <h2><%= pluralize(source.errors.count, "error") %> prohibited this source from being saved:</h2>
+<%= form_with model: source,
+              url: source.new_record? ? sources_path(type: type) : source_path(source) do |f| %>
 
-      <ul>
-        <% source.errors.each do |error| %>
-          <li><%= error.full_message %></li>
-        <% end %>
-      </ul>
-    </div>
+  <% if source.errors.any? %>
+    <ul class="errors">
+      <% source.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+    </ul>
   <% end %>
 
-  <div>
-    <%= form.label :name, style: "display: block" %>
-    <%= form.text_field :name %>
+  <%= f.hidden_field :providable_type, value: type %>
+
+  <div class="field">
+    <%= f.label :name %>
+    <%= f.text_field :name, placeholder: "Home weather" %>
   </div>
 
-  <div>
-    <%= form.label :providable_id, style: "display: block" %>
-    <%= form.text_field :providable_id %>
+  <div class="field">
+    <%= f.label :refresh_seconds, "Refresh every (seconds)" %>
+    <%= f.number_field :refresh_seconds, min: 60, step: 60 %>
   </div>
 
-  <div>
-    <%= form.label :refresh_seconds, style: "display: block" %>
-    <%= form.number_field :refresh_seconds %>
-  </div>
+  <fieldset>
+    <legend><%= Source::PROVIDER_LABELS[type] %></legend>
+    <%# fields_for :provider names the inputs source[provider][...], which
+        is what provider_params reads. It deliberately does not match the
+        association name, so Rails never tries to auto-assign it. %>
+    <%= f.fields_for :provider, source.providable do |pf| %>
+      <%= render "sources/providers/#{type.underscore}", f: pf %>
+    <% end %>
+  </fieldset>
 
-  <div>
-    <%= form.label :payload, style: "display: block" %>
-    <%= form.text_field :payload %>
-  </div>
-
-  <div>
-    <%= form.label :fetched_at, style: "display: block" %>
-    <%= form.datetime_field :fetched_at %>
-  </div>
-
-  <div>
-    <%= form.label :attempted_at, style: "display: block" %>
-    <%= form.datetime_field :attempted_at %>
-  </div>
-
-  <div>
-    <%= form.label :last_error, style: "display: block" %>
-    <%= form.text_field :last_error %>
-  </div>
-
-  <div>
-    <%= form.label :failure_count, style: "display: block" %>
-    <%= form.number_field :failure_count %>
-  </div>
-
-  <div>
-    <%= form.submit %>
-  </div>
+  <%= f.submit %>
 <% end %>

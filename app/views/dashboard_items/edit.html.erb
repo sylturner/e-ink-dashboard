@@ -31,6 +31,11 @@
                               {}, { multiple: true, size: 4 } %>
     </p>
 
+    <p class="hint">
+      <%= link_to "Manage sources", sources_path %>
+      — add a weather location, RSS feed, or calendar.
+    </p>
+
     <p>
       <%= f.label :visible %>
       <%= f.checkbox :visible %>

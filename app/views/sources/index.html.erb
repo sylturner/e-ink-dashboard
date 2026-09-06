@@ -1,16 +1,54 @@
-<p style="color: green"><%= notice %></p>
-
 <% content_for :title, "Sources" %>
 
+<p class="notice"><%= notice %></p>
+<p class="alert"><%= alert %></p>
+
 <h1>Sources</h1>
+<%= link_to "Add a source", new_source_path, class: "btn" %>
 
-<div id="sources">
-  <% @sources.each do |source| %>
-    <%= render source %>
-    <p>
-      <%= link_to "Show this source", source %>
-    </p>
-  <% end %>
-</div>
-
-<%= link_to "New source", new_source_path %>
+<table class="sources">
+  <thead>
+    <tr>
+      <th>Name</th><th>Type</th><th>Detail</th>
+      <th>Last fetch</th><th>Health</th><th>Used by</th><th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @sources.each do |source| %>
+      <tr>
+        <td><%= link_to source.name, edit_source_path(source) %></td>
+        <td><%= source.kind_label %></td>
+        <td class="detail">
+          <% case source.providable_type %>
+          <% when "WeatherProvider" %>
+            <%= source.providable.latitude %>,
+            <%= source.providable.longitude %>
+          <% when "RssProvider" %>
+            <%= source.providable.feed_url.truncate(50) %>
+          <% when "IcalProvider" %>
+            <%= source.providable.ical_url.truncate(50) %>
+          <% end %>
+        </td>
+        <td>
+          <%= source.fetched_at ? time_ago_in_words(source.fetched_at) + " ago" : "never" %>
+        </td>
+        <td>
+          <% if source.healthy? %>
+            OK
+          <% elsif source.fetched_at.present? %>
+            <%= pluralize(source.failure_count, "failure") %>
+            <div class="error"><%= source.last_error %></div>
+          <% else %>
+            <div class="error"><%= source.last_error || "not fetched" %></div>
+          <% end %>
+        </td>
+        <td><%= source.dashboard_items.count %></td>
+        <td class="actions">
+          <%= button_to "Test", test_source_path(source), method: :post %>
+          <%= button_to "Delete", source, method: :delete,
+                        form: { data: { turbo_confirm: "Delete #{source.name}?" } } %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

@@ -1,5 +1,12 @@
 Rails.application.routes.draw do
-  resources :sources
+  resources :sources do
+    member do
+      post :test
+    end
+    collection do
+      get :geocode
+    end
+  end
 
   resources :dashboard_items do
     member do

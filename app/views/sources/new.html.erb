@@ -1,11 +1,7 @@
-<% content_for :title, "New source" %>
+<% content_for :title, "Add #{Source::PROVIDER_LABELS[@type]}" %>
 
-<h1>New source</h1>
+<h1>Add <%= Source::PROVIDER_LABELS[@type] %></h1>
 
-<%= render "form", source: @source %>
+<%= render "form", source: @source, type: @type %>
 
-<br>
-
-<div>
-  <%= link_to "Back to sources", sources_path %>
-</div>
+<p><%= link_to "Back to sources", sources_path %></p>

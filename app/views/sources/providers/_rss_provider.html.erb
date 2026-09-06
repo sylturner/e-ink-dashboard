@@ -1,0 +1,13 @@
+<div class="field">
+  <%= f.label :feed_url, "Feed URL" %>
+  <%= f.url_field :feed_url, placeholder: "https://example.com/feed.xml" %>
+  <p class="hint">
+    The RSS or Atom URL. Save it, then use Test on the source list to
+    confirm it parses before putting it on a dashboard.
+  </p>
+</div>
+
+<div class="field">
+  <%= f.label :max_items, "Items to keep" %>
+  <%= f.number_field :max_items, min: 1, max: 50 %>
+</div>

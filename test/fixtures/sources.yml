@@ -19,3 +19,14 @@ two:
   attempted_at: 2026-09-05 20:01:01
   last_error:
   failure_count: 0
+
+# Not attached to any dashboard item, so it is safe to destroy.
+three:
+  name: Spare feed
+  providable: one (RssProvider)
+  refresh_seconds: 1800
+  payload: {}
+  fetched_at:
+  attempted_at:
+  last_error:
+  failure_count: 0

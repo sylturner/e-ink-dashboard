@@ -27,6 +27,12 @@
   </head>
 
   <body>
+    <nav class="app-nav">
+      <%= link_to "Dashboards", dashboards_path %>
+      <%= link_to "Sources", sources_path %>
+      <%= link_to "Devices", devices_path %>
+    </nav>
+
     <%= yield %>
   </body>
 </html>

@@ -1,70 +1,165 @@
 class SourcesController < ApplicationController
-  before_action :set_source, only: %i[ show edit update destroy ]
+  before_action :set_source, only: %i[show edit update destroy test]
 
-  # GET /sources or /sources.json
   def index
-    @sources = Source.all
+    @sources = Source.order(:name).includes(:providable)
   end
 
-  # GET /sources/1 or /sources/1.json
   def show
   end
 
-  # GET /sources/new
   def new
-    @source = Source.new
+    @type = permitted_type(params[:type])
+
+    if @type.nil?
+      render :choose_type
+    else
+      @source = Source.new(
+        providable: Source.provider_class(@type).new(defaults_for(@type)),
+        refresh_seconds: default_interval(@type)
+      )
+    end
   end
 
-  # GET /sources/1/edit
-  def edit
-  end
-
-  # POST /sources or /sources.json
   def create
+    @type = permitted_type(params[:type] || params.dig(:source, :providable_type))
+    return redirect_to(new_source_path, alert: "Unknown source type") if @type.nil?
+
     @source = Source.new(source_params)
+    @source.providable = Source.provider_class(@type).new(provider_params(@type))
 
-    respond_to do |format|
-      if @source.save
-        format.html { redirect_to @source, notice: "Source was successfully created." }
-        format.json { render :show, status: :created, location: @source }
-      else
-        format.html { render :new, status: :unprocessable_content }
-        format.json { render json: @source.errors, status: :unprocessable_content }
-      end
+    if save_with_provider(@source)
+      redirect_to sources_path, notice: "#{@source.name} added"
+    else
+      render :new, status: :unprocessable_content
     end
   end
 
-  # PATCH/PUT /sources/1 or /sources/1.json
+  def edit; end
+
   def update
-    respond_to do |format|
-      if @source.update(source_params)
-        format.html { redirect_to @source, notice: "Source was successfully updated.", status: :see_other }
-        format.json { render :show, status: :ok, location: @source }
-      else
-        format.html { render :edit, status: :unprocessable_content }
-        format.json { render json: @source.errors, status: :unprocessable_content }
-      end
+    type = @source.providable_type
+
+    Source.transaction do
+      @source.providable.update!(provider_params(type))
+      @source.update!(source_params)
     end
+
+    redirect_to sources_path, notice: "#{@source.name} updated"
+  rescue ActiveRecord::RecordInvalid
+    merge_provider_errors(@source)
+    render :edit, status: :unprocessable_content
   end
 
-  # DELETE /sources/1 or /sources/1.json
   def destroy
-    @source.destroy!
-
-    respond_to do |format|
-      format.html { redirect_to sources_path, notice: "Source was successfully destroyed.", status: :see_other }
-      format.json { head :no_content }
+    if @source.in_use?
+      names = @source.dashboard_items.map { |i| i.title.presence || i.kind }
+      return redirect_to sources_path,
+                         alert: "Still used by: #{names.to_sentence}"
     end
+
+    @source.destroy
+    redirect_to sources_path, notice: "Deleted"
+  end
+
+  # Runs fetch! immediately and reports what came back.
+  #
+  # NotImplementedError is rescued by name because it descends from
+  # ScriptError, not StandardError -- IcalProvider has no fetch! until
+  # Phase 6, and an unrescued raise here would be a 500.
+  def test
+    payload = @source.providable.fetch!
+    @source.record_success(payload)
+
+    redirect_to sources_path,
+                notice: "#{@source.name}: #{summarize(payload)}"
+  rescue NotImplementedError
+    redirect_to sources_path,
+                alert: "#{@source.name}: #{@source.kind_label} fetching is not built yet"
+  rescue StandardError => e
+    @source.record_failure(e)
+    redirect_to sources_path, alert: "#{@source.name}: #{e.message}"
+  end
+
+  # Place-name lookup for weather sources.
+  def geocode
+    render json: { results: Geocoding.search(params[:q]) }
+  rescue Http::Error => e
+    render json: { results: [], error: e.message }, status: :bad_gateway
   end
 
   private
-    # Use callbacks to share common setup or constraints between actions.
+
     def set_source
       @source = Source.find(params.expect(:id))
     end
 
-    # Only allow a list of trusted parameters through.
+    def permitted_type(type)
+      Source::PROVIDERS.find { |known| known == type.to_s }
+    end
+
+    # delegated_type's providable_id is NOT NULL, so an invalid provider
+    # makes Source#save raise a NotNullViolation instead of returning
+    # false. Save the provider first, then surface its errors on the
+    # source so the form has something to render.
+    def save_with_provider(source)
+      saved = false
+
+      Source.transaction do
+        saved = source.providable.save && source.save
+        raise ActiveRecord::Rollback unless saved
+      end
+
+      merge_provider_errors(source) unless saved
+      saved
+    end
+
+    def merge_provider_errors(source)
+      source.providable.errors.each do |error|
+        source.errors.add(:base, error.full_message)
+      end
+    end
+
     def source_params
-      params.expect(source: [ :name, :providable_id, :providable_type, :refresh_seconds, :payload, :fetched_at, :attempted_at, :last_error, :failure_count ])
+      params.expect(source: [ :name, :refresh_seconds ])
+    end
+
+    def provider_params(type)
+      allowed = Source::PROVIDER_ATTRIBUTES.fetch(type, [])
+      params.require(:source)
+            .fetch(:provider, ActionController::Parameters.new)
+            .permit(*allowed)
+    end
+
+    def defaults_for(type)
+      case type
+      when "WeatherProvider"
+        { units: "imperial", time_zone: Time.zone.name }
+      when "RssProvider"
+        { max_items: 10 }
+      when "IcalProvider"
+        { include_all_day: true }
+      else
+        {}
+      end
+    end
+
+    def default_interval(type)
+      { "WeatherProvider" => 900,
+        "RssProvider" => 1800,
+        "IcalProvider" => 900 }.fetch(type, 900)
+    end
+
+    def summarize(payload)
+      if payload["items"]
+        "#{payload['items'].size} items, newest: " \
+          "#{payload['items'].first&.dig('title')&.truncate(60)}"
+      elsif payload.dig("current", "temp")
+        "#{payload.dig('current', 'temp')}° #{payload.dig('current', 'label')}"
+      elsif payload["events"]
+        "#{payload['events'].size} events"
+      else
+        "fetched OK"
+      end
     end
 end

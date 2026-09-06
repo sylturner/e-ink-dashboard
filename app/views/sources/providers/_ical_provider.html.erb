@@ -1,0 +1,14 @@
+<div class="field">
+  <%= f.label :ical_url, "Secret iCal URL" %>
+  <%= f.url_field :ical_url %>
+  <p class="hint">
+    In Google Calendar: Settings → the calendar → Integrate calendar →
+    Secret address in iCal format. Works with Apple, Fastmail and
+    Nextcloud too. Treat it like a password.
+  </p>
+</div>
+
+<div class="field">
+  <%= f.checkbox :include_all_day %>
+  <%= f.label :include_all_day, "Include all-day events" %>
+</div>

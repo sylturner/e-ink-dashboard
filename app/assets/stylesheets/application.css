@@ -8,3 +8,79 @@
  *
  * Consider organizing styles into separate files for maintainability.
  */
+
+/* ============================================================
+   Admin chrome. Applies to every page rendered in the
+   application layout; the panel render has its own stylesheet.
+   ============================================================ */
+
+body { font: 14px/1.5 system-ui, sans-serif; color: #222; }
+
+h1 { font-size: 20px; margin: 16px 0 12px; }
+h2 { font-size: 16px; margin: 16px 0 8px; }
+
+.app-nav {
+  display: flex; gap: 16px;
+  padding: 10px 24px;
+  border-bottom: 1px solid #ddd;
+  background: #fafafa;
+}
+
+.app-nav a, .btn { color: #06c; }
+
+.notice:empty, .alert:empty { display: none; }
+.notice, .alert {
+  margin: 12px 24px; padding: 8px 12px; border: 1px solid #333;
+}
+.notice { background: #efe; }
+.alert  { background: #fee; border-color: #c00; }
+
+h1, table.sources, .type-list, form, p, fieldset { margin-left: 24px; margin-right: 24px; }
+.builder h1, .builder p, .builder form, .builder fieldset { margin-left: 0; margin-right: 0; }
+
+/* ---------- Source list ---------- */
+
+table.sources { border-collapse: collapse; width: calc(100% - 48px); margin-top: 12px; }
+table.sources th, table.sources td {
+  border-bottom: 1px solid #ddd; padding: 8px; text-align: left;
+  vertical-align: top;
+}
+table.sources th { font-weight: 600; background: #f6f6f6; white-space: nowrap; }
+table.sources .detail { font-family: ui-monospace, monospace; font-size: 12px; color: #555; }
+table.sources .actions { white-space: nowrap; }
+table.sources .actions form { display: inline; margin: 0; }
+
+.error { color: #c00; font-size: 12px; }
+
+.errors {
+  color: #c00; border: 1px solid #c00; background: #fee;
+  padding: 8px 8px 8px 28px; margin-bottom: 12px;
+}
+
+/* ---------- Forms ---------- */
+
+.field { margin-bottom: 12px; max-width: 460px; }
+.field label { display: block; font-weight: 600; margin-bottom: 2px; }
+.field input[type=text], .field input[type=url], .field input[type=number],
+.field select { width: 100%; padding: 4px 6px; }
+.field input[type=checkbox] { width: auto; }
+
+fieldset { border: 1px solid #ccc; padding: 12px; max-width: 500px; }
+legend { font-weight: 600; padding: 0 4px; }
+
+.hint { color: #666; font-size: 12px; margin: 4px 0 0; }
+
+.type-list { list-style: none; padding: 0; }
+.type-list li { margin: 8px 0; }
+
+/* ---------- Geocode lookup ---------- */
+
+.lookup { display: flex; gap: 8px; }
+.lookup input { flex: 1 1 auto; }
+
+.results { list-style: none; padding: 0; margin: 6px 0 0; }
+.results li { margin: 2px 0; }
+.results button {
+  background: none; border: none; padding: 2px 0;
+  color: #06c; cursor: pointer; text-align: left; font: inherit;
+}

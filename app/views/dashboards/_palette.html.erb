@@ -20,6 +20,11 @@
                               {}, { multiple: true, size: 4 } %>
     </p>
 
+    <p class="hint">
+      <%= link_to "Manage sources", sources_path %>
+      — add a weather location, RSS feed, or calendar.
+    </p>
+
     <%= f.hidden_field :col_span, value: 2 %>
     <%= f.hidden_field :row_span, value: 2 %>
     <%= f.hidden_field :visible, value: true %>

@@ -1,0 +1,14 @@
+<% content_for :title, "Add a source" %>
+
+<h1>Add a source</h1>
+
+<ul class="type-list">
+  <% Source::PROVIDERS.each do |type| %>
+    <li>
+      <%= link_to Source::PROVIDER_LABELS[type],
+                  new_source_path(type: type), class: "btn" %>
+    </li>
+  <% end %>
+</ul>
+
+<p><%= link_to "Back to sources", sources_path %></p>
