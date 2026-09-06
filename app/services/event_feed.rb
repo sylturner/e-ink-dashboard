@@ -3,8 +3,11 @@
 # already, which is what makes "combine several calendars" work without
 # special-casing.
 class EventFeed
+  # `calendar` is the name the feed publishes (X-WR-CALNAME); `tag` is
+  # the short marker from the Source it arrived on, which is what fits
+  # beside a title on a 1-bit panel.
   Event = Struct.new(:title, :location, :starts_at, :ends_at,
-                     :all_day, :calendar, keyword_init: true) do
+                     :all_day, :calendar, :tag, keyword_init: true) do
     # The last day the event actually occupies. An all-day event ends at
     # the following midnight, and so does a meeting booked to midnight;
     # neither should light up the next day.
@@ -23,20 +26,20 @@ class EventFeed
     end
 
     def time_label
-      return "All day" if all_day
+      date = starts_at.strftime('%-m/%-d')
+      return "#{date} All day" if all_day
 
-      starts_at.strftime("%-l:%M")
+      "#{date} #{starts_at.strftime('%-l:%M%P').chop}"
     end
   end
 
   def self.for(item, zone:)
-    events = item.sources.flat_map { |source| Array(source.payload["events"]) }
-
-    events.filter_map { |raw| build(raw, zone) }
-          .sort_by { |e| [ e.starts_at, e.title.to_s ] }
+    item.sources.flat_map { |source|
+      Array(source.payload["events"]).filter_map { |raw| build(raw, zone, source.tag) }
+    }.sort_by { |e| [ e.starts_at, e.title.to_s ] }
   end
 
-  def self.build(raw, zone)
+  def self.build(raw, zone, tag = nil)
     starts, ends = bounds(raw, zone)
     return nil if starts.nil?
 
@@ -46,7 +49,8 @@ class EventFeed
       starts_at: starts,
       ends_at: ends,
       all_day: !!raw["all_day"],
-      calendar: raw["calendar"]
+      calendar: raw["calendar"],
+      tag: tag
     )
   end
 

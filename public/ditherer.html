@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Ultimate 1-Bit Gradient & Pattern Studio</title>
+  <style>
+    body { font-family: monospace; background: #121212; color: #eee; padding: 20px; }
+    .controls { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px; background: #1e1e1e; padding: 15px; border-radius: 6px; }
+    label { display: flex; flex-direction: column; gap: 5px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .checkbox-label { flex-direction: row; align-items: center; gap: 10px; cursor: pointer; }
+    input, select, button, textarea { background: #2a2a2a; color: #fff; border: 1px solid #444; padding: 8px; border-radius: 4px; font-family: inherit; }
+    input[type="color"] { padding: 2px; height: 35px; cursor: pointer; }
+    button { background: #3a3a3a; cursor: pointer; font-weight: bold; border-color: #666; transition: background 0.2s; }
+    button:hover { background: #555; }
+    canvas { border: 1px solid #444; image-rendering: pixelated; background: #000; display: block; margin-bottom: 20px; }
+    .export-section { background: #1e1e1e; padding: 15px; border-radius: 6px; }
+    textarea { width: 100%; height: 80px; box-sizing: border-box; resize: vertical; margin-top: 10px; font-size: 11px; }
+    .btn-group { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+  <h2>1-Bit Gradient & Pattern Studio</h2>
+  
+  <div class="controls">
+    <label class="checkbox-label">
+      <input type="checkbox" id="enableGradient" checked> Enable Gradient
+    </label>
+
+    <label class="checkbox-label">
+      <input type="checkbox" id="invert"> Invert Pattern
+    </label>
+
+    <!-- NEW: Preset Selector -->
+    <label>Presets:
+      <select id="presets">
+        <option value="">-- Choose Preset --</option>
+        <option value="classicDither">Classic Bayer Dither</option>
+        <option value="retroScanlines">CRT Scanlines</option>
+        <option value="einkHeader">E-Paper Header Strip</option>
+        <option value="halftoneDots">Halftone Dot Grid</option>
+        <option value="gameboyMesh">GB Crosshatch</option>
+      </select>
+    </label>
+
+    <!-- NEW: Color Customization -->
+    <label>Foreground Color: <input type="color" id="fgColor" value="#ffffff"></label>
+    <label>Background Color: <input type="color" id="bgColor" value="#000000"></label>
+
+    <label>Gradient Type:
+      <select id="type">
+        <option value="top-down">Top to Bottom</option>
+        <option value="bottom-up">Bottom to Top</option>
+        <option value="center-light">Center Light</option>
+        <option value="center-dark">Center Dark</option>
+        <option value="left-right">Left to Right</option>
+        <option value="radial">Radial (Center Out)</option>
+      </select>
+    </label>
+
+    <label>Algorithm / Pattern: 
+      <select id="algo">
+        <optgroup label="Dithering">
+          <option value="bayer4">Ordered (Bayer 4x4)</option>
+          <option value="bayer8">Ordered (Bayer 8x8)</option>
+          <option value="noise">Random Noise</option>
+        </optgroup>
+        <optgroup label="Structural Patterns">
+          <option value="hlines">Lines</option>
+          <option value="grid">Grid / Crosshatch</option>
+          <option value="checker">Checkerboard</option>
+          <option value="diagonals">Diagonal Stripes</option>
+          <option value="zigzag">Zig-Zags</option>
+          <option value="dots">Halftone Circles</option>
+        </optgroup>
+      </select>
+    </label>
+
+    <label>Rotation Angle: 
+      <select id="rotation">
+        <option value="0">0°</option>
+        <option value="90">90°</option>
+        <option value="180">180°</option>
+        <option value="270">270°</option>
+      </select>
+    </label>
+
+    <label>Pattern Size (Tile): 
+      <input type="range" id="freq" min="2" max="32" value="8">
+      <span id="freqVal">8px</span>
+    </label>
+
+    <label>Item Spacing / Thickness: 
+      <input type="range" id="spacing" min="1" max="99" value="50">
+      <span id="spacingVal">50%</span>
+    </label>
+
+    <label>Static Fill / Threshold (%): 
+      <input type="range" id="staticFill" min="0" max="100" value="50">
+      <span id="staticFillVal">50%</span>
+    </label>
+
+    <label>Gradient Start (%): <input type="range" id="start" min="0" max="100" value="0"><span id="startVal">0%</span></label>
+    <label>Gradient End (%): <input type="range" id="end" min="0" max="100" value="100"><span id="endVal">100%</span></label>
+    <label>Gamma Curve: <input type="range" id="gamma" min="0.2" max="3" step="0.1" value="1"><span id="gammaVal">1.0</span></label>
+
+    <label>Width (px): <input type="number" id="w" value="128" min="8" max="1024"></label>
+    <label>Height (px): <input type="number" id="h" value="40" min="8" max="1024"></label>
+    <label>Display Zoom: <input type="number" id="scale" value="4" min="1" max="10"></label>
+  </div>
+
+  <canvas id="canvas"></canvas>
+
+  <div class="export-section">
+    <h3>Exports</h3>
+    <div class="btn-group">
+      <button id="downloadBtn">Download PNG</button>
+      <button id="copyCssBtn">Copy CSS snippet</button>
+      <!-- NEW: C-Array Exporter for Microcontrollers -->
+      <button id="copyCArrayBtn">Copy C-Array Buffer (E-Paper/Arduino)</button>
+    </div>
+    <textarea id="cssOutput" readonly></textarea>
+  </div>
+
+  <script>
+    const bayer4 = [
+      [ 0,  8,  2, 10],
+      [12,  4, 14,  6],
+      [ 3, 11,  1,  9],
+      [15,  7, 13,  5]
+    ];
+
+    let offscreenCanvas = document.createElement('canvas');
+
+    function hexToRgb(hex) {
+      const bigint = parseInt(hex.replace('#', ''), 16);
+      return [(bigint >> 16) & 255, (bigint >> 8) & 255, bigint & 255];
+    }
+
+    function draw() {
+      const w = parseInt(document.getElementById('w').value);
+      const h = parseInt(document.getElementById('h').value);
+      const scale = parseInt(document.getElementById('scale').value);
+      const algo = document.getElementById('algo').value;
+      const type = document.getElementById('type').value;
+      const freq = parseInt(document.getElementById('freq').value);
+      const spacingRatio = parseInt(document.getElementById('spacing').value) / 100;
+      const rotation = parseInt(document.getElementById('rotation').value);
+      const enableGradient = document.getElementById('enableGradient').checked;
+      const invert = document.getElementById('invert').checked;
+      const staticFill = parseInt(document.getElementById('staticFill').value) / 100;
+
+      const fgColor = hexToRgb(document.getElementById('fgColor').value);
+      const bgColor = hexToRgb(document.getElementById('bgColor').value);
+
+      let start = parseInt(document.getElementById('start').value) / 100;
+      let end = parseInt(document.getElementById('end').value) / 100;
+      const gamma = parseFloat(document.getElementById('gamma').value);
+
+      document.getElementById('startVal').textContent = Math.round(start * 100) + '%';
+      document.getElementById('endVal').textContent = Math.round(end * 100) + '%';
+      document.getElementById('gammaVal').textContent = gamma.toFixed(1);
+      document.getElementById('freqVal').textContent = freq + 'px';
+      document.getElementById('spacingVal').textContent = Math.round(spacingRatio * 100) + '%';
+      document.getElementById('staticFillVal').textContent = Math.round(staticFill * 100) + '%';
+
+      if (start >= end) end = start + 0.01;
+
+      offscreenCanvas.width = w;
+      offscreenCanvas.height = h;
+      const offCtx = offscreenCanvas.getContext('2d');
+      const imgData = offCtx.createImageData(w, h);
+
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          
+          let rx = x, ry = y;
+          if (rotation === 90) { rx = y; ry = w - 1 - x; }
+          else if (rotation === 180) { rx = w - 1 - x; ry = h - 1 - y; }
+          else if (rotation === 270) { rx = h - 1 - y; ry = x; }
+
+          let intensity = staticFill;
+
+          if (enableGradient) {
+            let pos = 0;
+            if (type === 'top-down') pos = y / (h - 1);
+            else if (type === 'bottom-up') pos = 1 - (y / (h - 1));
+            else if (type === 'left-right') pos = x / (w - 1);
+            else if (type === 'center-light') {
+              const centerDist = Math.abs((y / (h - 1)) - 0.5) * 2;
+              pos = 1 - centerDist;
+            } else if (type === 'center-dark') {
+              pos = Math.abs((y / (h - 1)) - 0.5) * 2;
+            } else if (type === 'radial') {
+              const cx = (w - 1) / 2;
+              const cy = (h - 1) / 2;
+              const maxDist = Math.sqrt(cx * cx + cy * cy);
+              const dist = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
+              pos = 1 - (dist / maxDist);
+            }
+
+            intensity = (pos - start) / (end - start);
+            intensity = Math.max(0, Math.min(1, intensity));
+            intensity = Math.pow(intensity, gamma);
+          }
+
+          let isWhite = false;
+          const thresholdRatio = enableGradient ? (intensity * spacingRatio) : spacingRatio;
+
+          if (algo === 'bayer4') {
+            const threshold = (bayer4[ry % 4][rx % 4] + 0.5) / 16;
+            isWhite = intensity > threshold;
+          } else if (algo === 'bayer8') {
+            const b8 = (bayer4[ry % 4][rx % 4] * 4) + (bayer4[Math.floor((ry % 8) / 2)][Math.floor((rx % 8) / 2)] / 4);
+            isWhite = intensity > (b8 / 64);
+          } else if (algo === 'noise') {
+            isWhite = intensity > Math.random();
+          } else if (algo === 'checker') {
+            const isCheck = ((Math.floor(rx / freq) + Math.floor(ry / freq)) % 2) === 0;
+            isWhite = enableGradient ? (isCheck ? intensity > 0.5 : false) : isCheck;
+          } else if (algo === 'hlines') {
+            isWhite = ((ry % freq) / freq) < thresholdRatio;
+          } else if (algo === 'grid') {
+            isWhite = (((rx % freq) / freq) < thresholdRatio) || (((ry % freq) / freq) < thresholdRatio);
+          } else if (algo === 'diagonals') {
+            isWhite = (((rx + ry) % freq) / freq) < thresholdRatio;
+          } else if (algo === 'zigzag') {
+            const zig = Math.abs((rx % (freq * 2)) - freq);
+            isWhite = (((ry + zig) % freq) / freq) < thresholdRatio;
+          } else if (algo === 'dots') {
+            // Radial distance from cell center (Halftone circles)
+            const cx = (rx % freq) - (freq / 2);
+            const cy = (ry % freq) - (freq / 2);
+            const dist = Math.sqrt(cx * cx + cy * cy) / (freq / 2);
+            isWhite = dist < thresholdRatio;
+          }
+
+          if (invert) isWhite = !isWhite;
+
+          const color = isWhite ? fgColor : bgColor;
+          const idx = (y * w + x) * 4;
+          imgData.data[idx] = color[0];
+          imgData.data[idx+1] = color[1];
+          imgData.data[idx+2] = color[2];
+          imgData.data[idx+3] = 255;
+        }
+      }
+
+      offCtx.putImageData(imgData, 0, 0);
+
+      const canvas = document.getElementById('canvas');
+      canvas.width = w * scale;
+      canvas.height = h * scale;
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(offscreenCanvas, 0, 0, w * scale, h * scale);
+
+      updateCssExport();
+    }
+
+    function updateCssExport() {
+      const dataUrl = offscreenCanvas.toDataURL('image/png');
+      const css = `background-image: url("${dataUrl}");\nbackground-repeat: repeat;\nimage-rendering: pixelated;`;
+      document.getElementById('cssOutput').value = css;
+    }
+
+    // --- PRESET SYSTEM ---
+    document.getElementById('presets').addEventListener('change', (e) => {
+      const p = e.target.value;
+      if (!p) return;
+
+      const set = (id, val, isCheck = false) => {
+        const el = document.getElementById(id);
+        if (isCheck) el.checked = val;
+        else el.value = val;
+      };
+
+      if (p === 'classicBayer') {
+        set('enableGradient', true, true); set('algo', 'bayer4'); set('type', 'top-down');
+        set('fgColor', '#ffffff'); set('bgColor', '#000000'); set('gamma', 1.0);
+      } else if (p === 'retroScanlines') {
+        set('enableGradient', false, true); set('algo', 'hlines'); set('freq', 4);
+        set('spacing', 50); set('fgColor', '#ffffff'); set('bgColor', '#000000');
+      } else if (p === 'einkHeader') {
+        set('enableGradient', true, true); set('algo', 'bayer4'); set('type', 'top-down');
+        set('start', 0); set('end', 100); set('h', 40); set('w', 128);
+      } else if (p === 'halftoneDots') {
+        set('enableGradient', true, true); set('algo', 'dots'); set('freq', 12);
+        set('type', 'radial'); set('spacing', 80);
+      } else if (p === 'gameboyMesh') {
+        set('enableGradient', false, true); set('algo', 'grid'); set('freq', 4);
+        set('spacing', 25); set('fgColor', '#9bbc0f'); set('bgColor', '#0f380f');
+      }
+      draw();
+    });
+
+    // --- C-ARRAY GENERATOR (1-BIT BITMAP BUFFER) ---
+    document.getElementById('copyCArrayBtn').addEventListener('click', () => {
+      const w = offscreenCanvas.width;
+      const h = offscreenCanvas.height;
+      const offCtx = offscreenCanvas.getContext('2d');
+      const imgData = offCtx.getImageData(0, 0, w, h).data;
+
+      let bytes = [];
+      let currentByte = 0;
+      let bitIndex = 0;
+
+      for (let i = 0; i < imgData.length; i += 4) {
+        // Pixel is considered white if Red channel > 128
+        const isWhite = imgData[i] > 128 ? 1 : 0;
+        
+        if (isWhite) {
+          currentByte |= (1 << (7 - bitIndex));
+        }
+
+        bitIndex++;
+        if (bitIndex === 8) {
+          bytes.push('0x' + currentByte.toString(16).padStart(2, '0'));
+          currentByte = 0;
+          bitIndex = 0;
+        }
+      }
+
+      if (bitIndex > 0) {
+        bytes.push('0x' + currentByte.toString(16).padStart(2, '0'));
+      }
+
+      const cCode = `// 1-Bit Monochromatic Image Buffer (${w}x${h}px)\nconst unsigned char epd_bitmap[${bytes.length}] = {\n  ${bytes.join(', ')}\n};`;
+      navigator.clipboard.writeText(cCode);
+      alert('C-Array copied to clipboard! Ready to paste into your display firmware.');
+    });
+
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      const link = document.createElement('a');
+      link.download = '1bit-pattern.png';
+      link.href = offscreenCanvas.toDataURL('image/png');
+      link.click();
+    });
+
+    document.getElementById('copyCssBtn').addEventListener('click', () => {
+      const textarea = document.getElementById('cssOutput');
+      textarea.select();
+      navigator.clipboard.writeText(textarea.value);
+      alert('CSS copied to clipboard!');
+    });
+
+    document.querySelectorAll('input, select').forEach(el => el.addEventListener('input', draw));
+    draw();
+  </script>
+</body>
+</html>

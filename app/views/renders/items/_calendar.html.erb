@@ -3,22 +3,26 @@
   limit  = item.setting("event_limit").to_i
   days   = item.setting("day_count").to_i
   times  = item.setting("show_times")
+
+  # A source marker only tells you anything when several calendars are
+  # merged into one tile; on a single-source tile it is just noise.
+  tags   = item.sources.size > 1
 %>
 
 <% case item.view %>
 <% when "next_events" %>
   <%= render "renders/items/calendar/list",
              events: EventFeed.upcoming(events, now, limit),
-             times: times, empty: "Nothing upcoming" %>
+             times: times, tags: tags, empty: "Nothing upcoming" %>
 
 <% when "tomorrow" %>
   <%= render "renders/items/calendar/list",
              events: EventFeed.on_day(events, now.to_date + 1).first(limit),
-             times: times, empty: "Nothing tomorrow" %>
+             times: times, tags: tags, empty: "Nothing tomorrow" %>
 
 <% when "next_days" %>
   <%= render "renders/items/calendar/agenda",
-             events: events, now: now, days: days, times: times %>
+             events: events, now: now, days: days, times: times, tags: tags %>
 
 <% when "week" %>
   <%# Sunday-start, to match the month grid. Rails' default week ends on
@@ -27,7 +31,7 @@
   <%= render "renders/items/calendar/agenda",
              events: events, now: now,
              days: (now.to_date.end_of_week(:sunday) - now.to_date).to_i + 1,
-             times: times %>
+             times: times, tags: tags %>
 
 <% when "month" %>
   <%= render "renders/items/calendar/month", events: events, now: now %>
@@ -35,5 +39,5 @@
 <% else %>
   <%= render "renders/items/calendar/list",
              events: EventFeed.on_day(events, now.to_date).first(limit),
-             times: times, empty: "Nothing today" %>
+             times: times, tags: tags, empty: "Nothing today" %>
 <% end %>

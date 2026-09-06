@@ -89,7 +89,8 @@
   --card-fill: var(--paper);
 
   /* Header treatment */
-  --header-fill: var(--ink);
+  /* --header-fill: var(--ink); */
+  --header-fill: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAAAoCAYAAAA2cfJIAAAAnElEQVR4Xu3VQQrDQAwEQen/j1ZIwOC8obouZq/rZnZn5iasLQBbAeAKAFcAuALAFQCuAHAFgCsAXAHgCgBXALgCwBUArgBwBYArAFwB4AoAVwC4AsAVAK4AcAWAKwBcAeAKAFcAuALAFQCuAHAFgCsA3N7d7e7c3fT17uFvAZ4IOkP38V2A54c/C9DZuY/fAjT/8PP3XoB4CgD3AS+3bhNdS+pmAAAAAElFTkSuQmCC") repeat;
   --header-text: var(--paper);
   --header-fs: var(--fs-sm);
   --header-lh: var(--lh-sm);
@@ -185,6 +186,7 @@ body {
   flex: 0 0 auto;
   padding: var(--header-pad);
   background: var(--header-fill);
+  image-rendering: pixelated;
   color: var(--header-text);
   font-family: var(--header-font);
   font-size: var(--header-fs);
@@ -451,3 +453,15 @@ body {
 
 .month-dots { font-size: var(--fs-xs); line-height: var(--lh-xs); }
 
+
+/* Source marker beside a merged calendar entry. Inverted rather than
+   coloured, because there is no colour to spend. */
+.tag {
+  flex: 0 0 auto;
+  margin-right: var(--pad-tight);
+  padding: 0 2px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: var(--fs-xs);
+  line-height: var(--lh-xs);
+}

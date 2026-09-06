@@ -119,4 +119,35 @@ class EventFeedTest < ActiveSupport::TestCase
 
     assert_equal [], EventFeed.for(@item, zone: ZONE)
   end
+
+  # --- source tags ---
+
+  test "each event carries the tag of the source it arrived on" do
+    attach("Work calendar", [ timed("a", ZONE.parse("2026-09-07 09:00"),
+                                    ZONE.parse("2026-09-07 10:00")) ])
+    attach("Family", [ timed("b", ZONE.parse("2026-09-07 11:00"),
+                             ZONE.parse("2026-09-07 12:00")) ])
+
+    feed = EventFeed.for(@item, zone: ZONE)
+
+    assert_equal %w[WOR FAM], feed.map(&:tag)
+  end
+
+  test "the tag comes from the source name, not the calendar name" do
+    source = attach("Household", [ timed("a", ZONE.parse("2026-09-07 09:00"),
+                                         ZONE.parse("2026-09-07 10:00"),
+                                         calendar: "someone@example.com") ])
+
+    event = EventFeed.for(@item, zone: ZONE).first
+
+    assert_equal source.tag, event.tag
+    assert_equal "HOU", event.tag
+    assert_equal "someone@example.com", event.calendar
+  end
+
+  test "a short source name still yields a tag" do
+    attach("Me", [ timed("a", ZONE.parse("2026-09-07 09:00"), ZONE.parse("2026-09-07 10:00")) ])
+
+    assert_equal "ME", EventFeed.for(@item, zone: ZONE).first.tag
+  end
 end

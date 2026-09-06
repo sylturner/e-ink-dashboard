@@ -2,13 +2,6 @@
   <div class="t-xs"><%= empty %></div>
 <% else %>
   <ul class="rows">
-    <% events.each do |event| %>
-      <li>
-        <span class="t-clip t-clip-1 t-xs"><%= event.title %></span>
-        <% if times %>
-          <span class="t-xs nowrap"><%= event.time_label %></span>
-        <% end %>
-      </li>
-    <% end %>
+    <%= render partial: "renders/items/calendar/event", collection: events, as: :event, locals: { tags: tags, times: times } %>
   </ul>
 <% end %>

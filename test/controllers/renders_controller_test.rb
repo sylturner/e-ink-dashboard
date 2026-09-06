@@ -95,4 +95,51 @@ class RendersControllerTest < ActionDispatch::IntegrationTest
 
     assert_includes body, "Nothing today"
   end
+
+  # A marker is only worth its pixels when several calendars are merged.
+  test "a tile merging two calendars marks which one each event is from" do
+    second = Source.create!(
+      name: "Family", refresh_seconds: 900,
+      providable: IcalProvider.new(ical_url: "https://example.com/family.ics"),
+      payload: { "events" => [
+        { "uid" => "d", "title" => "Swimming", "all_day" => false,
+          "starts_at" => "2026-09-06T14:00:00Z", "ends_at" => "2026-09-06T15:00:00Z",
+          "calendar" => "Family" }
+      ] }
+    )
+    @item.sources << second
+
+    body = render_view("today")
+
+    assert_select "span.tag", 2
+    assert_select "span.tag", text: @source.tag
+    assert_select "span.tag", text: second.tag
+    assert_includes body, "Swimming"
+  end
+
+  test "a single-calendar tile shows no markers" do
+    assert_equal 1, @item.sources.size
+
+    render_view("today")
+
+    assert_select "span.tag", 0
+  end
+
+  test "markers show in the agenda layouts too" do
+    second = Source.create!(
+      name: "Family", refresh_seconds: 900,
+      providable: IcalProvider.new(ical_url: "https://example.com/family.ics"),
+      payload: { "events" => [
+        { "uid" => "d", "title" => "Swimming", "all_day" => false,
+          "starts_at" => "2026-09-07T14:00:00Z", "ends_at" => "2026-09-07T15:00:00Z",
+          "calendar" => "Family" }
+      ] }
+    )
+    @item.sources << second
+    @item.update!(settings: { "day_count" => "5" })
+
+    render_view("next_days")
+
+    assert_select ".agenda span.tag", minimum: 2
+  end
 end

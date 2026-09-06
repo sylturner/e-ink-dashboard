@@ -1,0 +1,11 @@
+<li>
+  <span class="t-clip t-clip-1 t-xs">
+    <% if tags && event.tag.present? %>
+      <span class="tag"><%= event.tag %></span>
+    <% end %>
+    <%= event.title %>
+  </span>
+  <% if times %>
+    <span class="t-xs nowrap"><%= event.time_label %></span>
+  <% end %>
+</li>

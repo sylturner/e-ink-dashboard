@@ -11,14 +11,7 @@
           <%= date == now.to_date ? "Today" : date.strftime("%a %-d") %>
         </div>
         <ul class="rows">
-          <% EventFeed.on_day(events, date).each do |event| %>
-            <li>
-              <span class="t-clip t-clip-1"><%= event.title %></span>
-              <% if times %>
-                <span class="t-xs nowrap"><%= event.time_label %></span>
-              <% end %>
-            </li>
-          <% end %>
+          <%= render partial: "renders/items/calendar/event", collection: EventFeed.on_day(events, date), as: :event, locals: { tags: tags, times: times } %>
         </ul>
       </div>
     <% end %>
