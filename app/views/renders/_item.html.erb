@@ -4,32 +4,11 @@
   <% end %>
 
   <div class="card-body">
-    <% case item.kind %>
-    <% when "clock" %>
-      <div class="t-xl"><%= now.strftime("%-I:%M") %></div>
-      <div class="t-sm"><%= now.strftime("%A, %B %-d") %></div>
-
-    <% when "text" %>
-      <div class="t-sm"><%= item.settings["body"] %></div>
-
-    <% else %>
-      <%# Phase 3 replaces this with real component rendering %>
-      <div class="t-xs">
-        <%= item.kind %> &middot;
-        <% if item.sources.any? %>
-          <%= item.sources.map(&:name).join(", ") %>
-          <% stale = item.sources.any? { |s| s.fetched_at.nil? } %>
-          <%= "(no data yet)" if stale %>
-        <% else %>
-          no source
-        <% end %>
-      </div>
-    <% end %>
+    <%= render "renders/items/#{item.kind}",
+               item: item, now: now, data: item.sources.first&.payload || {} %>
   </div>
 
-  <% if item.sources.any? && item.sources.all? { |s| s.fetched_at.present? } %>
-    <div class="card-footer">
-      <%= item.sources.map(&:fetched_at).min.strftime("%-I:%M %p") %>
-    </div>
+  <% if item.sources.any? %>
+    <%= render "renders/staleness", item: item, now: now %>
   <% end %>
 </div>

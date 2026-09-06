@@ -25,9 +25,9 @@ weather = Source.find_or_create_by!(name: "Home weather") do |s|
   s.refresh_seconds = 900
 end
 
-news = Source.find_or_create_by!(name: "AP Top News") do |s|
+news = Source.find_or_create_by!(name: "NPR News") do |s|
   s.providable = RssProvider.new(
-    feed_url: "https://feeds.apnews.com/rss/apf-topnews",
+    feed_url: "https://feeds.npr.org/1001/rss.xml",
     max_items: 10
   )
   s.refresh_seconds = 1800

@@ -1,0 +1,6 @@
+<% limit = item.settings["event_limit"].to_i %>
+<ul class="rows rows--stacked">
+  <% (data["items"] || []).first(limit.positive? ? limit : 4).each do |entry| %>
+    <li class="t-clip t-clip-2"><%= entry["title"] %></li>
+  <% end %>
+</ul>

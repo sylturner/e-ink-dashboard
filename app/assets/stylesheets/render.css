@@ -345,3 +345,45 @@ body {
   --footer-pad: var(--pad-tight);
 }
 
+
+/* Icons inherit ink so they invert with their card */
+.icon {
+  display: block;
+  color: currentColor;
+  image-rendering: pixelated;
+}
+
+/* Current conditions: icon beside the reading */
+.now {
+  display: flex;
+  align-items: center;
+  gap: var(--pad);
+  margin-bottom: var(--pad-tight);
+}
+
+/* Hourly strip */
+.hours {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--pad-tight);
+}
+
+.hour {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-align: center;
+}
+
+/* Headlines wrap, so rows need to stack rather than sit on one line */
+.rows--stacked > li {
+  display: block;
+  white-space: normal;
+}
+
+/* Icon cells in a row shouldn't stretch */
+.rows > li > span {
+  display: flex;
+  align-items: center;
+}

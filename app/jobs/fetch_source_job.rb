@@ -1,13 +1,26 @@
-# Wired but inert until providers implement fetch! in Phase 3.
 class FetchSourceJob < ApplicationJob
   queue_as :default
 
   def perform(source)
+    before = checksum(source.payload)
     source.record_success(source.providable.fetch!)
-  rescue NotImplementedError
-    Rails.logger.info("[Fetch] #{source.providable_type} not implemented yet")
-  rescue StandardError => e
+
+    enqueue_renders(source) if checksum(source.payload) != before
+  rescue Http::Error, StandardError => e
     source.record_failure(e)
-    raise
+    Rails.logger.warn("[Fetch] #{source.name}: #{e.class}: #{e.message}")
+  end
+
+  private
+
+  def checksum(payload)
+    Digest::SHA256.hexdigest(payload.to_json)
+  end
+
+  def enqueue_renders(source)
+    Device.joins(dashboard: { dashboard_items: :dashboard_item_sources })
+          .where(dashboard_item_sources: { source_id: source.id })
+          .distinct
+          .find_each { |device| RenderDashboardJob.perform_later(device) }
   end
 end
