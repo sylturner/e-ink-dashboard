@@ -5,7 +5,6 @@ dashboard = Dashboard.find_or_create_by!(name: "Kitchen") do |d|
 end
 
 device = Device.find_or_create_by!(name: "Kitchen panel") do |dev|
-  dev.dashboard = dashboard
   dev.width = 800
   dev.height = 480
   dev.bit_depth = 1
@@ -53,5 +52,8 @@ items.each_with_index do |attrs, i|
   end
   item.sources << source if source && item.sources.exclude?(source)
 end
+
+device.dashboards << dashboard unless device.dashboards.include?(dashboard)
+device.update!(dashboard: dashboard)
 
 puts "Device token: #{device.token}"

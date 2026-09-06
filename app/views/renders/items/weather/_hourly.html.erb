@@ -1,0 +1,9 @@
+<div class="hours">
+  <% hours.each do |h| %>
+    <div class="hour">
+      <div class="t-sm"><%= h["hour"] %></div>
+      <%= weather_icon(h["icon"], scale: 1) %>
+      <div class="t-sm"><%= h["temp"] %>&deg;</div>
+    </div>
+  <% end %>
+</div>

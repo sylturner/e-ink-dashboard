@@ -1,0 +1,17 @@
+<% c = current || {} %>
+<div class="today">
+  <div class="now">
+    <%= weather_icon(c["icon"], scale: 3) %>
+    <div>
+      <div class="t-lg"><%= c["temp"] %>&deg;</div>
+      <div class="t-sm"><%= c["label"] %></div>
+      <div class="t-sm">Feels <%= c["feels_like"] %>&deg;</div>
+    </div>
+  </div>
+  <% if today %>
+    <div class="t-sm">
+      H <%= today["high"] %>&deg; &middot; L <%= today["low"] %>&deg;
+      <%= "· #{today["precip"]}%" if today["precip"].to_i.positive? %>
+    </div>
+  <% end %>
+</div>

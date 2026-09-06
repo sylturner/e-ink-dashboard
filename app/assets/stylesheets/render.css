@@ -69,10 +69,10 @@
   /* Type. Every line-height is an integer px value. */
   --font: "Spleen", monospace;
   --header-font: "VHS Gothic", monospace;
-  --body-font: "Spleen", monospace;
-  --footer-font: "Silkscreen", monospace;
+  --body-font: "Silkscreen", monospace;
+  --footer-font: "Spleen", monospace;
 
-  --fs-xs: 12px;   --lh-xs: 14px;
+  --fs-xs: 8px;    --lh-xs: 12px;
   --fs-sm: 16px;   --lh-sm: 24px;
   --fs-md: 24px;   --lh-md: 32px;
   --fs-lg: 32px;   --lh-lg: 40px;
@@ -108,6 +108,9 @@
   --footer-lh: var(--lh-xs);
   --footer-pad: var(--pad);
   --footer-rule: var(--rule) solid var(--ink);
+
+  /* Weather */
+  --weather-font: "Spleen", monospace;
 }
 
 /* ---------- Reset ---------- */
@@ -346,6 +349,14 @@ body {
 }
 
 
+/* ============================================================
+   Weather views
+   ============================================================ */
+
+.weather {
+  font-family: var(--weather-font);
+}
+
 /* Icons inherit ink so they invert with their card */
 .icon {
   display: block;
@@ -359,6 +370,12 @@ body {
   align-items: center;
   gap: var(--pad);
   margin-bottom: var(--pad-tight);
+}
+.today {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
 /* Hourly strip */
@@ -433,3 +450,4 @@ body {
 }
 
 .month-dots { font-size: var(--fs-xs); line-height: var(--lh-xs); }
+

@@ -10,8 +10,26 @@
   </div>
 
   <div>
-    <strong>Dashboard:</strong>
-    <%= device.dashboard_id %>
+    <strong>Currently showing:</strong>
+    <%= device.dashboard ? link_to(device.dashboard.name, builder_dashboard_path(device.dashboard)) : "(none)" %>
+  </div>
+
+  <div>
+    <strong>Assigned dashboards:</strong>
+    <% if device.dashboards.any? %>
+      <ul class="device-assignments">
+        <% device.device_dashboards.includes(:dashboard).each do |assignment| %>
+          <li>
+            <%= link_to assignment.dashboard.name, builder_dashboard_path(assignment.dashboard) %>
+            <%= "· showing" if assignment.dashboard_id == device.dashboard_id %>
+            <%= button_to "Unassign", device_dashboard_path(assignment), method: :delete,
+                          form: { class: "inline-form" } %>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      (none)
+    <% end %>
   </div>
 
   <div>

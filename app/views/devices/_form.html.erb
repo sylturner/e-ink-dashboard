@@ -16,9 +16,21 @@
     <%= form.text_field :name %>
   </div>
 
-  <div>
-    <%= form.label :dashboard_id, style: "display: block" %>
-    <%= form.text_field :dashboard_id %>
+  <div class="field">
+    <%= form.label :dashboard_ids, "Dashboards this panel can show", style: "display: block" %>
+    <%= form.collection_select :dashboard_ids, Dashboard.order(:name), :id, :name,
+                               {}, { multiple: true, size: 6 } %>
+    <p class="hint">Select several to assign more than one.</p>
+  </div>
+
+  <div class="field">
+    <%= form.label :dashboard_id, "Currently showing", style: "display: block" %>
+    <%= form.collection_select :dashboard_id, device.dashboards, :id, :name,
+                               { include_blank: "(none)" } %>
+    <p class="hint">
+      Only dashboards already assigned above can be shown. Save the
+      assignment first, then choose.
+    </p>
   </div>
 
   <div>

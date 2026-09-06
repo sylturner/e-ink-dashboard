@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_06_000418) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_06_202809) do
   create_table "dashboard_item_sources", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "dashboard_item_id", null: false
@@ -47,6 +47,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_06_000418) do
     t.string "name"
     t.string "theme", default: "default"
     t.datetime "updated_at", null: false
+  end
+
+  create_table "device_dashboards", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "dashboard_id", null: false
+    t.integer "device_id", null: false
+    t.integer "position", default: 0
+    t.datetime "updated_at", null: false
+    t.index ["dashboard_id"], name: "index_device_dashboards_on_dashboard_id"
+    t.index ["device_id", "dashboard_id"], name: "index_device_dashboards_on_device_and_dashboard", unique: true
+    t.index ["device_id"], name: "index_device_dashboards_on_device_id"
   end
 
   create_table "devices", force: :cascade do |t|
@@ -129,6 +140,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_06_000418) do
   add_foreign_key "dashboard_item_sources", "dashboard_items"
   add_foreign_key "dashboard_item_sources", "sources"
   add_foreign_key "dashboard_items", "dashboards"
+  add_foreign_key "device_dashboards", "dashboards"
+  add_foreign_key "device_dashboards", "devices"
   add_foreign_key "devices", "dashboards"
   add_foreign_key "frames", "devices"
 end

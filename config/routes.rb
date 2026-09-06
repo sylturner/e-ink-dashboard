@@ -15,6 +15,7 @@ Rails.application.routes.draw do
   end
 
   resources :devices
+  resources :device_dashboards, only: %i[create destroy]
 
   resources :dashboards do
     member do

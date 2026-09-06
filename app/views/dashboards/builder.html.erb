@@ -33,12 +33,6 @@
     <% end %>
 
     <%= link_to "Dashboards", dashboards_path, class: "btn" %>
-
-    <% if @dashboard.devices.any? %>
-      <%= link_to "View bitmap",
-                  device_frame_path(token: @dashboard.devices.first.token),
-                  target: "_blank", rel: "noopener", class: "btn" %>
-    <% end %>
   </header>
 
   <% if flash[:alert].present? || flash[:notice].present? %>
@@ -95,5 +89,57 @@
             src="<%= render_dashboard_path(dashboard_id: @dashboard.id) %>"
             width="800" height="480"
             title="Dashboard preview"></iframe>
+
+    <%# The iframe above is the HTML the panel is rendered from. These go
+        to the actual bitmap each device is served, which is the same
+        bytes the hardware fetches. %>
+    <div class="device-previews">
+      <% if @devices.any? %>
+        <h3>Bitmap as served to each device</h3>
+        <ul class="device-list">
+          <% @devices.each do |device| %>
+            <li>
+              <%= link_to "#{device.name} bitmap",
+                          device_frame_path(token: device.token),
+                          target: "_blank", rel: "noopener", class: "btn" %>
+              <span class="device-spec">
+                <%= device.width %>&times;<%= device.height %> &middot;
+                <%= device.bit_depth %>-bit <%= device.image_format
+                %><% if device.rotation.to_i.nonzero? %> &middot; <%= device.rotation %>&deg;<% end %>
+              </span>
+              <%= link_to "settings", device_path(device), class: "device-settings" %>
+              <%= button_to "Unassign",
+                            device_dashboard_path(@assignments.fetch(device.id)),
+                            method: :delete,
+                            params: { context: "builder" },
+                            form: { class: "inline-form" } %>
+            </li>
+          <% end %>
+        </ul>
+        <p class="hint">
+          Opens the live bitmap. Requesting it renders a fresh frame if one
+          is due, and counts as a check-in for that device.
+        </p>
+      <% else %>
+        <p class="hint">
+          No device is assigned to this dashboard yet, so there is no bitmap
+          to serve.
+        </p>
+      <% end %>
+
+      <% if @assignable_devices.any? %>
+        <%= form_with model: DeviceDashboard.new, class: "assign-device" do |f| %>
+          <%= f.hidden_field :dashboard_id, value: @dashboard.id %>
+          <%= hidden_field_tag :context, "builder" %>
+          <%= f.label :device_id, "Assign to device" %>
+          <%= f.collection_select :device_id, @assignable_devices, :id, :name %>
+          <%= f.submit "Assign" %>
+        <% end %>
+      <% elsif @devices.any? %>
+        <p class="hint">Every device is already assigned to this dashboard.</p>
+      <% else %>
+        <p class="hint"><%= link_to "Create a device", new_device_path %> to show this dashboard.</p>
+      <% end %>
+    </div>
   </section>
 </div>

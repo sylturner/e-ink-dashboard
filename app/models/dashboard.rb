@@ -3,7 +3,12 @@ class Dashboard < ApplicationRecord
   THEMES = %w[default quiet night dense].freeze
 
   has_many :dashboard_items, -> { order(:position) }, dependent: :destroy
-  has_many :devices, dependent: :nullify
+  has_many :device_dashboards, dependent: :destroy
+  has_many :devices, through: :device_dashboards
+
+  # Only so destroying a dashboard clears it off any panel showing it;
+  # `devices` above is the assignment relationship.
+  has_many :showing_devices, class_name: "Device", dependent: :nullify
 
   validates :name, presence: true
   validates :theme, inclusion: { in: THEMES }

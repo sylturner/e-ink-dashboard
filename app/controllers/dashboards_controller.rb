@@ -23,6 +23,9 @@ class DashboardsController < ApplicationController
   def builder
     @items   = @dashboard.dashboard_items.order(:position)
     @sources = Source.order(:name)
+    @devices = @dashboard.devices.order(:name)
+    @assignments = @dashboard.device_dashboards.index_by(&:device_id)
+    @assignable_devices = Device.where.not(id: @devices.map(&:id)).order(:name)
   end
 
   # POST /dashboards or /dashboards.json
