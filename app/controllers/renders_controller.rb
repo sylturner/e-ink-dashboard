@@ -2,6 +2,8 @@ class RendersController < ApplicationController
   layout "render"
 
   def dashboard
-    @now = Time.current
+    @device    = Device.first
+    @dashboard = @device&.dashboard || Dashboard.first
+    @now       = Time.current
   end
 end

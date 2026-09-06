@@ -1,5 +1,5 @@
-# app/services/bitmap_encoder.rb
-class BitmapEncoder
+# app/services/bitmap.rb
+class Bitmap
   attr_reader :width, :height, :rows
 
   def initialize(width:, height:, rows:)
@@ -9,7 +9,9 @@ class BitmapEncoder
   end
 
   # rows are top-down, 1 bit per pixel, MSB first, 1 = white
-  def self.from_png(png_bytes, threshold: 128)
+  def self.from_png(png_bytes, bit_depth: 1, threshold: 128)
+    raise ArgumentError, "only 1-bit is implemented" unless bit_depth == 1
+
     image = ChunkyPNG::Image.from_blob(png_bytes)
     row_bytes = (image.width + 7) / 8
 
@@ -29,7 +31,7 @@ class BitmapEncoder
   end
 
   def to_raw
-    rows.join
+    rows.join.b
   end
 
   def to_bmp
@@ -37,11 +39,15 @@ class BitmapEncoder
     offset    = 62
     size      = offset + row_bytes * height
 
-    file = ["BM", size, 0, 0, offset].pack("a2VvvV")
-    dib  = [40, width, height, 1, 1, 0,
-            row_bytes * height, 2835, 2835, 2, 2].pack("Vl<l<vvVVl<l<VV")
-    palette = [0, 0, 0, 0, 255, 255, 255, 0].pack("C8")
+    file = [ "BM", size, 0, 0, offset ].pack("a2VvvV")
+    dib  = [ 40, width, height, 1, 1, 0,
+            row_bytes * height, 2835, 2835, 2, 2 ].pack("Vl<l<vvVVl<l<VV")
+    palette = [ 0, 0, 0, 0, 255, 255, 255, 0 ].pack("C8")
 
-    file + dib + palette + rows.reverse.join
+    (file + dib + palette + rows.reverse.join).b
+  end
+
+  def to_format(format)
+    format.to_s == "raw" ? to_raw : to_bmp
   end
 end

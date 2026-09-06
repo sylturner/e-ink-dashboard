@@ -1,5 +1,7 @@
 <!DOCTYPE html>
-<html data-theme="<%= @theme || "default" %>">
+<html data-theme="<%= @dashboard&.theme || "default" %>"
+      style="--screen-w: <%= @device&.width || 800 %>px;
+             --screen-h: <%= @device&.height || 480 %>px;">
   <head>
     <meta charset="utf-8">
     <link rel="icon" href="data:,">
@@ -7,4 +9,3 @@
   </head>
   <body><%= yield %></body>
 </html>
-
