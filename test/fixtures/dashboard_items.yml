@@ -1,0 +1,27 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  dashboard: one
+  kind: weather
+  view: today
+  title: Weather
+  col: 1
+  row: 1
+  col_span: 4
+  row_span: 3
+  position: 0
+  settings: {}
+  visible: true
+
+two:
+  dashboard: two
+  kind: calendar
+  view: week
+  title: Calendar
+  col: 1
+  row: 1
+  col_span: 6
+  row_span: 4
+  position: 1
+  settings: {}
+  visible: true

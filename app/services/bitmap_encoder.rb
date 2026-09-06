@@ -1,5 +1,5 @@
-# app/services/frame.rb
-class Frame
+# app/services/bitmap_encoder.rb
+class BitmapEncoder
   attr_reader :width, :height, :rows
 
   def initialize(width:, height:, rows:)

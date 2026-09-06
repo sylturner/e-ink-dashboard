@@ -1,0 +1,72 @@
+<%= form_with(model: dashboard_item) do |form| %>
+  <% if dashboard_item.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(dashboard_item.errors.count, "error") %> prohibited this dashboard_item from being saved:</h2>
+
+      <ul>
+        <% dashboard_item.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :dashboard_id, style: "display: block" %>
+    <%= form.text_field :dashboard_id %>
+  </div>
+
+  <div>
+    <%= form.label :kind, style: "display: block" %>
+    <%= form.text_field :kind %>
+  </div>
+
+  <div>
+    <%= form.label :view, style: "display: block" %>
+    <%= form.text_field :view %>
+  </div>
+
+  <div>
+    <%= form.label :title, style: "display: block" %>
+    <%= form.text_field :title %>
+  </div>
+
+  <div>
+    <%= form.label :col, style: "display: block" %>
+    <%= form.number_field :col %>
+  </div>
+
+  <div>
+    <%= form.label :row, style: "display: block" %>
+    <%= form.number_field :row %>
+  </div>
+
+  <div>
+    <%= form.label :col_span, style: "display: block" %>
+    <%= form.number_field :col_span %>
+  </div>
+
+  <div>
+    <%= form.label :row_span, style: "display: block" %>
+    <%= form.number_field :row_span %>
+  </div>
+
+  <div>
+    <%= form.label :position, style: "display: block" %>
+    <%= form.number_field :position %>
+  </div>
+
+  <div>
+    <%= form.label :settings, style: "display: block" %>
+    <%= form.text_field :settings %>
+  </div>
+
+  <div>
+    <%= form.label :visible, style: "display: block" %>
+    <%= form.checkbox :visible %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>

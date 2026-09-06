@@ -1,0 +1,57 @@
+<%= form_with(model: source) do |form| %>
+  <% if source.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(source.errors.count, "error") %> prohibited this source from being saved:</h2>
+
+      <ul>
+        <% source.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :name, style: "display: block" %>
+    <%= form.text_field :name %>
+  </div>
+
+  <div>
+    <%= form.label :providable_id, style: "display: block" %>
+    <%= form.text_field :providable_id %>
+  </div>
+
+  <div>
+    <%= form.label :refresh_seconds, style: "display: block" %>
+    <%= form.number_field :refresh_seconds %>
+  </div>
+
+  <div>
+    <%= form.label :payload, style: "display: block" %>
+    <%= form.text_field :payload %>
+  </div>
+
+  <div>
+    <%= form.label :fetched_at, style: "display: block" %>
+    <%= form.datetime_field :fetched_at %>
+  </div>
+
+  <div>
+    <%= form.label :attempted_at, style: "display: block" %>
+    <%= form.datetime_field :attempted_at %>
+  </div>
+
+  <div>
+    <%= form.label :last_error, style: "display: block" %>
+    <%= form.text_field :last_error %>
+  </div>
+
+  <div>
+    <%= form.label :failure_count, style: "display: block" %>
+    <%= form.number_field :failure_count %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>

@@ -1,0 +1,11 @@
+<% content_for :title, "New device" %>
+
+<h1>New device</h1>
+
+<%= render "form", device: @device %>
+
+<br>
+
+<div>
+  <%= link_to "Back to devices", devices_path %>
+</div>

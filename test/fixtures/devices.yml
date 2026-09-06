@@ -1,0 +1,43 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  name: Kitchen panel
+  token: kitchen_token_fixture
+  dashboard: one
+  width: 800
+  height: 480
+  bit_depth: 1
+  image_format: bmp
+  rotation: 0
+  refresh_seconds: 300
+  night_refresh_seconds: 3600
+  active_from_hour: 6
+  active_until_hour: 23
+  time_zone: America/Los_Angeles
+  last_seen_at: 2026-09-05 20:01:00
+  battery_percent: 84
+  battery_voltage: 3.91
+  wifi_rssi: -62
+  firmware_version: 1.0.0
+  refresh_requested_at: 2026-09-05 20:01:00
+
+two:
+  name: Office panel
+  token: office_token_fixture
+  dashboard: two
+  width: 800
+  height: 480
+  bit_depth: 2
+  image_format: raw
+  rotation: 90
+  refresh_seconds: 600
+  night_refresh_seconds: 7200
+  active_from_hour: 7
+  active_until_hour: 22
+  time_zone: America/New_York
+  last_seen_at: 2026-09-05 20:01:00
+  battery_percent: 47
+  battery_voltage: 3.62
+  wifi_rssi: -71
+  firmware_version: 1.0.0
+  refresh_requested_at: 2026-09-05 20:01:00

@@ -1,0 +1,107 @@
+<%= form_with(model: device) do |form| %>
+  <% if device.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(device.errors.count, "error") %> prohibited this device from being saved:</h2>
+
+      <ul>
+        <% device.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :name, style: "display: block" %>
+    <%= form.text_field :name %>
+  </div>
+
+  <div>
+    <%= form.label :dashboard_id, style: "display: block" %>
+    <%= form.text_field :dashboard_id %>
+  </div>
+
+  <div>
+    <%= form.label :width, style: "display: block" %>
+    <%= form.number_field :width %>
+  </div>
+
+  <div>
+    <%= form.label :height, style: "display: block" %>
+    <%= form.number_field :height %>
+  </div>
+
+  <div>
+    <%= form.label :bit_depth, style: "display: block" %>
+    <%= form.number_field :bit_depth %>
+  </div>
+
+  <div>
+    <%= form.label :image_format, style: "display: block" %>
+    <%= form.text_field :image_format %>
+  </div>
+
+  <div>
+    <%= form.label :rotation, style: "display: block" %>
+    <%= form.number_field :rotation %>
+  </div>
+
+  <div>
+    <%= form.label :refresh_seconds, style: "display: block" %>
+    <%= form.number_field :refresh_seconds %>
+  </div>
+
+  <div>
+    <%= form.label :night_refresh_seconds, style: "display: block" %>
+    <%= form.number_field :night_refresh_seconds %>
+  </div>
+
+  <div>
+    <%= form.label :active_from_hour, style: "display: block" %>
+    <%= form.number_field :active_from_hour %>
+  </div>
+
+  <div>
+    <%= form.label :active_until_hour, style: "display: block" %>
+    <%= form.number_field :active_until_hour %>
+  </div>
+
+  <div>
+    <%= form.label :time_zone, style: "display: block" %>
+    <%= form.text_field :time_zone %>
+  </div>
+
+  <div>
+    <%= form.label :last_seen_at, style: "display: block" %>
+    <%= form.datetime_field :last_seen_at %>
+  </div>
+
+  <div>
+    <%= form.label :battery_percent, style: "display: block" %>
+    <%= form.number_field :battery_percent %>
+  </div>
+
+  <div>
+    <%= form.label :battery_voltage, style: "display: block" %>
+    <%= form.text_field :battery_voltage %>
+  </div>
+
+  <div>
+    <%= form.label :wifi_rssi, style: "display: block" %>
+    <%= form.number_field :wifi_rssi %>
+  </div>
+
+  <div>
+    <%= form.label :firmware_version, style: "display: block" %>
+    <%= form.text_field :firmware_version %>
+  </div>
+
+  <div>
+    <%= form.label :refresh_requested_at, style: "display: block" %>
+    <%= form.datetime_field :refresh_requested_at %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>

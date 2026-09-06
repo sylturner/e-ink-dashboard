@@ -1,0 +1,13 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  latitude: 47.606200
+  longitude: -122.332100
+  units: imperial
+  time_zone: America/Los_Angeles
+
+two:
+  latitude: 40.712800
+  longitude: -74.006000
+  units: metric
+  time_zone: America/New_York

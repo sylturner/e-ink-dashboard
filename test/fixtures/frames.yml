@@ -1,0 +1,17 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  device: one
+  checksum: 0000000000000000000000000000000000000000000000000000000000000001
+  byte_size: 48000
+  format: bmp
+  data:
+  rendered_at: 2026-09-05 20:04:18
+
+two:
+  device: two
+  checksum: 0000000000000000000000000000000000000000000000000000000000000002
+  byte_size: 48000
+  format: raw
+  data:
+  rendered_at: 2026-09-05 20:04:18

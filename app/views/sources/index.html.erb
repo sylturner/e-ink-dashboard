@@ -1,0 +1,16 @@
+<p style="color: green"><%= notice %></p>
+
+<% content_for :title, "Sources" %>
+
+<h1>Sources</h1>
+
+<div id="sources">
+  <% @sources.each do |source| %>
+    <%= render source %>
+    <p>
+      <%= link_to "Show this source", source %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New source", new_source_path %>

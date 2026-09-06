@@ -1,0 +1,9 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  feed_url: https://example.com/feed.xml
+  max_items: 10
+
+two:
+  feed_url: https://example.org/rss
+  max_items: 5

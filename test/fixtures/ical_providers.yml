@@ -1,0 +1,9 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  ical_url: https://example.com/calendar.ics
+  include_all_day: true
+
+two:
+  ical_url: webcal://example.org/work.ics
+  include_all_day: false

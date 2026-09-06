@@ -1,7 +1,7 @@
 class FramesController < ApplicationController
   def show
     png   = BrowserPool.capture(html: dashboard_html)
-    frame = Frame.from_png(png)
+    frame = BitmapEncoder.from_png(png)
 
     send_data frame.to_bmp, type: "image/bmp", disposition: "inline"
   end
