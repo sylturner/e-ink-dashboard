@@ -55,7 +55,7 @@ module BrowserPool
     def browser
       @browser ||= Ferrum::Browser.new(
         browser_path: ENV["CHROME_PATH"],
-        window_size: [800, 480],
+        window_size: [ 800, 480 ],
         timeout: 10,
         process_timeout: 20,
         protocol_timeout: 10,
@@ -84,4 +84,3 @@ module BrowserPool
 end
 
 at_exit { BrowserPool.shutdown }
-

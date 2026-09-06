@@ -8,6 +8,7 @@
   <% @dashboards.each do |dashboard| %>
     <%= render dashboard %>
     <p>
+      <%= link_to "Open builder", builder_dashboard_path(dashboard) %> |
       <%= link_to "Show this dashboard", dashboard %>
     </p>
   <% end %>

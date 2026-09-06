@@ -18,8 +18,11 @@
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
 
-    <%# Includes all stylesheet files in app/assets/stylesheets %>
-    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%# Named explicitly rather than :app. render.css is inlined into the
+        render layout by InlineAssets and pins html/body to the panel's
+        800x480 with overflow hidden -- including it here would break
+        every admin page. %>
+    <%= stylesheet_link_tag "application", "builder", "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
 

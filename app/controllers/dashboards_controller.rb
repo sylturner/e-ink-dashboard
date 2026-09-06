@@ -1,5 +1,5 @@
 class DashboardsController < ApplicationController
-  before_action :set_dashboard, only: %i[ show edit update destroy ]
+  before_action :set_dashboard, only: %i[ show edit update destroy builder ]
 
   # GET /dashboards or /dashboards.json
   def index
@@ -17,6 +17,12 @@ class DashboardsController < ApplicationController
 
   # GET /dashboards/1/edit
   def edit
+  end
+
+  # GET /dashboards/1/builder
+  def builder
+    @items   = @dashboard.dashboard_items.order(:position)
+    @sources = Source.order(:name)
   end
 
   # POST /dashboards or /dashboards.json
@@ -38,7 +44,7 @@ class DashboardsController < ApplicationController
   def update
     respond_to do |format|
       if @dashboard.update(dashboard_params)
-        format.html { redirect_to @dashboard, notice: "Dashboard was successfully updated.", status: :see_other }
+        format.html { redirect_to after_update_path, notice: "Dashboard was successfully updated.", status: :see_other }
         format.json { render :show, status: :ok, location: @dashboard }
       else
         format.html { render :edit, status: :unprocessable_content }
@@ -58,6 +64,12 @@ class DashboardsController < ApplicationController
   end
 
   private
+    # The builder posts the theme picker with this flag so a save returns
+    # to the canvas instead of navigating away to the show page.
+    def after_update_path
+      params[:from_builder].present? ? builder_dashboard_path(@dashboard) : @dashboard
+    end
+
     # Use callbacks to share common setup or constraints between actions.
     def set_dashboard
       @dashboard = Dashboard.find(params.expect(:id))

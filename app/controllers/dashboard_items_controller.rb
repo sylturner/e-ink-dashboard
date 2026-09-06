@@ -1,5 +1,5 @@
 class DashboardItemsController < ApplicationController
-  before_action :set_dashboard_item, only: %i[ show edit update destroy ]
+  before_action :set_dashboard_item, only: %i[ show edit update destroy reposition ]
 
   # GET /dashboard_items or /dashboard_items.json
   def index
@@ -21,16 +21,25 @@ class DashboardItemsController < ApplicationController
 
   # POST /dashboard_items or /dashboard_items.json
   def create
-    @dashboard_item = DashboardItem.new(dashboard_item_params)
+    @dashboard = Dashboard.find(params.dig(:dashboard_item, :dashboard_id))
+    @dashboard_item = @dashboard.dashboard_items.new(dashboard_item_params)
 
-    respond_to do |format|
-      if @dashboard_item.save
-        format.html { redirect_to @dashboard_item, notice: "Dashboard item was successfully created." }
-        format.json { render :show, status: :created, location: @dashboard_item }
-      else
-        format.html { render :new, status: :unprocessable_content }
-        format.json { render json: @dashboard_item.errors, status: :unprocessable_content }
-      end
+    slot = FreeSlot.find(@dashboard, @dashboard_item.col_span, @dashboard_item.row_span)
+
+    if slot.nil?
+      return redirect_to builder_dashboard_path(@dashboard),
+                         alert: "No room on the grid for that size."
+    end
+
+    @dashboard_item.col, @dashboard_item.row = slot
+    @dashboard_item.position = @dashboard.dashboard_items.maximum(:position).to_i + 1
+
+    if @dashboard_item.save
+      redirect_to builder_dashboard_path(@dashboard),
+                  notice: "Added #{@dashboard_item.kind}."
+    else
+      redirect_to builder_dashboard_path(@dashboard),
+                  alert: @dashboard_item.errors.full_messages.to_sentence
     end
   end
 
@@ -38,7 +47,7 @@ class DashboardItemsController < ApplicationController
   def update
     respond_to do |format|
       if @dashboard_item.update(dashboard_item_params)
-        format.html { redirect_to @dashboard_item, notice: "Dashboard item was successfully updated.", status: :see_other }
+        format.html { redirect_to builder_dashboard_path(@dashboard_item.dashboard), notice: "Dashboard item was successfully updated.", status: :see_other }
         format.json { render :show, status: :ok, location: @dashboard_item }
       else
         format.html { render :edit, status: :unprocessable_content }
@@ -47,12 +56,27 @@ class DashboardItemsController < ApplicationController
     end
   end
 
+  # PATCH /dashboard_items/1/reposition
+  #
+  # The builder's drag/resize endpoint. JSON only, and deliberately
+  # narrow: it moves and resizes, nothing else. `fits_within_grid` on the
+  # model stays the authority, so a rejected move rolls back client-side.
+  def reposition
+    if @dashboard_item.update(reposition_params)
+      render json: { ok: true }
+    else
+      render json: { ok: false, errors: @dashboard_item.errors.full_messages },
+             status: :unprocessable_content
+    end
+  end
+
   # DELETE /dashboard_items/1 or /dashboard_items/1.json
   def destroy
+    dashboard = @dashboard_item.dashboard
     @dashboard_item.destroy!
 
     respond_to do |format|
-      format.html { redirect_to dashboard_items_path, notice: "Dashboard item was successfully destroyed.", status: :see_other }
+      format.html { redirect_to builder_dashboard_path(dashboard), notice: "Dashboard item was successfully destroyed.", status: :see_other }
       format.json { head :no_content }
     end
   end
@@ -63,8 +87,15 @@ class DashboardItemsController < ApplicationController
       @dashboard_item = DashboardItem.find(params.expect(:id))
     end
 
-    # Only allow a list of trusted parameters through.
+    def reposition_params
+      params.expect(dashboard_item: [ :col, :row, :col_span, :row_span ])
+    end
+
+    # Only allow a list of trusted parameters through. Position and
+    # placement are owned by the builder, not by these forms.
     def dashboard_item_params
-      params.expect(dashboard_item: [ :dashboard_id, :kind, :view, :title, :col, :row, :col_span, :row_span, :position, :settings, :visible ])
+      params.expect(dashboard_item: [ :dashboard_id, :kind, :view, :title,
+                                      :col_span, :row_span, :settings, :visible,
+                                      source_ids: [] ])
     end
 end

@@ -1,8 +1,12 @@
 class Dashboard < ApplicationRecord
+  # Keep in sync with the [data-theme] blocks in render.css.
+  THEMES = %w[default quiet night dense].freeze
+
   has_many :dashboard_items, -> { order(:position) }, dependent: :destroy
   has_many :devices, dependent: :nullify
 
   validates :name, presence: true
+  validates :theme, inclusion: { in: THEMES }
   validates :grid_columns, :grid_rows,
             numericality: { greater_than: 0, less_than_or_equal_to: 24 }
 

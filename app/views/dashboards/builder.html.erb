@@ -1,0 +1,99 @@
+<% content_for :title, "#{@dashboard.name} builder" %>
+
+<%
+  # Canvas metrics. These mirror render.css exactly: an 800x480 panel
+  # divided into equal 1fr tracks with --grid-gap between them. The
+  # guide lines below are drawn from the same arithmetic, so a tile in
+  # the builder lands on the same pixels as it does in the render.
+  gap    = 8
+  canvas = { w: 800, h: 480 }
+  step_x = (canvas[:w] - (@dashboard.grid_columns - 1) * gap) / @dashboard.grid_columns.to_f + gap
+  step_y = (canvas[:h] - (@dashboard.grid_rows - 1) * gap) / @dashboard.grid_rows.to_f + gap
+%>
+
+<div class="builder"
+     data-controller="grid"
+     data-grid-cols-value="<%= @dashboard.grid_columns %>"
+     data-grid-rows-value="<%= @dashboard.grid_rows %>"
+     data-action="pointermove@window->grid#move
+                  pointerup@window->grid#end
+                  pointercancel@window->grid#end
+                  keydown@window->grid#nudge">
+
+  <header class="builder-bar">
+    <h1><%= @dashboard.name %></h1>
+
+    <%= form_with model: @dashboard, class: "inline-form" do |f| %>
+      <%= hidden_field_tag :from_builder, "1" %>
+      <%= f.label :theme %>
+      <%= f.select :theme,
+                   Dashboard::THEMES.map { |t| [ t.titleize, t ] },
+                   {},
+                   data: { action: "change->grid#submit" } %>
+    <% end %>
+
+    <%= link_to "Dashboards", dashboards_path, class: "btn" %>
+
+    <% if @dashboard.devices.any? %>
+      <%= link_to "View bitmap",
+                  device_frame_path(token: @dashboard.devices.first.token),
+                  target: "_blank", rel: "noopener", class: "btn" %>
+    <% end %>
+  </header>
+
+  <% if flash[:alert].present? || flash[:notice].present? %>
+    <p class="builder-flash"><%= flash[:alert] || flash[:notice] %></p>
+  <% end %>
+
+  <div class="builder-main">
+
+    <section class="builder-canvas-wrap">
+      <div class="builder-canvas"
+           data-grid-target="canvas"
+           style="--grid-gap: <%= gap %>px;
+                  --rule-x: <%= step_x.round(3) %>px;
+                  --rule-y: <%= step_y.round(3) %>px;
+                  width: <%= canvas[:w] %>px; height: <%= canvas[:h] %>px;">
+
+        <div class="builder-rules" aria-hidden="true"></div>
+
+        <% @items.each do |item| %>
+          <div class="tile"
+               data-grid-target="tile"
+               data-id="<%= item.id %>"
+               data-col="<%= item.col %>"
+               data-row="<%= item.row %>"
+               data-col-span="<%= item.col_span %>"
+               data-row-span="<%= item.row_span %>"
+               data-action="pointerdown->grid#start">
+            <div class="tile-label">
+              <strong><%= item.title.presence || item.kind %></strong>
+              <span><%= item.kind %><%= " · #{item.view}" if item.view.present? %></span>
+            </div>
+            <span class="tile-handle" data-handle="se"></span>
+          </div>
+        <% end %>
+      </div>
+
+      <p class="builder-status" data-grid-target="status">
+        Drag to move. Drag the corner to resize. Arrow keys nudge, shift+arrow resizes.
+      </p>
+    </section>
+
+    <aside class="builder-side">
+      <%= render "dashboards/palette", dashboard: @dashboard, sources: @sources %>
+
+      <turbo-frame id="inspector">
+        <p class="muted">Select a tile to edit it.</p>
+      </turbo-frame>
+    </aside>
+  </div>
+
+  <section class="builder-preview">
+    <h2>Preview</h2>
+    <iframe data-grid-target="preview"
+            src="<%= render_dashboard_path(dashboard_id: @dashboard.id) %>"
+            width="800" height="480"
+            title="Dashboard preview"></iframe>
+  </section>
+</div>

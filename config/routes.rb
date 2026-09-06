@@ -1,8 +1,19 @@
 Rails.application.routes.draw do
   resources :sources
-  resources :dashboard_items
+
+  resources :dashboard_items do
+    member do
+      patch :reposition
+    end
+  end
+
   resources :devices
-  resources :dashboards
+
+  resources :dashboards do
+    member do
+      get :builder
+    end
+  end
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
@@ -14,7 +25,7 @@ Rails.application.routes.draw do
   # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
 
   # Defines the root path route ("/")
-  # root "posts#index"
+  root "dashboards#index"
   get "devices/:token/frame", to: "frames#show", as: :device_frame
   get "render/dashboard",     to: "renders#dashboard"
 end

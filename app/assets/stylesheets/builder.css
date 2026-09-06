@@ -1,0 +1,89 @@
+/* ============================================================
+   Builder chrome. Kept strictly separate from render.css: nothing
+   here may leak into the render, and nothing there styles this page.
+   ============================================================ */
+
+.builder { display: flex; flex-direction: column; gap: 24px; padding: 24px; }
+
+.builder-bar {
+  display: flex; align-items: center; gap: 16px;
+}
+.builder-bar h1 { font-size: 20px; margin-right: auto; }
+
+.builder-flash {
+  font: 13px system-ui, sans-serif;
+  padding: 8px 12px;
+  border: 1px solid #333;
+  background: #ffd;
+}
+
+.builder-main { display: flex; gap: 24px; align-items: flex-start; }
+
+.builder-canvas-wrap { flex: 0 0 auto; }
+
+.builder-canvas {
+  position: relative;
+  background: #fff;
+  border: 1px solid #999;
+  touch-action: none;
+  user-select: none;
+}
+
+/* Faint grid guides. The view sets --rule-x / --rule-y to track + gap
+   for this dashboard's column and row count, so the guides stay
+   correct when the grid is not 8x8. */
+.builder-rules {
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(90deg,
+      rgba(0,0,0,.10) 0 1px, transparent 1px var(--rule-x, 101px)),
+    repeating-linear-gradient(180deg,
+      rgba(0,0,0,.10) 0 1px, transparent 1px var(--rule-y, 61px));
+  pointer-events: none;
+}
+
+.tile {
+  position: absolute;
+  box-sizing: border-box;
+  background: #f4f4f4;
+  border: 1px solid #333;
+  cursor: grab;
+  overflow: hidden;
+  transition: box-shadow .1s;
+}
+
+.tile-label {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 6px 8px; font: 12px/1.3 system-ui, sans-serif;
+}
+.tile-label span { color: #666; }
+
+.tile-handle {
+  position: absolute;
+  right: 0; bottom: 0;
+  width: 14px; height: 14px;
+  background: #333;
+  cursor: nwse-resize;
+}
+
+.tile--selected { box-shadow: 0 0 0 2px #06c; }
+.tile--active { cursor: grabbing; opacity: .9; }
+
+.tile--blocked {
+  background-image: repeating-linear-gradient(
+    45deg, rgba(204,0,0,.25) 0 6px, transparent 6px 12px
+  );
+  border-color: #c00;
+}
+
+.builder-status { font: 12px system-ui, sans-serif; color: #666; margin-top: 8px; }
+
+.builder-side { flex: 1 1 auto; min-width: 260px; }
+
+.builder-preview iframe {
+  border: 1px solid #999;
+  display: block;
+}
+
+.muted { color: #777; font: 13px system-ui, sans-serif; }

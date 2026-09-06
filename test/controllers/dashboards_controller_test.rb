@@ -28,6 +28,11 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "should get builder" do
+    get builder_dashboard_url(@dashboard)
+    assert_response :success
+  end
+
   test "should get edit" do
     get edit_dashboard_url(@dashboard)
     assert_response :success
@@ -36,6 +41,18 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
   test "should update dashboard" do
     patch dashboard_url(@dashboard), params: { dashboard: { grid_columns: @dashboard.grid_columns, grid_rows: @dashboard.grid_rows, name: @dashboard.name, theme: @dashboard.theme } }
     assert_redirected_to dashboard_url(@dashboard)
+  end
+
+  test "update from the builder returns to the builder" do
+    patch dashboard_url(@dashboard),
+          params: { from_builder: "1", dashboard: { theme: "night" } }
+    assert_redirected_to builder_dashboard_url(@dashboard)
+    assert_equal "night", @dashboard.reload.theme
+  end
+
+  test "should reject an unknown theme" do
+    patch dashboard_url(@dashboard), params: { dashboard: { theme: "neon" } }
+    assert_response :unprocessable_content
   end
 
   test "should destroy dashboard" do

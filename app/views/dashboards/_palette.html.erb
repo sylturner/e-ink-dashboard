@@ -1,0 +1,29 @@
+<section class="palette">
+  <h2>Add a component</h2>
+
+  <%= form_with model: DashboardItem.new, url: dashboard_items_path do |f| %>
+    <%= f.hidden_field :dashboard_id, value: dashboard.id %>
+
+    <p>
+      <%= f.label :kind %>
+      <%= f.select :kind, DashboardItem::KINDS.map { |k| [ k.titleize, k ] } %>
+    </p>
+
+    <p>
+      <%= f.label :title %>
+      <%= f.text_field :title %>
+    </p>
+
+    <p>
+      <%= f.label :source_ids, "Sources" %>
+      <%= f.collection_select :source_ids, sources, :id, :name,
+                              {}, { multiple: true, size: 4 } %>
+    </p>
+
+    <%= f.hidden_field :col_span, value: 2 %>
+    <%= f.hidden_field :row_span, value: 2 %>
+    <%= f.hidden_field :visible, value: true %>
+
+    <%= f.submit "Add" %>
+  <% end %>
+</section>
