@@ -1,7 +1,7 @@
 <% c = current || {} %>
 <div class="today">
   <div class="now">
-    <%= weather_icon(c["icon"], scale: 3) %>
+    <%= weather_icon(c["icon"], size: 64) %>
     <div>
       <div class="t-lg"><%= c["temp"] %>&deg;</div>
       <div class="t-sm"><%= c["label"] %></div>

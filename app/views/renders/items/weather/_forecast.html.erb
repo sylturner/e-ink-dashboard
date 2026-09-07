@@ -2,7 +2,7 @@
   <% days.each do |d| %>
     <li>
       <span class="t-sm"><%= d["day"] %></span>
-      <span><%= weather_icon(d["icon"], scale: 1) %></span>
+      <span><%= weather_icon(d["icon"], size: 24) %></span>
       <span class="t-sm"><%= d["high"] %>&deg; / <%= d["low"] %>&deg;</span>
     </li>
   <% end %>

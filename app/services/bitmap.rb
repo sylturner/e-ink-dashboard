@@ -1,4 +1,6 @@
 # app/services/bitmap.rb
+require "vips"
+
 class Bitmap
   attr_reader :width, :height, :rows
 
@@ -8,26 +10,32 @@ class Bitmap
     @rows   = rows
   end
 
-  # rows are top-down, 1 bit per pixel, MSB first, 1 = white
+  # rows are top-down, 1 bit per pixel, MSB first, 1 = white.
+  #
+  # The dashboard HTML is authored to land on the pixel grid, so at 1:1
+  # the capture is already almost pure black and white — this just packs
+  # it. Anti-aliased curves (the weather glyphs) fall to whichever side
+  # of `threshold` they cover more of.
   def self.from_png(png_bytes, bit_depth: 1, threshold: 128)
     raise ArgumentError, "only 1-bit is implemented" unless bit_depth == 1
 
-    image = ChunkyPNG::Image.from_blob(png_bytes)
-    row_bytes = (image.width + 7) / 8
+    image  = Vips::Image.new_from_buffer(png_bytes, "").colourspace("b-w").extract_band(0)
+    width  = image.width
+    height = image.height
 
-    rows = Array.new(image.height) do |y|
+    # `>= threshold` yields a uchar mask: 255 where light (white), else 0.
+    pixels = (image >= threshold).write_to_memory
+    row_bytes = (width + 7) / 8
+
+    rows = Array.new(height) do |y|
       buffer = Array.new(row_bytes, 0)
-      image.width.times do |x|
-        px = image[x, y]
-        lum = (ChunkyPNG::Color.r(px) * 299 +
-               ChunkyPNG::Color.g(px) * 587 +
-               ChunkyPNG::Color.b(px) * 114) / 1000
-        buffer[x / 8] |= (0x80 >> (x % 8)) if lum >= threshold
+      pixels.byteslice(y * width, width).each_byte.with_index do |value, x|
+        buffer[x / 8] |= (0x80 >> (x % 8)) unless value.zero?
       end
       buffer.pack("C*")
     end
 
-    new(width: image.width, height: image.height, rows: rows)
+    new(width: width, height: height, rows: rows)
   end
 
   def to_raw
