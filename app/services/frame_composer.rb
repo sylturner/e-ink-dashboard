@@ -11,8 +11,7 @@ class FrameComposer
   end
 
   def call
-    png    = BrowserPool.capture(html: html, width: @device.width,
-                                 height: @device.height)
+    png    = BrowserPool.capture(html: html, width: @device.width, height: @device.height)
     bitmap = Bitmap.from_png(png, bit_depth: @device.bit_depth)
     bytes  = bitmap.to_format(@device.image_format)
 
