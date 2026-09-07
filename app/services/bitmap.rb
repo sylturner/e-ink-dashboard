@@ -1,4 +1,4 @@
-require 'mini_magick'
+# app/services/bitmap.rb
 class Bitmap
   attr_reader :width, :height, :rows
 
