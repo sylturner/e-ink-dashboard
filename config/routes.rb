@@ -16,6 +16,8 @@ Rails.application.routes.draw do
 
   resources :devices do
     member { post :refresh }
+    # Self-enrollment: a panel with no token posts here to get one.
+    collection { post :enroll, to: "enrollments#create" }
   end
 
   resources :device_dashboards, only: %i[create destroy]

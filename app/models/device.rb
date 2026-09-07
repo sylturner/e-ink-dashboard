@@ -4,6 +4,13 @@ class Device < ApplicationRecord
   MIN_SLEEP = 60
   MAX_SLEEP = 6.hours.to_i
 
+  # How often an unclaimed panel comes back to ask, so assigning a
+  # dashboard feels immediate rather than like a fault.
+  UNCLAIMED_SLEEP = 120
+
+  # Omits I, L, O, 0, 1 -- those get misread off a low-res panel.
+  CLAIM_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789".chars.freeze
+
   # Every dashboard this panel is allowed to show.
   has_many :device_dashboards, -> { order(:position) }, dependent: :destroy
   has_many :dashboards, through: :device_dashboards
@@ -16,10 +23,48 @@ class Device < ApplicationRecord
 
   after_save :sync_active_dashboard
 
+  # Every device needs a code, not just self-enrolled ones: an unclaimed
+  # panel shows it on the setup screen however the row got there.
+  before_create :assign_claim_code
+
   validates :name, presence: true
   validates :bit_depth, inclusion: { in: [ 1, 2, 4 ] }
   validates :image_format, inclusion: { in: %w[bmp raw] }
   validates :rotation, inclusion: { in: [ 0, 90, 180, 270 ] }
+
+  # Idempotent by MAC, so a device retrying after a timeout does not
+  # create duplicates and a re-flashed one reattaches to its old row.
+  def self.enroll!(mac:, attributes: {})
+    normalized = mac.to_s.downcase.strip
+    device = find_or_initialize_by(mac_address: normalized)
+
+    if device.new_record?
+      device.assign_attributes(attributes)
+      device.name = "Panel #{normalized.tr(':', '').last(4).upcase}" if device.name.blank?
+      device.enrolled_at = Time.current
+    else
+      # Re-enrollment after a factory reset: refresh what the hardware
+      # reports, keep the dashboard assignments and frame history.
+      device.assign_attributes(
+        attributes.slice(:width, :height, :bit_depth, :image_format, :firmware_version)
+      )
+    end
+
+    device.save!
+    device
+  end
+
+  def self.generate_claim_code
+    loop do
+      code = Array.new(4) { CLAIM_ALPHABET.sample }.join
+      break code unless exists?(claim_code: code)
+    end
+  end
+
+  # A panel is claimed once it has something to show.
+  def claimed?
+    dashboard_id.present?
+  end
 
   def current_frame
     frames.order(rendered_at: :desc).first
@@ -28,12 +73,6 @@ class Device < ApplicationRecord
   # Dashboards this device could be switched to but is not showing.
   def other_dashboards
     dashboards.where.not(id: dashboard_id)
-  end
-
-  def sleep_seconds(at = Time.current)
-    hour = at.in_time_zone(time_zone.presence || Time.zone.name).hour
-    daytime = (active_from_hour...active_until_hour).cover?(hour)
-    daytime ? refresh_seconds : night_refresh_seconds
   end
 
   # The active dashboard is meaningless unless it is also assigned, so
@@ -70,8 +109,9 @@ class Device < ApplicationRecord
     update_columns(refresh_requested_at: Time.current)
   end
 
-
   def sleep_seconds(at = Time.current)
+    return UNCLAIMED_SLEEP unless claimed?
+
     zone    = time_zone.presence || Time.zone.name
     hour    = at.in_time_zone(zone).hour
     daytime = (active_from_hour...active_until_hour).cover?(hour)
@@ -79,4 +119,10 @@ class Device < ApplicationRecord
 
     value.to_i.clamp(MIN_SLEEP, MAX_SLEEP)
   end
+
+  private
+
+    def assign_claim_code
+      self.claim_code = self.class.generate_claim_code if claim_code.blank?
+    end
 end

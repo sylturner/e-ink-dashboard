@@ -26,7 +26,7 @@ class EventFeed
     end
 
     def time_label
-      date = starts_at.strftime('%-m/%-d')
+      date = starts_at.strftime("%-m/%-d")
       return "#{date} All day" if all_day
 
       "#{date} #{starts_at.strftime('%-l:%M%P').chop}"

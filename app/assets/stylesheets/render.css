@@ -465,3 +465,34 @@ body {
   font-size: var(--fs-xs);
   line-height: var(--lh-xs);
 }
+
+/* ============================================================
+   Setup screen for a panel that has not been claimed yet
+   ============================================================ */
+
+.setup {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  gap: 32px;
+  padding: 32px;
+}
+
+.setup-code {
+  flex: 0 0 auto;
+  text-align: center;
+  border: 2px solid var(--ink);
+  padding: 24px;
+}
+
+/* Big enough to read across a room, and every glyph in the claim
+   alphabet is unambiguous at this size. */
+.setup-digits {
+  font-size: 64px;
+  line-height: 64px;
+  letter-spacing: 4px;
+  margin-top: 8px;
+}
+
+.setup-steps ol { margin: 8px 0 8px 24px; }
+.setup-steps li { margin-bottom: 4px; }

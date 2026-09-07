@@ -3,11 +3,14 @@
 // Wakes, fetches /devices/<token>/frame, draws it if changed, sleeps.
 // Everything happens in setup(); loop() is never reached.
 //
+// The device has no token of its own to begin with: on first boot it
+// posts its MAC to /devices/enroll and stores the token it gets back in
+// flash. One firmware image therefore covers every panel.
+//
 // secrets.h must define:
-//   WIFI_NAME, WIFI_PASSWORD, SERVER_BASE_URL, DEVICE_TOKEN
+//   WIFI_NAME, WIFI_PASSWORD, SERVER_BASE_URL
 // e.g.
 //   #define SERVER_BASE_URL "http://nastier.local:3000"
-//   #define DEVICE_TOKEN    "abc123..."
 
 #include <WiFi.h>
 #include <HTTPClient.h>
@@ -16,6 +19,7 @@
 #include <gdey/GxEPD2_750_GDEY075T7.h>
 #include <esp_sleep.h>
 #include <driver/rtc_io.h>
+#include <Preferences.h>
 #include "secrets.h"
 #include "types.h"
 
@@ -63,6 +67,11 @@ constexpr uint32_t BOOT_HOLD_MS = 5000;
 #define SHOW_BOOT_SPLASH 1
 
 // ---------- State that survives deep sleep ----------
+// The token lives in flash, not RTC memory: RTC_DATA_ATTR is cleared on
+// power loss, so a battery swap would silently re-enroll the panel.
+Preferences prefs;
+String deviceToken;
+
 RTC_DATA_ATTR uint32_t bootCount     = 0;
 RTC_DATA_ATTR uint32_t failureCount  = 0;
 RTC_DATA_ATTR char     storedEtag[80] = {0};
@@ -224,6 +233,47 @@ bool connectToWiFi()
 }
 
 // =====================================================================
+// Enrollment
+// =====================================================================
+
+bool enrollDevice()
+{
+  const String url = String(SERVER_BASE_URL) + "/devices/enroll";
+
+  HTTPClient http;
+  http.setTimeout(HTTP_TIMEOUT_MS);
+  http.setConnectTimeout(HTTP_TIMEOUT_MS);
+  if (!http.begin(url)) return false;
+
+  http.addHeader("X-Device-Mac", WiFi.macAddress());
+  http.addHeader("X-Device-Width", String(SCREEN_WIDTH));
+  http.addHeader("X-Device-Height", String(SCREEN_HEIGHT));
+  http.addHeader("X-Device-Bit-Depth", "1");
+  http.addHeader("X-Device-Format", "bmp");
+  http.addHeader("X-Firmware-Version", FIRMWARE_VERSION);
+
+  const int status = http.POST("");
+  Serial.printf("Enroll HTTP %d\n", status);
+
+  if (status != HTTP_CODE_OK)
+  {
+    http.end();
+    return false;
+  }
+
+  String token = http.getString();
+  http.end();
+  token.trim();
+
+  if (token.length() < 8 || token.length() > 128) return false;
+
+  prefs.putString("token", token);
+  deviceToken = token;
+  Serial.println("Enrolled");
+  return true;
+}
+
+// =====================================================================
 // Fetch and draw
 // =====================================================================
 
@@ -233,7 +283,7 @@ FetchResult fetchAndDraw()
   result.sleepSeconds = DEFAULT_SLEEP_S;
 
   const String url =
-    String(SERVER_BASE_URL) + "/devices/" + DEVICE_TOKEN + "/frame";
+    String(SERVER_BASE_URL) + "/devices/" + deviceToken + "/frame";
 
   HTTPClient http;
   http.setTimeout(HTTP_TIMEOUT_MS);
@@ -296,6 +346,18 @@ FetchResult fetchAndDraw()
     result.ok = true;
     result.unchanged = true;
     Serial.println("Unchanged; skipping panel refresh");
+    return result;
+  }
+
+  // The server does not know this token -- the device row was deleted.
+  // Drop it and re-enroll on the next wake rather than failing forever.
+  if (status == HTTP_CODE_NOT_FOUND)
+  {
+    Serial.println("Token rejected; clearing for re-enrollment");
+    prefs.remove("token");
+    deviceToken = "";
+    http.end();
+    result.message = "Re-registering";
     return result;
   }
 
@@ -489,6 +551,18 @@ void setup()
 
   pinMode(PIN_BUTTON, INPUT_PULLUP);
 
+  // Holding the button through a cold boot clears the stored token, so a
+  // panel can be moved to another server without a reflash.
+  if (wakeReason == WAKE_BOOT && digitalRead(PIN_BUTTON) == LOW)
+  {
+    Serial.println("Button held at boot: clearing stored token");
+    prefs.begin("dashboard", false);
+    prefs.clear();
+    prefs.end();
+    showMessage("Reset", "Registration cleared");
+    delay(2000);
+  }
+
   if (wakeReason == WAKE_BUTTON)
   {
     pressKind = classifyPress();
@@ -519,6 +593,21 @@ void setup()
     uint32_t backoff = RETRY_SLEEP_S * failureCount;
     if (backoff > MAX_BACKOFF_S) backoff = MAX_BACKOFF_S;
     sleepFor(backoff);
+  }
+
+  prefs.begin("dashboard", false);
+  deviceToken = prefs.getString("token", "");
+
+  if (deviceToken.length() == 0)
+  {
+    showMessage("Setting up", "Registering with server");
+
+    if (!enrollDevice())
+    {
+      failureCount++;
+      showMessage("Setup failed", "Could not register");
+      sleepFor(RETRY_SLEEP_S);
+    }
   }
 
   FetchResult result = fetchAndDraw();

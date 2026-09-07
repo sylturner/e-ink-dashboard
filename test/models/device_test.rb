@@ -108,4 +108,70 @@ class DeviceTest < ActiveSupport::TestCase
     assert_equal 3600, @device.sleep_seconds(zone.parse("2026-09-06 03:00"))
     assert_equal 3600, @device.sleep_seconds(zone.parse("2026-09-06 23:30"))
   end
+
+  # --- enrollment and claiming ---
+
+  test "every device gets a claim code, however the row was created" do
+    device = Device.create!(name: "Hand made")
+
+    assert_match(/\A[A-Z2-9]{4}\z/, device.claim_code)
+  end
+
+  test "claim codes avoid glyphs that misread on a low-res panel" do
+    50.times do
+      code = Device.generate_claim_code
+      assert_no_match(/[ILO01]/, code, "#{code} contains an ambiguous glyph")
+    end
+  end
+
+  test "claim codes are unique" do
+    codes = Array.new(30) { Device.create!(name: "P").claim_code }
+
+    assert_equal codes.size, codes.uniq.size
+  end
+
+  test "a device is claimed once it has something to show" do
+    device = Device.create!(name: "Fresh")
+    assert_not device.claimed?
+
+    device.dashboards = [ @kitchen ]
+    assert device.reload.claimed?
+  end
+
+  test "an unclaimed panel comes back quickly so claiming feels immediate" do
+    device = Device.create!(name: "Fresh", refresh_seconds: 900,
+                            night_refresh_seconds: 3600)
+
+    assert_equal Device::UNCLAIMED_SLEEP, device.sleep_seconds
+    assert_operator device.sleep_seconds, :<, 900
+
+    device.dashboards = [ @kitchen ]
+    assert_equal 900, device.reload.sleep_seconds(Time.current.change(hour: 12))
+  end
+
+  test "enroll! is keyed on a normalized MAC" do
+    a = Device.enroll!(mac: "A4:CF:12:9B:0D:7E")
+    b = Device.enroll!(mac: "  a4:cf:12:9b:0d:7e ")
+
+    assert_equal a.id, b.id
+    assert_equal "a4:cf:12:9b:0d:7e", a.mac_address
+  end
+
+  test "re-enrolling does not mint a new token or claim code" do
+    device = Device.enroll!(mac: "aa:bb:cc:dd:ee:ff")
+    token, code = device.token, device.claim_code
+
+    again = Device.enroll!(mac: "aa:bb:cc:dd:ee:ff", attributes: { bit_depth: 2 })
+
+    assert_equal token, again.token
+    assert_equal code, again.claim_code
+    assert_equal 2, again.bit_depth
+  end
+
+  test "re-enrolling does not reset the name someone chose" do
+    device = Device.enroll!(mac: "aa:bb:cc:dd:ee:ff")
+    device.update!(name: "Kitchen wall")
+
+    assert_equal "Kitchen wall", Device.enroll!(mac: "aa:bb:cc:dd:ee:ff").name
+  end
 end

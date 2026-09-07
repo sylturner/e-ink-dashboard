@@ -11,8 +11,6 @@ class FrameComposer
   end
 
   def call
-    raise "device #{@device.id} has no dashboard" if @device.dashboard.nil?
-
     png    = BrowserPool.capture(html: html, width: @device.width,
                                  height: @device.height)
     bitmap = Bitmap.from_png(png, bit_depth: @device.bit_depth)
@@ -31,8 +29,12 @@ class FrameComposer
   private
 
   def html
+    # An unclaimed panel goes through the same pipeline, so its claim
+    # code comes out at the same crispness as everything else.
+    template = @device.claimed? ? "renders/dashboard" : "renders/setup"
+
     ApplicationController.renderer.render(
-      template: "renders/dashboard",
+      template: template,
       layout: "render",
       assigns: {
         dashboard: @device.dashboard,

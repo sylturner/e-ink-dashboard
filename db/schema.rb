@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_06_202809) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_07_013150) do
   create_table "dashboard_item_sources", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "dashboard_item_id", null: false
@@ -66,12 +66,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_06_202809) do
     t.integer "battery_percent"
     t.decimal "battery_voltage", precision: 4, scale: 2
     t.integer "bit_depth", default: 1
+    t.string "claim_code"
     t.datetime "created_at", null: false
     t.integer "dashboard_id"
+    t.datetime "enrolled_at"
     t.string "firmware_version"
     t.integer "height", default: 480
     t.string "image_format", default: "bmp"
     t.datetime "last_seen_at"
+    t.string "mac_address"
     t.string "name"
     t.integer "night_refresh_seconds", default: 3600
     t.datetime "refresh_requested_at"
@@ -82,7 +85,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_06_202809) do
     t.datetime "updated_at", null: false
     t.integer "width", default: 800
     t.integer "wifi_rssi"
+    t.index ["claim_code"], name: "index_devices_on_claim_code", unique: true
     t.index ["dashboard_id"], name: "index_devices_on_dashboard_id"
+    t.index ["mac_address"], name: "index_devices_on_mac_address", unique: true
     t.index ["token"], name: "index_devices_on_token", unique: true
   end
 

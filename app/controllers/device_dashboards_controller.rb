@@ -29,6 +29,10 @@ class DeviceDashboardsController < ApplicationController
     # Allowlisted rather than a redirect_to parameter, so this can never
     # be pointed somewhere else.
     def return_path(device: @assignment&.device, dashboard: @assignment&.dashboard)
-      params[:context] == "builder" ? builder_dashboard_path(dashboard) : device_path(device)
+      case params[:context]
+      when "builder" then builder_dashboard_path(dashboard)
+      when "devices" then devices_path
+      else device_path(device)
+      end
     end
 end

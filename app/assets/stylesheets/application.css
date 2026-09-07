@@ -84,3 +84,25 @@ legend { font-weight: 600; padding: 0 4px; }
   background: none; border: none; padding: 2px 0;
   color: #06c; cursor: pointer; text-align: left; font: inherit;
 }
+
+/* ---------- Devices waiting to be claimed ---------- */
+
+.pending {
+  margin: 12px 24px;
+  border: 1px solid #333;
+  background: #ffd;
+  padding: 12px;
+}
+.pending h2 { margin-top: 0; }
+
+.claim-row {
+  display: flex; align-items: center; gap: 10px;
+  margin: 0 0 8px;
+  font: 13px system-ui, sans-serif;
+}
+.claim-row .code {
+  font-family: ui-monospace, monospace;
+  font-size: 18px; letter-spacing: 2px;
+  background: #222; color: #fff; padding: 2px 8px;
+}
+.claim-row .claim-what { color: #555; }

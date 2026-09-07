@@ -1,0 +1,19 @@
+<div class="setup">
+  <div class="setup-code">
+    <div class="t-sm">CLAIM CODE</div>
+    <div class="setup-digits"><%= @device.claim_code %></div>
+  </div>
+
+  <div class="setup-steps t-sm">
+    <p>This panel isn't showing a dashboard yet.</p>
+    <ol>
+      <li>Open the dashboard app on your network</li>
+      <li>Go to Devices</li>
+      <li>Find <%= @device.claim_code %> and pick a dashboard</li>
+    </ol>
+    <p class="t-xs">
+      <%= @device.name %> &middot; <%= @device.width %>x<%= @device.height %>
+      &middot; firmware <%= @device.firmware_version.presence || "?" %>
+    </p>
+  </div>
+</div>

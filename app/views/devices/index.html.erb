@@ -4,6 +4,31 @@
 
 <h1>Devices</h1>
 
+<%# Claiming goes through DeviceDashboard, not device.dashboard_id:
+    sync_active_dashboard reverts a bare dashboard_id when there is no
+    assignment behind it, so setting it directly would silently fail. %>
+<% if @pending.any? %>
+  <section class="pending">
+    <h2>Waiting to be set up</h2>
+
+    <% @pending.each do |device| %>
+      <%= form_with model: DeviceDashboard.new, class: "claim-row" do |f| %>
+        <%= f.hidden_field :device_id, value: device.id %>
+        <%= hidden_field_tag :context, "devices" %>
+
+        <strong class="code"><%= device.claim_code %></strong>
+        <span class="claim-what">
+          <%= device.name %><%= " · #{device.mac_address}" if device.mac_address.present? %>
+        </span>
+
+        <%= f.collection_select :dashboard_id, Dashboard.order(:name), :id, :name,
+                                { include_blank: "Choose a dashboard" } %>
+        <%= f.submit "Assign" %>
+      <% end %>
+    <% end %>
+  </section>
+<% end %>
+
 <div id="devices">
   <% @devices.each do |device| %>
     <%= render device %>

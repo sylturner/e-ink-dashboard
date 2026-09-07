@@ -45,4 +45,52 @@ class DevicesControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to devices_url
   end
+
+  test "unclaimed devices appear as waiting to be set up, with their code" do
+    pending = Device.enroll!(mac: "a4:cf:12:9b:0d:7e")
+
+    get devices_url
+
+    assert_response :success
+    assert_select "section.pending .claim-row", 1
+    assert_select "section.pending .code", pending.claim_code
+    assert_select "section.pending", /#{pending.mac_address}/
+  end
+
+  test "claimed devices are not listed as pending" do
+    devices(:one).dashboards = [ dashboards(:one) ]
+    Device.where.not(id: devices(:one).id).find_each { |d| d.dashboards = [ dashboards(:one) ] }
+
+    get devices_url
+
+    assert_select "section.pending", 0
+  end
+
+  # The claim form must create an assignment: setting dashboard_id alone
+  # is reverted by Device#sync_active_dashboard.
+  test "claiming a pending device from the index assigns it a dashboard" do
+    pending = Device.enroll!(mac: "a4:cf:12:9b:0d:7e")
+    assert_not pending.claimed?
+
+    assert_difference "DeviceDashboard.count", 1 do
+      post device_dashboards_url, params: {
+        context: "devices",
+        device_dashboard: { device_id: pending.id, dashboard_id: dashboards(:one).id }
+      }
+    end
+
+    assert_redirected_to devices_path
+    pending.reload
+    assert pending.claimed?
+    assert_equal dashboards(:one), pending.dashboard
+  end
+
+  test "a claimed device drops out of the pending list" do
+    pending = Device.enroll!(mac: "a4:cf:12:9b:0d:7e")
+    pending.dashboards = [ dashboards(:one) ]
+
+    get devices_url
+
+    assert_select ".claim-row .code", { text: pending.claim_code, count: 0 }
+  end
 end
