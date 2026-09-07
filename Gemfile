@@ -75,3 +75,5 @@ gem "icalendar", "~> 2.12"
 gem "icalendar-recurrence", "~> 1.2"
 
 gem "nokogiri", "~> 1.19"
+
+gem "mini_magick", "~> 5.4"

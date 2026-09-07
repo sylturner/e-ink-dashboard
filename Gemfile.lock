@@ -429,6 +429,7 @@ DEPENDENCIES
   importmap-rails
   jbuilder
   kamal
+  mini_magick (~> 5.4)
   nokogiri (~> 1.19)
   propshaft
   pry
