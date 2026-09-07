@@ -24,6 +24,7 @@
 #include "types.h"
 
 #define FIRMWARE_VERSION "2.0.0"
+#define TEST_MODE 0
 
 // ---------- Wiring ----------
 constexpr int PIN_PWR    = 6;
@@ -490,6 +491,13 @@ PressKind classifyPress()
 
 void sleepFor(uint32_t seconds)
 {
+  #if TEST_MODE
+    Serial.printf("TEST_MODE: would sleep %lu s — staying awake\n",
+                (unsigned long)seconds);
+    Serial.flush();
+  while (true) delay(1000);
+  #endif
+
   if (seconds < MIN_SLEEP_S) seconds = MIN_SLEEP_S;
   if (seconds > MAX_SLEEP_S) seconds = MAX_SLEEP_S;
 
