@@ -21,6 +21,7 @@ module BrowserPool
             page.evaluate_async(<<~JS, 5)
               document.fonts.ready.then(() => arguments[0](true))
             JS
+            browser.network.wait_for_idle
             page.screenshot(encoding: :binary, format: :png)
           ensure
             begin

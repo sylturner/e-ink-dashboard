@@ -69,7 +69,10 @@ class Component
 
     "news" => {
       label: "News",
-      views: { "headlines" => "Headlines" },
+      views: {
+        "headlines" => "Headlines",
+        "images" => "Images"
+      },
       source_types: %w[RssProvider],
       multi_source: true,
       settings: [
