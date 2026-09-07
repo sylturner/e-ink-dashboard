@@ -57,6 +57,12 @@ class DevicesController < ApplicationController
     end
   end
 
+  def refresh
+    @device = Device.find(params[:id])
+    @device.request_refresh!
+    redirect_back fallback_location: devices_path, notice: "Will refresh on next wake"
+  end
+
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_device

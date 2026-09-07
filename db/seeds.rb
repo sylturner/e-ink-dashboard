@@ -16,9 +16,9 @@ device = Device.find_or_create_by!(name: "Kitchen panel") do |dev|
   dev.time_zone = "America/New_York"
 end
 
-weather = Source.find_or_create_by!(name: "Home weather") do |s|
+weather = Source.find_or_create_by!(name: "Atlanta weather") do |s|
   s.providable = WeatherProvider.new(
-    latitude: 33.8109, longitude: -84.2397,
+    latitude: 33.75011713514474, longitude: -84.38892527093536,
     units: "imperial", time_zone: "America/New_York"
   )
   s.refresh_seconds = 900

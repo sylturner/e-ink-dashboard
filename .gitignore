@@ -35,4 +35,4 @@
 
 .DS_Store
 .*.swp
-/esp32/secrets.h
+secrets.h

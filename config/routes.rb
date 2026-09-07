@@ -14,7 +14,10 @@ Rails.application.routes.draw do
     end
   end
 
-  resources :devices
+  resources :devices do
+    member { post :refresh }
+  end
+
   resources :device_dashboards, only: %i[create destroy]
 
   resources :dashboards do

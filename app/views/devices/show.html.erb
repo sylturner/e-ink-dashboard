@@ -1,7 +1,35 @@
 <p style="color: green"><%= notice %></p>
 
 <%= render @device %>
+<%= button_to "Refresh on next wake",
+              refresh_device_path(@device), method: :post %>
 
+<dl class="telemetry">
+  <dt>Last seen</dt>
+  <dd>
+    <%= @device.last_seen_at ?
+        "#{time_ago_in_words(@device.last_seen_at)} ago" : "never" %>
+  </dd>
+
+  <dt>Battery</dt>
+  <dd>
+    <% if @device.battery_percent %>
+      <%= @device.battery_percent %>%
+      (<%= @device.battery_voltage %>V)
+    <% else %>
+      not reporting
+    <% end %>
+  </dd>
+
+  <dt>Signal</dt>
+  <dd><%= @device.wifi_rssi ? "#{@device.wifi_rssi} dBm" : "—" %></dd>
+
+  <dt>Firmware</dt>
+  <dd><%= @device.firmware_version.presence || "—" %></dd>
+
+  <dt>Next wake</dt>
+  <dd><%= @device.sleep_seconds %>s after last fetch</dd>
+</dl>
 <div>
   <%= link_to "Edit this device", edit_device_path(@device) %> |
   <%= link_to "Back to devices", devices_path %>
