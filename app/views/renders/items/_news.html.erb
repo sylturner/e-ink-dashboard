@@ -1,11 +1,23 @@
-<% limit = item.setting("event_limit").to_i %>
-<ul class="rows rows--stacked">
-  <% (data["items"] || []).first(limit).each do |entry| %>
-    <li>
-      <span class="t-clip t-clip-2"><%= entry["title"] %></span>
-      <% if item.setting("show_source") && entry["source"].present? %>
-        <span class="t-xs nowrap"><%= entry["source"] %></span>
+<%
+  limit = item.setting("event_limit").to_i
+  entries = (data["items"] || []).first(limit)
+%>
+<div class="feed">
+  <% case item.view %>
+  <% when "headlines" %>
+    <ul class="rows rows--stacked">
+      <% entries.each do |entry| %>
+        <li>
+          <span class="t-clip t-clip-2"><%= entry["title"] %></span>
+          <% if item.setting("show_source") && entry["source"].present? %>
+            <span class="t-xs nowrap"><%= entry["source"] %></span>
+          <% end %>
+        </li>
       <% end %>
-    </li>
+    </ul>
+  <% when "images" %>
+    <% entries.each do |entry| %>
+      <img src="<%= entry["image"] %>"/>
+    <% end %>
   <% end %>
-</ul>
+</div>
