@@ -1,44 +1,21 @@
 module IconHelper
-  # scale must be a whole number. Fractional scaling reintroduces
-  # half-pixel edges, which is the thing this system exists to avoid.
-  def weather_icon(name, scale: 2)
-    grid = Icons::WEATHER.fetch(name.to_s, Icons::WEATHER["cloudy"])
-    size = 16 * scale
+  # Weather Iconic glyphs are 32x32 line art painted with currentColor,
+  # so they invert with their card like the rest of the ink. `size` is
+  # the rendered edge in px; the vector scales cleanly to any value.
+  def weather_icon(name, size: 32)
+    body = Icons::WEATHER.fetch(name.to_s, Icons::WEATHER["clouds"])
 
-    rects = grid.each_with_index.flat_map do |row, y|
-      run_lengths(row).map do |x, len|
-        %(<rect x="#{x * scale}" y="#{y * scale}" ) +
-          %(width="#{len * scale}" height="#{scale}"/>)
-      end
-    end
+    # A hairline stroke keeps the thin linework from breaking up once the
+    # frame is thresholded to 1-bit. Holding it near half a device pixel
+    # at any size firms the glyph up without filling the small counters.
+    stroke = (16.0 / size).round(3)
 
     <<~SVG.html_safe
       <svg class="icon" width="#{size}" height="#{size}"
-           viewBox="0 0 #{size} #{size}"
-           shape-rendering="crispEdges"
-           xmlns="http://www.w3.org/2000/svg">
-        <g fill="currentColor">#{rects.join}</g>
-      </svg>
+           viewBox="0 0 #{Icons::VIEWBOX} #{Icons::VIEWBOX}"
+           fill="currentColor" stroke="currentColor" stroke-width="#{stroke}"
+           fill-rule="evenodd" clip-rule="evenodd"
+           xmlns="http://www.w3.org/2000/svg">#{body}</svg>
     SVG
-  end
-
-  private
-
-  # Collapse each row into [start_x, length] runs so one <rect>
-  # covers a horizontal span instead of one per pixel.
-  def run_lengths(row)
-    runs = []
-    x = 0
-    while x < row.length
-      if row[x] == "#"
-        len = 0
-        len += 1 while row[x + len] == "#"
-        runs << [ x, len ]
-        x += len
-      else
-        x += 1
-      end
-    end
-    runs
   end
 end

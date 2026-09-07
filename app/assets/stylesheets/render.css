@@ -363,7 +363,6 @@ body {
 .icon {
   display: block;
   color: currentColor;
-  image-rendering: pixelated;
 }
 
 /* Current conditions: icon beside the reading */
