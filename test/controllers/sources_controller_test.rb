@@ -207,6 +207,59 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, ical.reload.payload["events"].size
   end
 
+  test "new calendar form offers a file upload field" do
+    get new_source_url(type: "IcalProvider")
+
+    assert_response :success
+    assert_select "form[enctype=?]", "multipart/form-data"
+    assert_select "input[type=file][name=?]", "source[provider][ics_file]"
+  end
+
+  test "creates a calendar source from an uploaded .ics file" do
+    file = fixture_file_upload("calendar.ics", "text/calendar")
+
+    assert_difference [ "Source.count", "IcalProvider.count" ], 1 do
+      post sources_url(type: "IcalProvider"), params: {
+        source: { name: "Team calendar", refresh_seconds: 900,
+                  provider: { ics_file: file, include_all_day: "1" } }
+      }
+    end
+
+    assert_redirected_to sources_path
+    provider = Source.order(:id).last.providable
+    assert_equal "calendar.ics", provider.ics_filename
+    assert_match(/BEGIN:VCALENDAR/, provider.ics_data)
+
+    travel_to Time.utc(2026, 9, 5, 12) do
+      assert_operator provider.fetch!["events"].size, :>, 0
+    end
+  end
+
+  test "a calendar source with neither url nor file re-renders the form" do
+    assert_no_difference "Source.count" do
+      post sources_url(type: "IcalProvider"), params: {
+        source: { name: "Empty", refresh_seconds: 900, provider: { ical_url: "" } }
+      }
+    end
+
+    assert_response :unprocessable_content
+    assert_select "ul.errors li", /upload an \.ics file/
+  end
+
+  test "uploading a replacement .ics file on edit swaps the calendar" do
+    ical = sources(:two)
+    ical.providable.update!(ics_data: "OLD", ics_filename: "old.ics")
+
+    patch source_url(ical), params: {
+      source: { name: ical.name, refresh_seconds: ical.refresh_seconds,
+                provider: { ics_file: fixture_file_upload("calendar.ics", "text/calendar") } }
+    }
+
+    assert_redirected_to sources_path
+    assert_equal "calendar.ics", ical.reload.providable.ics_filename
+    assert_match(/BEGIN:VCALENDAR/, ical.providable.ics_data)
+  end
+
   # Providable#fetch! raises NotImplementedError, which descends from
   # ScriptError rather than StandardError -- so `rescue StandardError`
   # alone would turn a provider without a fetch! into a 500.

@@ -153,6 +153,85 @@ class IcalProviderTest < ActiveSupport::TestCase
   # Non-deterministic encryption means the same plaintext encrypts
   # differently every time, so the column cannot be used to correlate
   # two sources pointing at the same calendar.
+  # --- uploaded .ics files ---
+
+  test "fetch! parses an uploaded file instead of hitting the network" do
+    @provider.ics_data = CALENDAR
+
+    payload = travel_to(NOW) do
+      stub_method(Http, :get, raises: Http::Error.new("should not be called")) do
+        @provider.fetch!
+      end
+    end
+
+    assert_equal 3, payload["events"].map { |e| e["uid"] }.uniq.size
+    assert_includes payload["events"].map { |e| e["title"] }, "Dentist"
+  end
+
+  test "an uploaded file still expands recurrence on every fetch" do
+    @provider.ics_data = CALENDAR
+    events = travel_to(NOW) { @provider.fetch! }["events"].select { |e| e["uid"] == "weekly" }
+
+    assert_operator events.size, :>, 5
+  end
+
+  test "ics_file= reads the upload and remembers its name" do
+    upload = Rack::Test::UploadedFile.new(
+      StringIO.new(CALENDAR), "text/calendar", original_filename: "family.ics"
+    )
+    @provider.ics_file = upload
+
+    assert_equal CALENDAR, @provider.ics_data
+    assert_equal "family.ics", @provider.ics_filename
+  end
+
+  test "a blank upload leaves the stored calendar alone" do
+    @provider.update!(ics_data: CALENDAR, ics_filename: "kept.ics")
+    @provider.ics_file = ""
+
+    assert_equal CALENDAR, @provider.reload.ics_data
+  end
+
+  test "remove_ics clears the uploaded file on save" do
+    @provider.update!(ics_data: CALENDAR, ics_filename: "gone.ics")
+
+    @provider.remove_ics = "1"
+    @provider.ical_url   = "https://example.com/live.ics"
+    @provider.save!
+
+    assert_nil @provider.reload.ics_data
+    assert_nil @provider.ics_filename
+  end
+
+  test "a provider needs either a url or an uploaded file" do
+    provider = IcalProvider.new
+
+    assert_not provider.valid?
+    assert_includes provider.errors.full_messages.to_sentence, "upload an .ics file"
+
+    provider.ics_data = CALENDAR
+    assert provider.valid?
+  end
+
+  test "detail names the uploaded file" do
+    @provider.ics_data = CALENDAR
+    @provider.ics_filename = "family.ics"
+
+    assert_equal "File: family.ics", @provider.detail
+  end
+
+  test "ics_data is ciphertext at rest" do
+    @provider.update!(ics_data: CALENDAR)
+
+    stored = ActiveRecord::Base.connection.select_value(
+      "SELECT ics_data FROM ical_providers WHERE id = #{@provider.id}"
+    )
+
+    assert_not_equal CALENDAR, stored
+    assert_not_includes stored, "Dentist"
+    assert_equal CALENDAR, @provider.reload.ics_data
+  end
+
   test "the same url encrypts to different ciphertext each time" do
     url = "https://example.com/same.ics"
     a = IcalProvider.create!(ical_url: url)

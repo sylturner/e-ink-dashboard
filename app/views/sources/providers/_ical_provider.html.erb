@@ -9,6 +9,22 @@
 </div>
 
 <div class="field">
+  <%= f.label :ics_file, "…or upload an .ics file" %>
+  <%= f.file_field :ics_file, accept: ".ics,text/calendar" %>
+  <p class="hint">
+    A one-off export instead of a live subscription. It is re-parsed on
+    every refresh, so recurring events keep expanding, but new events
+    won't appear until you upload again.
+    <% if f.object.uploaded? %>
+      <br>
+      On file: <strong><%= f.object.ics_filename.presence || "calendar.ics" %></strong>.
+      <%= f.check_box :remove_ics %>
+      <%= f.label :remove_ics, "remove it" %>
+    <% end %>
+  </p>
+</div>
+
+<div class="field">
   <%= f.checkbox :include_all_day %>
   <%= f.label :include_all_day, "Include all-day events" %>
 </div>

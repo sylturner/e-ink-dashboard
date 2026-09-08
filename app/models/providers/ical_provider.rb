@@ -3,25 +3,62 @@ class IcalProvider < ApplicationRecord
 
   # The secret iCal address is a bearer credential: anyone holding it can
   # read the calendar. Encrypted at rest, non-deterministically, since
-  # nothing ever queries by it.
+  # nothing ever queries by it. An uploaded .ics file is the same secret
+  # in another shape, so its contents are encrypted too.
   encrypts :ical_url
+  encrypts :ics_data
 
   provides label:           "Calendar (iCal)",
            attributes:      %i[ical_url include_all_day],
            refresh_seconds: 900
 
+  # ics_file is the uploaded .ics; remove_ics is the checkbox that drops
+  # a previously uploaded file. Neither is a stored column.
+  def self.extra_params
+    %i[ics_file remove_ics]
+  end
+
   WINDOW_BACK    = 1.day
   WINDOW_FORWARD = 60.days
   MAX_EVENTS     = 500
+  MAX_ICS_BYTES  = 5.megabytes
 
-  validates :ical_url, presence: true,
+  attr_accessor :remove_ics
+
+  validate  :url_or_file
+  validate  :ics_data_size
+  validates :ical_url, allow_blank: true,
             format: { with: %r{\A(https?|webcal)://\S+\z} }
+
+  before_validation :drop_uploaded_file, if: -> { ActiveModel::Type::Boolean.new.cast(remove_ics) }
 
   def self.defaults
     { include_all_day: true }
   end
 
+  # file_field/check_box read the getter; there is nothing to prefill for
+  # an upload, so it always reads back empty.
+  def ics_file
+    nil
+  end
+
+  # Accepts the uploaded .ics. A blank value -- the empty file input when
+  # nothing was chosen -- is ignored so an edit that only touches other
+  # fields keeps the calendar already on file.
+  def ics_file=(uploaded)
+    return if uploaded.blank?
+
+    self.ics_data     = uploaded.read
+    self.ics_filename = uploaded.original_filename if uploaded.respond_to?(:original_filename)
+  end
+
+  def uploaded?
+    ics_data.present?
+  end
+
   def detail
+    return "File: #{ics_filename.presence || 'calendar.ics'}" if uploaded?
+
     ical_url.to_s.truncate(50)
   end
 
@@ -30,7 +67,7 @@ class IcalProvider < ApplicationRecord
   # across a 60-day window there would be the wrong place for it. The
   # payload holds concrete, already-expanded occurrences.
   def fetch!
-    body      = Http.get(normalized_url)
+    body      = ics_data.presence || Http.get(normalized_url)
     calendars = parse(body)
     raise Http::Error, "no calendar data" if calendars.blank?
 
@@ -55,6 +92,23 @@ class IcalProvider < ApplicationRecord
   end
 
   private
+
+    def url_or_file
+      return if ical_url.present? || ics_data.present?
+
+      errors.add(:base, "Add a secret iCal URL or upload an .ics file")
+    end
+
+    def drop_uploaded_file
+      self.ics_data     = nil
+      self.ics_filename = nil
+    end
+
+    def ics_data_size
+      return if ics_data.blank? || ics_data.bytesize <= MAX_ICS_BYTES
+
+      errors.add(:base, "The .ics file is too large (max #{MAX_ICS_BYTES / 1.megabyte} MB)")
+    end
 
     # Parsing is all-or-nothing in the icalendar gem: a single malformed
     # DTSTART raises before any event is reachable, so the per-event

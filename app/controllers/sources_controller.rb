@@ -126,7 +126,8 @@ class SourcesController < ApplicationController
     end
 
     def provider_params(type)
-      allowed = Source.provider_class(type)&.form_attributes || []
+      klass   = Source.provider_class(type)
+      allowed = Array(klass&.form_attributes) + Array(klass&.extra_params)
       params.require(:source)
             .fetch(:provider, ActionController::Parameters.new)
             .permit(*allowed)

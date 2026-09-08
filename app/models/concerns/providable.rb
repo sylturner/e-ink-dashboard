@@ -39,6 +39,13 @@ module Providable
     def defaults
       {}
     end
+
+    # Form params that aren't stored columns -- file uploads, or a
+    # checkbox that clears something. Permitted alongside form_attributes
+    # but exempt from the "every form attribute is a column" rule.
+    def extra_params
+      []
+    end
   end
 
   def fetch!
