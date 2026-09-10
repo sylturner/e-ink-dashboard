@@ -72,6 +72,6 @@ class DevicesController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def device_params
-      params.expect(device: [ :name, :dashboard_id, { dashboard_ids: [] }, :width, :height, :bit_depth, :image_format, :rotation, :refresh_seconds, :night_refresh_seconds, :active_from_hour, :active_until_hour, :time_zone, :last_seen_at, :battery_percent, :battery_voltage, :wifi_rssi, :firmware_version, :refresh_requested_at ])
+      params.expect(device: [ :name, :dashboard_id, { dashboard_ids: [] }, :width, :height, :bit_depth, :image_format, :dither, :rotation, :refresh_seconds, :night_refresh_seconds, :active_from_hour, :active_until_hour, :time_zone, :last_seen_at, :battery_percent, :battery_voltage, :wifi_rssi, :firmware_version, :refresh_requested_at ])
     end
 end

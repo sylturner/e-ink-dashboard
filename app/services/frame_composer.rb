@@ -12,7 +12,7 @@ class FrameComposer
 
   def call
     png    = BrowserPool.capture(html: html, width: @device.width, height: @device.height)
-    bitmap = Bitmap.from_png(png, bit_depth: @device.bit_depth)
+    bitmap = Bitmap.from_png(png, bit_depth: @device.bit_depth, dither: @device.dither_algorithm)
     bytes  = bitmap.to_format(@device.image_format)
 
     frame = @device.frames.create!(

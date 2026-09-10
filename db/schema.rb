@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_07_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_10_120000) do
   create_table "dashboard_item_sources", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "dashboard_item_id", null: false
@@ -69,6 +69,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_07_120000) do
     t.string "claim_code"
     t.datetime "created_at", null: false
     t.integer "dashboard_id"
+    t.string "dither", default: "floyd_steinberg", null: false
     t.datetime "enrolled_at"
     t.string "firmware_version"
     t.integer "height", default: 480

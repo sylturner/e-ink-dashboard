@@ -5,9 +5,27 @@ require "ferrum"
 module BrowserPool
   LOCK = Mutex.new
 
+  # How long to hold the capture for slow fonts or remote images before
+  # screenshotting whatever has arrived. Kept under protocol_timeout so a
+  # slow image never surfaces as a Ferrum error, which would tear down Chrome.
+  ASSET_WAIT_MS = 7_000
+
+  # Resolves once fonts are ready and every <img> has loaded and decoded
+  # (or failed), or after ASSET_WAIT_MS, whichever comes first. decode()
+  # waits for an in-flight load, so images still downloading are covered.
+  WAIT_FOR_ASSETS_JS = <<~JS.freeze
+    const done = arguments[0];
+    const images = Array.from(document.images, (img) => img.decode().catch(() => {}));
+    Promise.race([
+      Promise.all([document.fonts.ready, ...images]),
+      new Promise((resolve) => setTimeout(resolve, #{ASSET_WAIT_MS}))
+    ]).then(() => done(true));
+  JS
+
   class << self
-    # Pass html: for normal captures. Chrome renders it directly and makes
-    # no network requests, so nothing can deadlock against Rails.
+    # Pass html: for normal captures. Local assets are inlined, but content
+    # like news images still loads from remote URLs, so the capture waits
+    # for those before taking the screenshot.
     # url: exists only for debugging against a live page.
     def capture(html: nil, url: nil, width: 800, height: 480)
       raise ArgumentError, "pass html: or url:" if html.nil? && url.nil?
@@ -18,10 +36,10 @@ module BrowserPool
           begin
             page.resize(width: width, height: height)
             html ? (page.content = html) : page.go_to(url)
-            page.evaluate_async(<<~JS, 5)
-              document.fonts.ready.then(() => arguments[0](true))
-            JS
-            browser.network.wait_for_idle
+            page.evaluate_async(WAIT_FOR_ASSETS_JS, (ASSET_WAIT_MS / 1000) + 2)
+            # Must be the capture page's network; browser.network is the
+            # default tab, which never sees this page's requests.
+            page.network.wait_for_idle(timeout: 2)
             page.screenshot(encoding: :binary, format: :png)
           ensure
             begin

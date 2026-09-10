@@ -32,6 +32,10 @@ class Device < ApplicationRecord
   validates :image_format, inclusion: { in: %w[bmp raw] }
   validates :rotation, inclusion: { in: [ 0, 90, 180, 270 ] }
 
+  # "none" keeps the plain black/white threshold.
+  DITHER_OPTIONS = [ "none", *Dither::ALGORITHMS ].freeze
+  validates :dither, inclusion: { in: DITHER_OPTIONS }
+
   # Idempotent by MAC, so a device retrying after a timeout does not
   # create duplicates and a re-flashed one reattaches to its old row.
   def self.enroll!(mac:, attributes: {})
@@ -64,6 +68,11 @@ class Device < ApplicationRecord
   # A panel is claimed once it has something to show.
   def claimed?
     dashboard_id.present?
+  end
+
+  # What Bitmap.from_png expects: an algorithm name, or nil to threshold.
+  def dither_algorithm
+    dither unless dither == "none"
   end
 
   def current_frame
