@@ -38,8 +38,8 @@ class WeatherProvider < ApplicationRecord
     params = {
       latitude: latitude,
       longitude: longitude,
-      current: "temperature_2m,apparent_temperature,relative_humidity_2m,weather_code",
-      hourly: "temperature_2m,weather_code,precipitation_probability",
+      current: "temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,is_day",
+      hourly: "temperature_2m,weather_code,precipitation_probability,is_day",
       daily: "weather_code,temperature_2m_max,temperature_2m_min," \
              "precipitation_probability_max,sunrise,sunset",
       timezone: time_zone.presence || "auto",
@@ -63,7 +63,7 @@ class WeatherProvider < ApplicationRecord
       "temp"       => c["temperature_2m"]&.round,
       "feels_like" => c["apparent_temperature"]&.round,
       "humidity"   => c["relative_humidity_2m"]&.round,
-      "icon"       => Icons.for_wmo(code),
+      "icon"       => Icons.for_wmo(code, is_day: c["is_day"]),
       "label"      => Icons.label_for_wmo(code)
     }
   end
@@ -78,8 +78,9 @@ class WeatherProvider < ApplicationRecord
         "high"   => d.dig("temperature_2m_max", i)&.round,
         "low"    => d.dig("temperature_2m_min", i)&.round,
         "precip" => d.dig("precipitation_probability_max", i),
-        "icon"   => Icons.for_wmo(code),
-        "label"  => Icons.label_for_wmo(code)
+        # Daily codes summarise the day, and there's no is_day to go on.
+        "icon"   => Icons.for_wmo(code, is_day: 1),
+        "label"  => Icons.label_for_wmo(code, short: true)
       }
     end
   end
@@ -100,7 +101,8 @@ class WeatherProvider < ApplicationRecord
         "hour"   => at.strftime("%-l %p"),
         "temp"   => h.dig("temperature_2m", i)&.round,
         "precip" => h.dig("precipitation_probability", i),
-        "icon"   => Icons.for_wmo(code)
+        "icon"   => Icons.for_wmo(code, is_day: h.dig("is_day", i)),
+        "label"  => Icons.label_for_wmo(code, short: true)
       }
     end.first(24)
   end

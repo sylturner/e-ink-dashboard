@@ -379,6 +379,23 @@ body {
   text-align: center;
 }
 
+/* Daily forecast: glyph and condition share the middle of the row */
+.forecast-sky {
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: var(--pad-tight);
+}
+.forecast-sky > .icon {
+  flex: none;
+}
+
+/* Condition labels. Silkscreen is drawn on an 8px grid, so it stays
+   legible at xs where Spleen smears. */
+.sky-label {
+  font-family: "Silkscreen", monospace;
+  overflow: hidden;
+}
+
 /* Hourly strip */
 .hours {
   display: flex;
@@ -387,11 +404,18 @@ body {
 }
 
 .hour {
+  flex: 1 1 0;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 2px;
   text-align: center;
+}
+
+/* Two lines held for the label so temperatures stay level whether it wraps or not */
+.hour > .sky-label {
+  height: calc(var(--lh-xs) * 2);
 }
 
 /* Headlines wrap, so rows need to stack rather than sit on one line */
