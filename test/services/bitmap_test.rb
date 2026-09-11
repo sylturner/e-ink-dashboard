@@ -17,6 +17,22 @@ class BitmapTest < ActiveSupport::TestCase
     assert_equal [ 0xFF, 0x00 ], bmp.rows.first.bytes
   end
 
+  test "from_png with dither breaks a flat grey into a dot pattern" do
+    grey = Vips::Image.black(16, 16).linear(1, 128).cast("uchar").write_to_buffer(".png")
+
+    thresholded = Bitmap.from_png(grey)
+    dithered    = Bitmap.from_png(grey, dither: "floyd_steinberg")
+
+    assert_equal [ 0xFF ], thresholded.rows.map(&:bytes).flatten.uniq
+    assert_operator dithered.rows.join.unpack1("B*").count("0"), :>, 64
+  end
+
+  test "from_png flattens transparency onto white" do
+    clear = Vips::Image.black(8, 1, bands: 4).cast("uchar").write_to_buffer(".png")
+
+    assert_equal [ 0xFF ], Bitmap.from_png(clear).rows.first.bytes
+  end
+
   test "to_bmp emits a valid 1-bit BMP header" do
     bytes = Bitmap.from_png(png).to_bmp
 

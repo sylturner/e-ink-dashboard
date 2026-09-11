@@ -13,18 +13,27 @@ class Bitmap
   # rows are top-down, 1 bit per pixel, MSB first, 1 = white.
   #
   # The dashboard HTML is authored to land on the pixel grid, so at 1:1
-  # the capture is already almost pure black and white — this just packs
-  # it. Anti-aliased curves (the weather glyphs) fall to whichever side
-  # of `threshold` they cover more of.
-  def self.from_png(png_bytes, bit_depth: 1, threshold: 128)
+  # the capture is already almost pure black and white. With `dither:`
+  # (see Dither::ALGORITHMS) the greys that remain — images, anti-aliased
+  # curves — are error-diffused into dot patterns. Without it, every pixel
+  # just falls to whichever side of `threshold` it is on.
+  def self.from_png(png_bytes, bit_depth: 1, dither: nil, threshold: 128)
     raise ArgumentError, "only 1-bit is implemented" unless bit_depth == 1
 
-    image  = Vips::Image.new_from_buffer(png_bytes, "").colourspace("b-w").extract_band(0)
+    # Flatten onto white first, so transparent areas don't read as black.
+    image  = Vips::Image.new_from_buffer(png_bytes, "")
+    image  = image.flatten(background: 255) if image.has_alpha?
+    image  = image.colourspace("b-w").extract_band(0).cast("uchar")
     width  = image.width
     height = image.height
 
-    # `>= threshold` yields a uchar mask: 255 where light (white), else 0.
-    pixels = (image >= threshold).write_to_memory
+    # Either way this is a uchar mask: 255 where white, else 0.
+    pixels = if dither.present?
+      Dither.call(image.write_to_memory, width: width, height: height,
+                  algorithm: dither, threshold: threshold)
+    else
+      (image >= threshold).write_to_memory
+    end
     row_bytes = (width + 7) / 8
 
     rows = Array.new(height) do |y|
