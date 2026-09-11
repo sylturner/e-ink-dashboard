@@ -1,12 +1,12 @@
 # Credits
 
-## Weather Iconic
+## Weather Icons
 
-The weather glyphs in `app/services/icons.rb` are the black-and-white
-("single-color") variant of **Weather Iconic** by Konrad Michalik.
+The weather glyphs in `app/services/icons.rb` are **Weather Icons** by
+Erik Flowers, taken from a fork that adds an Open-Meteo mapping.
 
-- Source: https://github.com/konradmichalik/weather-iconic
-- License: Creative Commons Attribution-ShareAlike 3.0 United States (CC BY-SA 3.0 US)
-  — https://creativecommons.org/licenses/by-sa/3.0/us/
+- Source: https://github.com/sylturner/weather-icons (fork of https://github.com/erikflowers/weather-icons)
+- License: SIL Open Font License 1.1 — https://scripts.sil.org/OFL
 
-Icons are mapped to Open-Meteo's WMO weather codes in `Icons.for_wmo`.
+Icons are mapped to Open-Meteo's WMO weather codes in `Icons::OPEN_METEO`,
+generated from the fork's `less/mappings/wi-openmeteo.less`.

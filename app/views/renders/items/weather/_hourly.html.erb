@@ -3,6 +3,7 @@
     <div class="hour">
       <div class="t-sm"><%= h["hour"] %></div>
       <%= weather_icon(h["icon"], size: 32) %>
+      <div class="t-xs sky-label"><%= h["label"] %></div>
       <div class="t-sm"><%= h["temp"] %>&deg;</div>
     </div>
   <% end %>
