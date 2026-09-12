@@ -24,7 +24,7 @@
 #include "types.h"
 
 #define FIRMWARE_VERSION "2.0.0"
-#define TEST_MODE 0
+#define TEST_MODE 1
 
 // ---------- Wiring ----------
 constexpr int PIN_PWR    = 6;
@@ -188,6 +188,7 @@ bool connectToWiFi()
   WiFi.mode(WIFI_STA);
   WiFi.setSleep(false);
 
+
   // Reusing the stored BSSID and channel skips the scan, which is
   // typically a second of radio time on every single wake.
   if (apKnown)
@@ -230,6 +231,8 @@ bool connectToWiFi()
   Serial.printf("Wi-Fi up: %s  %d dBm  ch %d\n",
                 WiFi.localIP().toString().c_str(),
                 WiFi.RSSI(), (int)apChannel);
+  Serial.print("ESP32 STA MAC Address: ");
+  Serial.println(WiFi.macAddress());
   return true;
 }
 
