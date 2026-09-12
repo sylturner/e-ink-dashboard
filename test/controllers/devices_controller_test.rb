@@ -85,6 +85,21 @@ class DevicesControllerTest < ActionDispatch::IntegrationTest
     assert_equal dashboards(:one), pending.dashboard
   end
 
+  # The devices pages used to render only the notice, so a refused claim
+  # redirected back with no explanation.
+  test "a refused claim says why on the devices page" do
+    device = devices(:one)
+    device.dashboards = [ dashboards(:one) ]
+
+    post device_dashboards_url, params: {
+      context: "devices",
+      device_dashboard: { device_id: device.id, dashboard_id: dashboards(:one).id }
+    }
+    follow_redirect!
+
+    assert_select ".alert.alert-danger", /already been taken/i
+  end
+
   test "a claimed device drops out of the pending list" do
     pending = Device.enroll!(mac: "a4:cf:12:9b:0d:7e")
     pending.dashboards = [ dashboards(:one) ]

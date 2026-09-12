@@ -1,4 +1,4 @@
-# Shared behaviour for the concrete providers behind a Source, plus the
+# Shared behavior for the concrete providers behind a Source, plus the
 # registry that discovers them.
 #
 # Everything a provider needs to describe itself -- its label, the

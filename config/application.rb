@@ -21,6 +21,10 @@ module EInkDashboard
     # class names stay put -- they are persisted in sources.providable_type.
     Rails.autoloaders.main.collapse("#{root}/app/models/providers")
 
+    # AdminFormBuilder marks a control with an error as `is-invalid`. The
+    # default wrapper div around it would break Bootstrap's input layouts.
+    config.action_view.field_error_proc = ->(html_tag, _instance) { html_tag }
+
     # Configuration for the application, engines, and railties goes here.
     #
     # These settings can be overridden in specific environments using the files

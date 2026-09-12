@@ -1,0 +1,30 @@
+<%# Ported from the CoreUI free admin template's header.pug. %>
+<header class="header header-sticky p-0 mb-4">
+  <div class="container-fluid border-bottom px-4">
+    <button class="header-toggler" type="button" data-action="sidebar#toggle" aria-label="Toggle the sidebar">
+      <%= ui_icon "cil-menu", classes: "icon icon-lg" %>
+    </button>
+
+    <span class="fw-semibold text-truncate ms-3 me-auto"><%= content_for(:title) || t("app.name") %></span>
+
+    <ul class="header-nav">
+      <li class="nav-item dropdown" data-controller="theme">
+        <button class="btn btn-link nav-link py-2 px-2 d-flex align-items-center" type="button"
+                data-coreui-toggle="dropdown" aria-expanded="false" aria-label="Color mode">
+          <%= ui_icon "cil-contrast", classes: "icon icon-lg" %>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end color-mode-menu">
+          <% [ [ "light", "Light", "cil-sun" ], [ "dark", "Dark", "cil-moon" ], [ "auto", "Auto", "cil-contrast" ] ].each do |mode, label, icon| %>
+            <li>
+              <button class="dropdown-item d-flex align-items-center" type="button"
+                      data-theme-target="option" data-action="theme#pick" data-theme-mode-param="<%= mode %>">
+                <%= ui_icon icon, classes: "icon icon-lg me-3" %>
+                <%= label %>
+              </button>
+            </li>
+          <% end %>
+        </ul>
+      </li>
+    </ul>
+  </div>
+</header>

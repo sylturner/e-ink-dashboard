@@ -1,8 +1,8 @@
 # app/services/dither.rb
 #
-# Error-diffusion dithering from 8-bit greyscale down to pure black and
+# Error-diffusion dithering from 8-bit grayscale down to pure black and
 # white. Each pixel snaps to 0 or 255 and the difference is pushed onto
-# neighbours not yet visited, so mid-greys (photos, comics, anti-aliased
+# neighbors not yet visited, so mid-grays (photos, comics, anti-aliased
 # edges) come out as dot patterns rather than solid blobs.
 #
 # Pixels that are already pure black or white carry no error, so the
@@ -24,7 +24,7 @@ class Dither
 
   ALGORITHMS = KERNELS.keys.freeze
 
-  # `pixels` is a width * height byte string of greyscale values. Returns
+  # `pixels` is a width * height byte string of grayscale values. Returns
   # a string of the same size holding only 0 (black) and 255 (white).
   def self.call(pixels, width:, height:, algorithm: "floyd_steinberg", threshold: 128)
     kernel = KERNELS.fetch(algorithm.to_s) { raise ArgumentError, "unknown dither: #{algorithm}" }

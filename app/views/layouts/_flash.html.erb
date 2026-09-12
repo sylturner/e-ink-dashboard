@@ -1,0 +1,8 @@
+<% { notice: "success", alert: "danger" }.each do |type, tone| %>
+  <% if flash[type].present? %>
+    <div class="alert alert-<%= tone %> alert-dismissible fade show" role="alert">
+      <%= flash[type] %>
+      <button type="button" class="btn-close" data-coreui-dismiss="alert" aria-label="Close"></button>
+    </div>
+  <% end %>
+<% end %>

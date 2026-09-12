@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <title><%= content_for(:title) || "E Ink Dashboard" %></title>
+    <title><%= content_for(:title) || t("app.name") %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="E Ink Dashboard">
+    <meta name="application-name" content="<%= t("app.name") %>">
     <meta name="mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
@@ -21,18 +21,40 @@
     <%# Named explicitly rather than :app. render.css is inlined into the
         render layout by InlineAssets and pins html/body to the panel's
         800x480 with overflow hidden -- including it here would break
-        every admin page. %>
-    <%= stylesheet_link_tag "application", "builder", "data-turbo-track": "reload" %>
+        every admin page. CoreUI (vendored) comes first so the app's own
+        sheets can override it. %>
+    <%= stylesheet_link_tag "coreui.min", "application", "builder", "data-turbo-track": "reload" %>
+
+    <%# Applies the saved light/dark choice before first paint, so a dark
+        page never flashes white. It repeats theme_controller.js's logic
+        because it has to run before importmap modules load. The nonce is
+        ready for when a Content Security Policy is enabled. %>
+    <%= javascript_tag nonce: true do %>
+      (() => {
+        let mode = "auto"
+        try { mode = localStorage.getItem("color-mode") || "auto" } catch {}
+        const dark = mode === "dark" || (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches)
+        document.documentElement.setAttribute("data-coreui-theme", dark ? "dark" : "light")
+      })()
+    <% end %>
     <%= javascript_importmap_tags %>
   </head>
 
-  <body>
-    <nav class="app-nav">
-      <%= link_to "Dashboards", dashboards_path %>
-      <%= link_to "Sources", sources_path %>
-      <%= link_to "Devices", devices_path %>
-    </nav>
+  <body data-controller="sidebar">
+    <%# WCAG 2.4.1: lets keyboard users jump past the sidebar and header. %>
+    <a class="skip-link visually-hidden-focusable" href="#main-content">Skip to main content</a>
 
-    <%= yield %>
+    <%= render "layouts/sidebar" %>
+
+    <div class="wrapper d-flex flex-column min-vh-100">
+      <%= render "layouts/header" %>
+
+      <div class="body flex-grow-1">
+        <main id="main-content" class="<%= content_for(:container_class) || "container-lg" %> px-4">
+          <%= render "layouts/flash" %>
+          <%= yield %>
+        </main>
+      </div>
+    </div>
   </body>
 </html>

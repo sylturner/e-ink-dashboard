@@ -10,52 +10,169 @@
  */
 
 /* ============================================================
-   Admin chrome. Applies to every page rendered in the
-   application layout; the panel render has its own stylesheet.
+   Admin pages. Applies to every page rendered in the application
+   layout, on top of the vendored CoreUI stylesheet; the panel
+   render has its own stylesheet. The page shell, flash and
+   typography come from CoreUI -- the rules below the tokens and
+   components are the pre-CoreUI page styles, to be replaced area by
+   area. Colors use CoreUI's theme variables or the tokens below, so
+   these pages stay readable in dark mode.
    ============================================================ */
 
-body { font: 14px/1.5 system-ui, sans-serif; color: #222; }
+/* ---------- Tokens ----------
+   The app's own colors, each chosen to meet WCAG 2.2 AA. "on-light"
+   values are for light surfaces: the light theme, plus the alerts, the
+   pending-device box and the builder canvas, which stay light in dark
+   mode too. "on-dark" values are for the dark theme and the sidebar,
+   which is dark in both themes.
 
-h1 { font-size: 20px; margin: 16px 0 12px; }
-h2 { font-size: 16px; margin: 16px 0 8px; }
+   accent: CoreUI's primary #5856d6 is >= 5.1:1 on light surfaces but
+           only 2.1-3.0:1 on dark ones. #a6a5e9 keeps its hue (241deg),
+           lightened to >= 5.0:1 on every dark surface.
+   border: form control boundaries (1.4.11). #737b89 is >= 3.1:1 on the
+           light fill, page, alert and warning backgrounds; #8a93a2 is
+           >= 4.2:1 on the dark ones. */
+:root {
+  --app-accent-on-light: #5856d6;
+  --app-accent-on-dark: #a6a5e9;
+  --app-border-on-light: #737b89;
+  --app-border-on-dark: #8a93a2;
+  --app-header-height: calc(4rem + 1px);
 
-.app-nav {
-  display: flex; gap: 16px;
-  padding: 10px 24px;
-  border-bottom: 1px solid #ddd;
-  background: #fafafa;
+  --app-focus-ring: var(--app-accent-on-light);
+  --app-control-border: var(--app-border-on-light);
 }
 
-.app-nav a, .btn { color: #06c; }
+[data-coreui-theme=dark] {
+  --app-focus-ring: var(--app-accent-on-dark);
+  --app-control-border: var(--app-border-on-dark);
 
-.notice:empty, .alert:empty { display: none; }
-.notice, .alert {
-  margin: 12px 24px; padding: 8px 12px; border: 1px solid #333;
+  /* CoreUI's dark link color is the 2.1-3.0:1 primary. The -rgb triplet
+     repeats --app-accent-on-dark: CSS can't split a hex variable. The
+     hover, #bebdef, is >= 6.3:1. */
+  --cui-link-color: var(--app-accent-on-dark);
+  --cui-link-color-rgb: 166, 165, 233;
+  --cui-link-hover-color: #bebdef;
+  --cui-link-hover-color-rgb: 190, 189, 239;
 }
-.notice { background: #efe; }
-.alert  { background: #fee; border-color: #c00; }
 
-h1, table.sources, .type-list, form, p, fieldset { margin-left: 24px; margin-right: 24px; }
-.builder h1, .builder p, .builder form, .builder fieldset { margin-left: 0; margin-right: 0; }
+.sidebar-dark { --app-focus-ring: var(--app-accent-on-dark); }
+
+.alert, .pending, .builder-canvas {
+  --app-focus-ring: var(--app-accent-on-light);
+  --app-control-border: var(--app-border-on-light);
+}
+
+/* ---------- Page shell ----------
+   Ported from the CoreUI free admin template's src/scss/style.scss and
+   its header markup. These live in the template, not in coreui.min.css:
+   without the .wrapper padding the page slides under the fixed sidebar. */
+
+body { background-color: var(--cui-tertiary-bg); }
+[data-coreui-theme=dark] body { background-color: var(--cui-dark-bg-subtle); }
+
+.wrapper {
+  width: 100%;
+  padding-inline: var(--cui-sidebar-occupy-start, 0) var(--cui-sidebar-occupy-end, 0);
+  will-change: auto;
+  transition: padding .15s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .wrapper { transition: none; }
+}
+
+.header > .container-fluid,
+.sidebar-header { min-height: var(--app-header-height); }
+
+/* Lines the toggler's icon up with the page gutter, as in the template. */
+.header-toggler { margin-inline-start: -14px; }
+
+.color-mode-menu { --cui-dropdown-min-width: 8rem; }
+
+.sidebar-brand-full { margin-left: 3px; }
+
+.sidebar-toggler { margin-inline-start: auto; }
+.sidebar-narrow .sidebar-toggler,
+.sidebar-narrow-unfoldable:not(:hover) .sidebar-toggler { margin-inline-end: auto; }
+
+/* ---------- Accessibility (WCAG 2.2 AA) ---------- */
+
+/* Visible focus (2.4.7) at >= 3:1 (1.4.11). CoreUI's own focus ring is
+   a 25%-opacity glow of about 1.2-1.4:1, and some controls (the header
+   toggler) have none. The outline sits 2px off the element, so it is
+   drawn in the token for the surface around it. !important because
+   CoreUI zeroes the outline with more specific selectors
+   (.btn:focus-visible and others). */
+:focus-visible {
+  outline: 2px solid var(--app-focus-ring) !important;
+  outline-offset: 2px !important;
+}
+
+.form-control, .form-select, .form-check-input { border-color: var(--app-control-border); }
+
+/* Dark mode inverts .btn-close to white, which is ~1.1:1 on the light
+   alert backgrounds. Uninverted it is >= 3.7:1. */
+[data-coreui-theme=dark] .alert .btn-close { --cui-btn-close-filter: none; filter: none; }
+
+/* Reflow at 320px (1.4.10): long unbroken strings -- feed URLs, tokens,
+   raw payloads -- wrap instead of widening the page. */
+main { overflow-wrap: break-word; }
+
+/* Focus not obscured (2.4.11). The header is sticky, so anything the
+   page scrolls to -- the skip link's target, or a control brought into
+   view by Tab -- stops below it rather than underneath it. */
+html { scroll-padding-top: calc(var(--app-header-height) + 1rem); }
+
+/* The skip link is hidden until focused, then pinned above the fixed
+   sidebar so it is actually visible. */
+.skip-link:focus {
+  position: fixed; top: .5rem; left: .5rem; z-index: 2000;
+  padding: .5rem 1rem;
+  background: var(--cui-body-bg); color: var(--cui-link-color);
+  border-radius: var(--cui-border-radius);
+}
+
+/* ---------- Components ---------- */
+
+/* An outline button that meets contrast in both themes. CoreUI's outline
+   variants don't (secondary ~4.2:1 on the light page, primary ~2.9:1 in
+   dark), so this uses body text and the >= 3:1 control border. Use with
+   .btn: `class="btn btn-sm btn-app-outline"`. */
+.btn-app-outline {
+  --cui-btn-color: var(--cui-body-color);
+  --cui-btn-border-color: var(--app-control-border);
+  --cui-btn-hover-color: var(--cui-emphasis-color);
+  --cui-btn-hover-bg: var(--cui-secondary-bg);
+  --cui-btn-hover-border-color: var(--app-control-border);
+  --cui-btn-active-color: var(--cui-emphasis-color);
+  --cui-btn-active-bg: var(--cui-secondary-bg);
+  --cui-btn-active-border-color: var(--app-control-border);
+  --cui-btn-disabled-color: var(--cui-body-color);
+  --cui-btn-disabled-border-color: var(--app-control-border);
+}
 
 /* ---------- Source list ---------- */
 
-table.sources { border-collapse: collapse; width: calc(100% - 48px); margin-top: 12px; }
+table.sources { border-collapse: collapse; width: 100%; margin-top: 12px; }
 table.sources th, table.sources td {
-  border-bottom: 1px solid #ddd; padding: 8px; text-align: left;
+  border-bottom: 1px solid var(--cui-border-color); padding: 8px; text-align: left;
   vertical-align: top;
 }
-table.sources th { font-weight: 600; background: #f6f6f6; white-space: nowrap; }
-table.sources .detail { font-family: ui-monospace, monospace; font-size: 12px; color: #555; }
+table.sources th { font-weight: 600; background: var(--cui-secondary-bg); white-space: nowrap; }
+table.sources .detail { font-family: ui-monospace, monospace; font-size: 12px; color: var(--cui-secondary-color); }
 table.sources .actions { white-space: nowrap; }
 table.sources .actions form { display: inline; margin: 0; }
 
-.error { color: #c00; font-size: 12px; }
+.error { color: var(--cui-danger); font-size: 12px; }
 
 .errors {
-  color: #c00; border: 1px solid #c00; background: #fee;
+  color: var(--cui-danger-text-emphasis);
+  border: 1px solid var(--cui-danger-border-subtle);
+  background: var(--cui-danger-bg-subtle);
   padding: 8px 8px 8px 28px; margin-bottom: 12px;
 }
+/* AdminFormBuilder#error_messages already wraps the list in an alert. */
+.alert .errors { border: 0; background: none; color: inherit; padding: 0 0 0 1rem; margin: 0; }
 
 /* ---------- Forms ---------- */
 
@@ -65,10 +182,12 @@ table.sources .actions form { display: inline; margin: 0; }
 .field select { width: 100%; padding: 4px 6px; }
 .field input[type=checkbox] { width: auto; }
 
-fieldset { border: 1px solid #ccc; padding: 12px; max-width: 500px; }
-legend { font-weight: 600; padding: 0 4px; }
+fieldset { border: 1px solid var(--cui-border-color); padding: 12px; max-width: 500px; }
+/* CoreUI's reboot floats legends full-width at heading size, which
+   pulls them inside these bordered fieldsets. */
+legend { float: none; width: auto; font-size: inherit; font-weight: 600; padding: 0 4px; margin: 0; }
 
-.hint { color: #666; font-size: 12px; margin: 4px 0 0; }
+.hint { color: var(--cui-secondary-color); font-size: 12px; margin: 4px 0 0; }
 
 .type-list { list-style: none; padding: 0; }
 .type-list li { margin: 8px 0; }
@@ -82,15 +201,16 @@ legend { font-weight: 600; padding: 0 4px; }
 .results li { margin: 2px 0; }
 .results button {
   background: none; border: none; padding: 2px 0;
-  color: #06c; cursor: pointer; text-align: left; font: inherit;
+  color: var(--cui-link-color); cursor: pointer; text-align: left; font: inherit;
 }
 
 /* ---------- Devices waiting to be claimed ---------- */
 
 .pending {
-  margin: 12px 24px;
-  border: 1px solid #333;
-  background: #ffd;
+  margin: 12px 0;
+  border: 1px solid var(--cui-warning-border-subtle);
+  background: var(--cui-warning-bg-subtle);
+  color: var(--cui-warning-text-emphasis);
   padding: 12px;
 }
 .pending h2 { margin-top: 0; }
@@ -105,4 +225,6 @@ legend { font-weight: 600; padding: 0 4px; }
   font-size: 18px; letter-spacing: 2px;
   background: #222; color: #fff; padding: 2px 8px;
 }
-.claim-row .claim-what { color: #555; }
+/* Inherits the warning text color: CoreUI keeps the warning background
+   light in dark mode, where --cui-secondary-color is near-white. */
+.claim-row .claim-what { color: inherit; }

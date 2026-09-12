@@ -14,7 +14,7 @@ class Bitmap
   #
   # The dashboard HTML is authored to land on the pixel grid, so at 1:1
   # the capture is already almost pure black and white. With `dither:`
-  # (see Dither::ALGORITHMS) the greys that remain — images, anti-aliased
+  # (see Dither::ALGORITHMS) the grays that remain — images, anti-aliased
   # curves — are error-diffused into dot patterns. Without it, every pixel
   # just falls to whichever side of `threshold` it is on.
   def self.from_png(png_bytes, bit_depth: 1, dither: nil, threshold: 128)
