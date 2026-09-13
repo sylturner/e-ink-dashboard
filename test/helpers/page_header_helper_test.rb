@@ -23,6 +23,15 @@ class PageHeaderHelperTest < ActionView::TestCase
     assert_select "header.page-hero .gap-2", 0
   end
 
+  test "a page title links back to its section and titles the page" do
+    @rendered = page_title("Kitchen", parent: [ "Dashboards", "/dashboards" ], crumb: "Builder")
+
+    assert_select "nav[aria-label=Breadcrumb] .breadcrumb-item a[href=?]", "/dashboards", "Dashboards"
+    assert_select ".breadcrumb-item.active[aria-current=page]", "Builder"
+    assert_select "h1", "Kitchen"
+    assert_equal "Kitchen", content_for(:title)
+  end
+
   test "keeps a title the view already set" do
     content_for :title, "Kitchen settings"
 

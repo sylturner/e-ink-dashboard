@@ -1,6 +1,6 @@
 <%# A dashboard as a card: its render as the panel shows it, then its
     name, which opens the builder and makes the whole card a link. The
-    footer is raised above that link so its own buttons stay clickable. %>
+    footer is raised above that link so its button stays clickable. %>
 <% width, height = dashboard.screen_size %>
 <% device_count = dashboard.devices.size %>
 <article id="<%= dom_id dashboard %>" class="card h-100 dashboard-card">
@@ -11,7 +11,7 @@
 
   <div class="card-body">
     <h2 class="h5 card-title">
-      <%= link_to dashboard.name, builder_dashboard_path(dashboard),
+      <%= link_to dashboard.name, edit_dashboard_path(dashboard),
                   class: "stretched-link link-body-emphasis text-decoration-none" %>
     </h2>
     <p class="card-text small text-body-secondary mb-2">
@@ -25,12 +25,9 @@
     </span>
   </div>
 
-  <div class="card-footer bg-transparent d-flex gap-2 position-relative z-2">
-    <%= link_to edit_dashboard_path(dashboard), class: "btn btn-sm btn-app-outline" do %>
-      Settings<span class="visually-hidden"> for <%= dashboard.name %></span>
-    <% end %>
+  <div class="card-footer bg-transparent d-flex justify-content-end position-relative z-2">
     <%= button_to dashboard, method: :delete, class: "btn btn-sm btn-app-outline",
-                  form: { class: "ms-auto", data: { turbo_confirm: "Delete #{dashboard.name}?" } } do %>
+                  form: { data: { turbo_confirm: "Delete #{dashboard.name}?" } } do %>
       Delete<span class="visually-hidden"> <%= dashboard.name %></span>
     <% end %>
   </div>

@@ -15,8 +15,7 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
       assert_select "img.dashboard-thumbnail[src=?][loading=lazy][width][height]",
                     dashboard_thumbnail_path(@dashboard, format: :png)
       assert_select "img[alt=?]", "Preview showing Weather"
-      assert_select "a.stretched-link[href=?]", builder_dashboard_path(@dashboard), @dashboard.name
-      assert_select ".card-footer a[href=?]", edit_dashboard_path(@dashboard), "Settings for #{@dashboard.name}"
+      assert_select "a.stretched-link[href=?]", edit_dashboard_path(@dashboard), @dashboard.name
       assert_select ".card-footer form[action=?] button", dashboard_path(@dashboard), "Delete #{@dashboard.name}"
     end
   end
@@ -30,44 +29,71 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
     assert_select "main a[href=?]", new_dashboard_path, 2
   end
 
-  test "should get new" do
+  test "new is the builder before there is a dashboard to put tiles on" do
     get new_dashboard_url
+
     assert_response :success
+    assert_select "h1", "New dashboard"
+    assert_select ".builder-canvas"
+    assert_select ".tile", 0
+    assert_select ".dashboard-settings form[action=?]", dashboards_path do
+      assert_select "input[name=?]", "dashboard[name]"
+      assert_select "select[name=?]", "dashboard[theme]"
+      assert_select "input[type=submit][value=?]", "Create dashboard"
+    end
+    assert_select "#inspector, .palette, .builder-preview", 0
   end
 
-  test "should create dashboard" do
+  test "creating a dashboard opens it in the builder" do
     assert_difference("Dashboard.count") do
-      post dashboards_url, params: { dashboard: { grid_columns: @dashboard.grid_columns, grid_rows: @dashboard.grid_rows, name: @dashboard.name, theme: @dashboard.theme } }
+      post dashboards_url, params: { dashboard: { name: "Hallway", theme: "night", grid_columns: 12, grid_rows: 6 } }
     end
 
-    assert_redirected_to dashboard_url(Dashboard.last)
+    assert_redirected_to edit_dashboard_url(Dashboard.last)
   end
 
-  test "should show dashboard" do
-    get dashboard_url(@dashboard)
-    assert_response :success
+  test "a rejected new dashboard comes back with its errors" do
+    assert_no_difference("Dashboard.count") do
+      post dashboards_url, params: { dashboard: { name: "", theme: "default", grid_columns: 8, grid_rows: 8 } }
+    end
+
+    assert_response :unprocessable_content
+    assert_select ".dashboard-settings ul.errors li", "Name can't be blank"
+    assert_select "input.is-invalid[name=?]", "dashboard[name]"
   end
 
-  test "should get builder" do
-    get builder_dashboard_url(@dashboard)
-    assert_response :success
-  end
-
-  test "should get edit" do
+  test "edit is the builder, with the dashboard's settings beside the canvas" do
     get edit_dashboard_url(@dashboard)
+
     assert_response :success
+    assert_select "h1", @dashboard.name
+    assert_select ".builder-canvas"
+    assert_select "#inspector"
+    assert_select ".palette"
+    assert_select ".dashboard-settings" do
+      assert_select "form[action=?] input[name=?][value=?]", dashboard_path(@dashboard), "dashboard[name]", @dashboard.name
+      assert_select "input[type=submit][value=?]", "Save dashboard"
+      assert_select "form[action=?] button", dashboard_path(@dashboard), "Delete dashboard"
+    end
   end
 
-  test "should update dashboard" do
-    patch dashboard_url(@dashboard), params: { dashboard: { grid_columns: @dashboard.grid_columns, grid_rows: @dashboard.grid_rows, name: @dashboard.name, theme: @dashboard.theme } }
-    assert_redirected_to dashboard_url(@dashboard)
-  end
+  test "saving the settings returns to the builder" do
+    patch dashboard_url(@dashboard), params: { dashboard: { name: @dashboard.name, theme: "night", grid_columns: 8, grid_rows: 8 } }
 
-  test "update from the builder returns to the builder" do
-    patch dashboard_url(@dashboard),
-          params: { from_builder: "1", dashboard: { theme: "night" } }
-    assert_redirected_to builder_dashboard_url(@dashboard)
+    assert_redirected_to edit_dashboard_url(@dashboard)
     assert_equal "night", @dashboard.reload.theme
+  end
+
+  # The canvas has to match the tiles on it, so it keeps the saved grid.
+  test "a rejected update shows its errors on the builder, drawn from the saved settings" do
+    patch dashboard_url(@dashboard), params: { dashboard: { name: "", grid_columns: 0 } }
+
+    assert_response :unprocessable_content
+    assert_select "h1", @dashboard.name
+    assert_select "[data-grid-cols-value=?]", @dashboard.grid_columns.to_s
+    assert_select ".tile", @dashboard.dashboard_items.count
+    assert_select "input.is-invalid[name=?]", "dashboard[name]"
+    assert_select "input.is-invalid[name=?]", "dashboard[grid_columns]"
   end
 
   test "should reject an unknown theme" do
@@ -83,11 +109,19 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to dashboards_url
   end
 
+  test "the old show and builder URLs land in the builder" do
+    get "/dashboards/#{@dashboard.id}"
+    assert_redirected_to edit_dashboard_path(@dashboard)
+
+    get "/dashboards/#{@dashboard.id}/builder"
+    assert_redirected_to edit_dashboard_path(@dashboard)
+  end
+
   test "the builder links to each device's bitmap under the preview" do
     device = devices(:one)
     device.dashboards = [ @dashboard ]
 
-    get builder_dashboard_url(@dashboard)
+    get edit_dashboard_url(@dashboard)
 
     assert_response :success
     assert_select ".builder-preview .device-list li", 1
@@ -100,7 +134,7 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
     devices(:one).dashboards = [ @dashboard ]
     devices(:two).dashboards = [ @dashboard ]
 
-    get builder_dashboard_url(@dashboard)
+    get edit_dashboard_url(@dashboard)
 
     assert_select ".device-list li", 2
     [ devices(:one), devices(:two) ].each do |device|
@@ -111,7 +145,7 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
   test "a dashboard with no device says so and offers to assign one" do
     @dashboard.device_dashboards.destroy_all
 
-    get builder_dashboard_url(@dashboard)
+    get edit_dashboard_url(@dashboard)
 
     assert_response :success
     assert_select ".device-list", 0
@@ -132,7 +166,7 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
       }
     end
 
-    assert_redirected_to builder_dashboard_path(@dashboard)
+    assert_redirected_to edit_dashboard_path(@dashboard)
     assert_includes device.reload.dashboards, @dashboard
     assert_equal @dashboard, device.dashboard, "the first assignment becomes the active one"
   end
@@ -146,7 +180,7 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
       delete device_dashboard_url(assignment), params: { context: "builder" }
     end
 
-    assert_redirected_to builder_dashboard_path(@dashboard)
+    assert_redirected_to edit_dashboard_path(@dashboard)
     assert_empty device.reload.dashboards
     assert_nil device.dashboard, "nothing left to show"
   end
@@ -162,7 +196,7 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
       }
     end
 
-    assert_redirected_to builder_dashboard_path(@dashboard)
+    assert_redirected_to edit_dashboard_path(@dashboard)
     assert_match(/already been taken/i, flash[:alert])
   end
 
@@ -172,7 +206,7 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
     dashboard = dashboards(:two)
     item = dashboard_items(:two)
 
-    get builder_dashboard_url(dashboard)
+    get edit_dashboard_url(dashboard)
 
     assert_select ".tile[role=button][tabindex='0'][aria-pressed=false][data-id=?]", item.id.to_s do |tiles|
       assert_match(/, column #{item.col}, row #{item.row}, #{item.col_span} by #{item.row_span}\z/,
@@ -184,7 +218,7 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
 
   # WCAG 2.5.7: every drag has a single-click alternative.
   test "the builder offers move and resize buttons as an alternative to dragging" do
-    get builder_dashboard_url(dashboards(:two))
+    get edit_dashboard_url(dashboards(:two))
 
     assert_select ".builder-movers[role=group][aria-label]" do
       assert_select "button[type=button][disabled][data-action=?]", "grid#moveBy", 8
@@ -197,7 +231,7 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
   test "each tile carries the URLs the grid controller loads and saves it with" do
     item = dashboard_items(:two)
 
-    get builder_dashboard_url(dashboards(:two))
+    get edit_dashboard_url(dashboards(:two))
 
     assert_select ".tile[data-id=?][data-edit-url=?][data-reposition-url=?]",
                   item.id.to_s, edit_dashboard_item_path(item), reposition_dashboard_item_path(item)
@@ -205,7 +239,7 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
 
   # The inspector loads a second dashboard_item form beside the palette.
   test "the add-a-tile form's ids can't collide with the tile inspector's" do
-    get builder_dashboard_url(@dashboard)
+    get edit_dashboard_url(@dashboard)
 
     assert_select ".palette label[for=?]", "palette_dashboard_item_kind"
     assert_select ".palette select#palette_dashboard_item_kind"
@@ -228,7 +262,7 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
   test "only unassigned devices are offered" do
     devices(:one).dashboards = [ @dashboard ]
 
-    get builder_dashboard_url(@dashboard)
+    get edit_dashboard_url(@dashboard)
 
     assert_select "form.assign-device option" do |options|
       values = options.map { |o| o["value"].to_i }

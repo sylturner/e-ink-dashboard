@@ -11,8 +11,18 @@ export default class extends Controller {
     this.Sidebar.getOrCreateInstance(element)
   }
 
+  // CoreUI 5.9's Sidebar adds a window resize listener that dispose()
+  // leaves behind, and the listener's first call, _isMobile(), throws once
+  // dispose has nulled the instance's properties. Every Turbo visit
+  // replaces the sidebar, so after one a window resize would log a
+  // TypeError. Stubbing that check after disposing (dispose would null a
+  // stub set before it) lets the leftover listener return quietly.
   sidebarTargetDisconnected(element) {
-    this.Sidebar.getInstance(element)?.dispose()
+    const sidebar = this.Sidebar.getInstance(element)
+    if (!sidebar) return
+
+    sidebar.dispose()
+    sidebar._isMobile = () => false
   }
 
   toggle() {

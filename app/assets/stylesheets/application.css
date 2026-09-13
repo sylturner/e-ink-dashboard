@@ -56,6 +56,12 @@
   --cui-link-hover-color-rgb: 190, 189, 239;
 }
 
+/* A field's error message. CoreUI's light value, #e55353, is 3.7:1 on a
+   white card; the same hue darkened to #cc1f1f is 5.6:1 there and 5.0:1
+   on the page background. CoreUI's dark value already passes, so this
+   leaves the dark theme alone. */
+:root:not([data-coreui-theme=dark]) { --cui-form-invalid-color: #cc1f1f; }
+
 .sidebar-dark { --app-focus-ring: var(--app-accent-on-dark); }
 
 .alert, .pending, .builder-canvas {

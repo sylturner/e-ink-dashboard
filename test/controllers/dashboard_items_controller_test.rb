@@ -20,7 +20,7 @@ class DashboardItemsControllerTest < ActionDispatch::IntegrationTest
       post dashboard_items_url, params: { dashboard_item: { col: @dashboard_item.col, col_span: @dashboard_item.col_span, dashboard_id: @dashboard_item.dashboard_id, kind: @dashboard_item.kind, position: @dashboard_item.position, row: @dashboard_item.row, row_span: @dashboard_item.row_span, settings: @dashboard_item.settings, title: @dashboard_item.title, view: @dashboard_item.view, visible: @dashboard_item.visible } }
     end
 
-    assert_redirected_to builder_dashboard_url(@dashboard_item.dashboard)
+    assert_redirected_to edit_dashboard_url(@dashboard_item.dashboard)
   end
 
   test "should show dashboard_item" do
@@ -35,7 +35,7 @@ class DashboardItemsControllerTest < ActionDispatch::IntegrationTest
 
   test "should update dashboard_item" do
     patch dashboard_item_url(@dashboard_item), params: { dashboard_item: { col: @dashboard_item.col, col_span: @dashboard_item.col_span, dashboard_id: @dashboard_item.dashboard_id, kind: @dashboard_item.kind, position: @dashboard_item.position, row: @dashboard_item.row, row_span: @dashboard_item.row_span, settings: @dashboard_item.settings, title: @dashboard_item.title, view: @dashboard_item.view, visible: @dashboard_item.visible } }
-    assert_redirected_to builder_dashboard_url(@dashboard_item.dashboard)
+    assert_redirected_to edit_dashboard_url(@dashboard_item.dashboard)
   end
 
   test "should destroy dashboard_item" do
@@ -43,7 +43,7 @@ class DashboardItemsControllerTest < ActionDispatch::IntegrationTest
       delete dashboard_item_url(@dashboard_item)
     end
 
-    assert_redirected_to builder_dashboard_url(@dashboard_item.dashboard)
+    assert_redirected_to edit_dashboard_url(@dashboard_item.dashboard)
   end
 
   test "reposition moves and resizes the item" do
@@ -82,7 +82,7 @@ class DashboardItemsControllerTest < ActionDispatch::IntegrationTest
          params: { dashboard_item: { dashboard_id: dashboard.id, kind: "clock",
                                      col_span: 2, row_span: 2, visible: true } }
 
-    assert_redirected_to builder_dashboard_url(dashboard)
+    assert_redirected_to edit_dashboard_url(dashboard)
 
     item = DashboardItem.order(:id).last
     # Fixture :one holds cols 1-4 / rows 1-3, so the first 2x2 opening is
@@ -99,7 +99,7 @@ class DashboardItemsControllerTest < ActionDispatch::IntegrationTest
                                        col_span: 8, row_span: 8, visible: true } }
     end
 
-    assert_redirected_to builder_dashboard_url(dashboard)
+    assert_redirected_to edit_dashboard_url(dashboard)
     assert_match(/No room/, flash[:alert])
   end
 
@@ -170,7 +170,7 @@ class DashboardItemsControllerTest < ActionDispatch::IntegrationTest
                         settings: { "day_count" => "7", "hour_count" => "6" } }
     }
 
-    assert_redirected_to builder_dashboard_url(@dashboard_item.dashboard)
+    assert_redirected_to edit_dashboard_url(@dashboard_item.dashboard)
     @dashboard_item.reload
     assert_equal "forecast", @dashboard_item.view
     assert_equal 7, @dashboard_item.setting("day_count")
@@ -185,7 +185,7 @@ class DashboardItemsControllerTest < ActionDispatch::IntegrationTest
                         settings: { "show_times" => "0" } }
     }
 
-    assert_redirected_to builder_dashboard_url(item.dashboard)
+    assert_redirected_to edit_dashboard_url(item.dashboard)
     assert_equal false, item.reload.setting("show_times")
   end
 

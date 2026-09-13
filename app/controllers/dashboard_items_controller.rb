@@ -36,7 +36,7 @@ class DashboardItemsController < ApplicationController
     slot = FreeSlot.find(@dashboard, @dashboard_item.col_span, @dashboard_item.row_span)
 
     if slot.nil?
-      return redirect_to builder_dashboard_path(@dashboard),
+      return redirect_to edit_dashboard_path(@dashboard),
                          alert: "No room on the grid for that size."
     end
 
@@ -44,10 +44,10 @@ class DashboardItemsController < ApplicationController
     @dashboard_item.position = @dashboard.dashboard_items.maximum(:position).to_i + 1
 
     if @dashboard_item.save
-      redirect_to builder_dashboard_path(@dashboard),
+      redirect_to edit_dashboard_path(@dashboard),
                   notice: "Added #{@dashboard_item.kind}."
     else
-      redirect_to builder_dashboard_path(@dashboard),
+      redirect_to edit_dashboard_path(@dashboard),
                   alert: @dashboard_item.errors.full_messages.to_sentence
     end
   end
@@ -56,7 +56,7 @@ class DashboardItemsController < ApplicationController
   def update
     respond_to do |format|
       if @dashboard_item.update(dashboard_item_params)
-        format.html { redirect_to builder_dashboard_path(@dashboard_item.dashboard), notice: "Dashboard item was successfully updated.", status: :see_other }
+        format.html { redirect_to edit_dashboard_path(@dashboard_item.dashboard), notice: "Dashboard item was successfully updated.", status: :see_other }
         format.json { render :show, status: :ok, location: @dashboard_item }
       else
         format.html { render :edit, status: :unprocessable_content }
@@ -85,7 +85,7 @@ class DashboardItemsController < ApplicationController
     @dashboard_item.destroy!
 
     respond_to do |format|
-      format.html { redirect_to builder_dashboard_path(dashboard), notice: "Dashboard item was successfully destroyed.", status: :see_other }
+      format.html { redirect_to edit_dashboard_path(dashboard), notice: "Dashboard item was successfully destroyed.", status: :see_other }
       format.json { head :no_content }
     end
   end

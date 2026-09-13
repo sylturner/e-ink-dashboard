@@ -282,12 +282,6 @@ export default class extends Controller {
       `${tile.dataset.name}, column ${c.col}, row ${c.row}, ${c.colSpan} by ${c.rowSpan}`)
   }
 
-  // Submits the enclosing form without an inline onchange handler, so
-  // the page keeps working under a strict CSP.
-  submit(event) {
-    event.target.form?.requestSubmit()
-  }
-
   status(message) {
     if (this.hasStatusTarget) this.statusTarget.textContent = message
   }

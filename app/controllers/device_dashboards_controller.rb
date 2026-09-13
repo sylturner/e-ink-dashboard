@@ -30,7 +30,7 @@ class DeviceDashboardsController < ApplicationController
     # be pointed somewhere else.
     def return_path(device: @assignment&.device, dashboard: @assignment&.dashboard)
       case params[:context]
-      when "builder" then builder_dashboard_path(dashboard)
+      when "builder" then edit_dashboard_path(dashboard)
       when "devices" then devices_path
       else device_path(device)
       end

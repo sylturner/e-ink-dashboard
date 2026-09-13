@@ -27,7 +27,8 @@ A self-hosted server for ESP32 e-paper panels.
 - **Device API.** It is used by the firmware in `esp32/esp32_dashboard/` and is deliberately unauthenticated.
   - `POST /devices/enroll` gives a panel a token for its MAC, plus a claim code shown on its screen until it is assigned a dashboard.
   - `GET /devices/:token/frame` returns the bitmap, composing a fresh one when it is due or forced. It also records telemetry from `X-*` headers and sets `Refresh-Rate`.
-- **Admin UI:** Dashboards (including the drag-and-drop builder, `grid_controller.js`), Sources and Devices.
+- **Admin UI:** Dashboards, Sources and Devices.
+  - A dashboard has no show page. The list's cards show it, and the drag-and-drop builder (`grid_controller.js`) is both its new and edit page.
   - It is built on the vendored CoreUI 5.9 Bootstrap admin template (`vendor/assets`, `vendor/javascript`), with `AdminFormBuilder` as the default form builder.
   - Section index pages open with the `page_header` helper's banner (`application/_page_header.html.erb`).
   - It is being restyled one area at a time, so some views are still Rails scaffold.

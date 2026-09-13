@@ -12,7 +12,7 @@ class AdminLayoutTest < ActionDispatch::IntegrationTest
   end
 
   test "the builder counts as the Dashboards section" do
-    get builder_dashboard_url(dashboards(:one))
+    get edit_dashboard_url(dashboards(:one))
 
     assert_select "#sidebar a.nav-link.active[href=?]", dashboards_path
   end
