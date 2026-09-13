@@ -34,6 +34,10 @@ Rails.application.routes.draw do
   # stand in for a show page. Old links to either land in the builder.
   get "dashboards/:id",         to: redirect("/dashboards/%{id}/edit"), constraints: { id: /\d+/ }
   get "dashboards/:id/builder", to: redirect("/dashboards/%{id}/edit")
+  # The app's one settings row: an edit page and nothing else.
+  resource :settings, only: %i[edit update]
+  get "settings", to: redirect("/settings/edit")
+
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.

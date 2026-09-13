@@ -9,6 +9,7 @@ class RendersController < ApplicationController
     @dashboard = Dashboard.find_by(id: params[:dashboard_id])
     @device    = @dashboard ? @dashboard.devices.first : Device.first
     @dashboard ||= @device&.dashboard || Dashboard.first
-    @now       = Time.current
+    # The panel's clock, as FrameComposer draws it.
+    @now       = @device ? @device.local_time : Time.current
   end
 end

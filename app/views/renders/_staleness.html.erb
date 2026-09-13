@@ -4,6 +4,6 @@
 %>
 <% if failing %>
   <div class="card-footer">
-    <%= fetched.in_time_zone(now.time_zone).strftime("%-l:%M %p") %><%= " · stale" %>
+    <%= panel_time(fetched.in_time_zone(now.time_zone), :time) %><%= " · stale" %>
   </div>
 <% end %>

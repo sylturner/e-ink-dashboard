@@ -1,5 +1,11 @@
-# How a source's fetching is going, for the source list and details page.
+# How a source's fetching is going, for the source list and details page,
+# and the choices its form offers.
 module SourcesHelper
+  # A weather source's units, on its form and as the app settings' default.
+  def weather_units_options
+    WeatherProvider::UNITS.map { [ t("weather.units.#{it}"), it ] }
+  end
+
   # A badge -- OK, failing with its failure count, or not fetched yet --
   # followed by the last error while the source isn't healthy.
   def source_health(source)

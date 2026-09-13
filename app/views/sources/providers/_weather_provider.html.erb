@@ -38,7 +38,7 @@
 
   <div class="mb-3">
     <%= f.label :units %>
-    <%= f.select :units, [ [ "Fahrenheit", "imperial" ], [ "Celsius", "metric" ] ] %>
+    <%= f.select :units, weather_units_options %>
     <%= f.invalid_feedback :units %>
   </div>
 </div>

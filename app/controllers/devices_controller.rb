@@ -7,7 +7,7 @@ class DevicesController < ApplicationController
   # dashboard.
   def index
     @pending    = Device.where(dashboard_id: nil).order(:enrolled_at, :name)
-    @devices    = Device.where.not(dashboard_id: nil).includes(:dashboard).order(:name)
+    @devices    = Device.claimed.includes(:dashboard).order(:name)
     @dashboards = Dashboard.order(:name)
     # Which cards have a frame to show, without loading the bitmaps.
     @framed_ids = Frame.rendered.where(device_id: @devices.map(&:id)).distinct.pluck(:device_id).to_set
@@ -16,9 +16,9 @@ class DevicesController < ApplicationController
   # GET /devices/new
   #
   # Panels normally add themselves (EnrollmentsController); this is for
-  # adding one by hand.
+  # adding one by hand. It starts on the app's schedule, as they do.
   def new
-    @device = Device.new
+    @device = Device.new(AppSetting.current.panel_defaults)
   end
 
   # GET /devices/1/edit

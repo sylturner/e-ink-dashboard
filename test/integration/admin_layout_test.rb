@@ -17,6 +17,13 @@ class AdminLayoutTest < ActionDispatch::IntegrationTest
     assert_select "#sidebar a.nav-link.active[href=?]", dashboards_path
   end
 
+  test "the settings page counts as Settings" do
+    get edit_settings_url
+
+    assert_select "#sidebar a.nav-link.active", 1
+    assert_select "#sidebar a.nav-link.active[href=?]", edit_settings_path
+  end
+
   # WCAG 3.1.1, 2.4.1 and 1.3.1: page language, a way past the repeated
   # sidebar, and landmarks for the navigation and content.
   test "the layout declares its language, landmarks and a skip link" do

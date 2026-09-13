@@ -140,6 +140,18 @@ class DevicesControllerTest < ActionDispatch::IntegrationTest
     assert_select ".device-status, .device-dashboards", 0
   end
 
+  test "a new device starts on the app's schedule and time zone" do
+    AppSetting.current.update!(refresh_seconds: 1200, active_from_hour: 8)
+
+    get new_device_url
+
+    assert_select "input[name=?][value='1200']", "device[refresh_seconds]"
+    assert_select "select[name=?] option[selected][value='8']", "device[active_from_hour]"
+    # Nothing selected, so the first choice -- the app's zone -- shows.
+    assert_select "select[name=?] option:first-child[value='']", "device[time_zone]", "App time zone (Etc/UTC)"
+    assert_select "select[name=?] option[selected]", "device[time_zone]", 0
+  end
+
   test "creating a device opens its page" do
     assert_difference("Device.count") do
       post devices_url, params: { device: { name: "Hallway", width: 800, height: 480, bit_depth: 1,
@@ -156,7 +168,7 @@ class DevicesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_content
     assert_select ".device-settings ul.errors li", "Name can't be blank"
-    assert_select "input.is-invalid[name=?]", "device[time_zone]"
+    assert_select "select.is-invalid[name=?]", "device[time_zone]"
   end
 
   test "edit is the device's page, with its status, dashboards and settings" do
@@ -199,7 +211,7 @@ class DevicesControllerTest < ActionDispatch::IntegrationTest
     assert_select "select[name=?][aria-describedby=?]", "device[dither]", "device_dither_hint"
     assert_select ".form-text#device_dither_hint"
     assert_select "input[name=?][aria-describedby=?]", "device[night_refresh_seconds]", "device_refresh_seconds_hint"
-    assert_select "input[name=?][aria-describedby=?]", "device[time_zone]", "device_time_zone_hint"
+    assert_select "select[name=?][aria-describedby=?]", "device[time_zone]", "device_time_zone_hint"
   end
 
   test "saving the settings returns to the page and asks for a fresh frame" do
@@ -274,7 +286,7 @@ class DevicesControllerTest < ActionDispatch::IntegrationTest
     assert_select "h1", @device.name
     assert_select ".device-assignments li", 1
     assert_select "input.is-invalid[name=?]", "device[name]"
-    assert_select "input.is-invalid[name=?] ~ .invalid-feedback", "device[time_zone]", "Time zone isn't a time zone name"
+    assert_select "select.is-invalid[name=?] ~ .invalid-feedback", "device[time_zone]", "Time zone isn't a time zone name"
   end
 
   test "the dashboards card switches the panel to another of its dashboards" do

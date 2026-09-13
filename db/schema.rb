@@ -10,7 +10,20 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_10_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_13_120000) do
+  create_table "app_settings", force: :cascade do |t|
+    t.integer "active_from_hour", default: 6, null: false
+    t.integer "active_until_hour", default: 23, null: false
+    t.string "clock", default: "12h", null: false
+    t.datetime "created_at", null: false
+    t.integer "night_refresh_seconds", default: 3600, null: false
+    t.integer "refresh_seconds", default: 900, null: false
+    t.string "time_zone", default: "Etc/UTC", null: false
+    t.string "units", default: "imperial", null: false
+    t.datetime "updated_at", null: false
+    t.string "week_start", default: "sunday", null: false
+  end
+
   create_table "dashboard_item_sources", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "dashboard_item_id", null: false
@@ -72,6 +85,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_10_120000) do
     t.string "dither", default: "floyd_steinberg", null: false
     t.datetime "enrolled_at"
     t.string "firmware_version"
+    t.boolean "gamma_correct_dither", default: false, null: false
     t.integer "height", default: 480
     t.string "image_format", default: "bmp"
     t.datetime "last_seen_at"

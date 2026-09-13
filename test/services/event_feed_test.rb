@@ -47,7 +47,8 @@ class EventFeedTest < ActiveSupport::TestCase
     attach("Cal", [ timed("noon", Time.utc(2026, 9, 7, 16), Time.utc(2026, 9, 7, 17)) ])
 
     event = EventFeed.for(@item, zone: ZONE).first
-    assert_equal "9/7 12:00p", event.time_label
+    assert_equal ZONE.parse("2026-09-07 12:00"), event.starts_at
+    assert_equal ZONE, event.starts_at.time_zone
     assert_equal Date.new(2026, 9, 7), event.starts_at.to_date
   end
 
@@ -57,7 +58,6 @@ class EventFeedTest < ActiveSupport::TestCase
     event = EventFeed.for(@item, zone: ActiveSupport::TimeZone["Pacific/Auckland"]).first
 
     assert event.all_day
-    assert_equal "9/10 All day", event.time_label
     assert event.on?(Date.new(2026, 9, 10))
     assert_not event.on?(Date.new(2026, 9, 9))
     assert_not event.on?(Date.new(2026, 9, 11)), "DTEND is exclusive for all-day events"

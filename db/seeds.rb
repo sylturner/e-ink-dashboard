@@ -1,3 +1,5 @@
+AppSetting.current.update!(time_zone: "America/New_York")
+
 dashboard = Dashboard.find_or_create_by!(name: "Kitchen") do |d|
   d.theme = "default"
   d.grid_columns = 8

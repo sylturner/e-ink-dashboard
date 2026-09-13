@@ -7,4 +7,8 @@ class ApplicationController < ActionController::Base
 
   # CoreUI classes on form controls; see app/form_builders.
   default_form_builder AdminFormBuilder
+
+  # Times and weeks follow the app's settings, on the admin pages and in
+  # everything the panels ask for.
+  around_action { |_controller, action| AppSetting.current.apply(&action) }
 end

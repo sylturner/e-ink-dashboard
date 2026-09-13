@@ -1,8 +1,7 @@
 class Device < ApplicationRecord
-  has_secure_token :token
+  include CheckInSchedule
 
-  MIN_SLEEP = 60
-  MAX_SLEEP = 6.hours.to_i
+  has_secure_token :token
 
   # How often an unclaimed panel comes back to ask, so assigning a
   # dashboard feels immediate rather than like a fault.
@@ -14,11 +13,6 @@ class Device < ApplicationRecord
   BIT_DEPTHS    = [ 1, 2, 4 ].freeze
   IMAGE_FORMATS = %w[bmp raw].freeze
   ROTATIONS     = [ 0, 90, 180, 270 ].freeze
-
-  # Daytime runs from the start hour up to, but not including, the end
-  # hour, so it can end at midnight (24).
-  DAYTIME_START_HOURS = (0..23)
-  DAYTIME_END_HOURS   = (1..24)
 
   # The settings a frame is rendered from: changing one leaves the frame
   # on the panel out of date. Rotation isn't used when rendering.
@@ -34,6 +28,8 @@ class Device < ApplicationRecord
 
   has_many :frames, dependent: :destroy
 
+  scope :claimed, -> { where.not(dashboard_id: nil) }
+
   after_save :sync_active_dashboard
 
   # Every device needs a code, not just self-enrolled ones: an unclaimed
@@ -44,16 +40,10 @@ class Device < ApplicationRecord
   validates :bit_depth, inclusion: { in: BIT_DEPTHS }
   validates :image_format, inclusion: { in: IMAGE_FORMATS }
   validates :rotation, inclusion: { in: ROTATIONS }
-  validates :active_from_hour, inclusion: { in: DAYTIME_START_HOURS }
-  validates :active_until_hour, inclusion: { in: DAYTIME_END_HOURS }
 
   # "none" keeps the plain black/white threshold.
   DITHER_OPTIONS = [ "none", *Dither::ALGORITHMS ].freeze
   validates :dither, inclusion: { in: DITHER_OPTIONS }
-
-  # The schedule and the render both read the panel's clock in this zone,
-  # so an unknown one would make every check-in fail.
-  validate :time_zone_known
 
   # Idempotent by MAC, so a device retrying after a timeout does not
   # create duplicates and a re-flashed one reattaches to its old row.
@@ -88,11 +78,6 @@ class Device < ApplicationRecord
       code = Array.new(4) { CLAIM_ALPHABET.sample }.join
       break code unless exists?(claim_code: code)
     end
-  end
-
-  # Blank is allowed: the server's zone stands in.
-  def self.known_time_zone?(name)
-    name.blank? || ActiveSupport::TimeZone[name].present?
   end
 
   # A panel is claimed once it has something to show.
@@ -153,12 +138,15 @@ class Device < ApplicationRecord
     saved_changes.keys.intersect?(FRAME_SETTINGS)
   end
 
+  # The time on the panel's clock: in its own zone, or the app's.
+  def local_time(at = Time.current)
+    at.in_time_zone(time_zone.presence || Time.zone)
+  end
+
   def sleep_seconds(at = Time.current)
     return UNCLAIMED_SLEEP unless claimed?
 
-    zone    = time_zone.presence || Time.zone.name
-    hour    = at.in_time_zone(zone).hour
-    daytime = (active_from_hour...active_until_hour).cover?(hour)
+    daytime = (active_from_hour...active_until_hour).cover?(local_time(at).hour)
     value   = daytime ? refresh_seconds : night_refresh_seconds
 
     value.to_i.clamp(MIN_SLEEP, MAX_SLEEP)
@@ -180,9 +168,5 @@ class Device < ApplicationRecord
 
     def assign_claim_code
       self.claim_code = self.class.generate_claim_code if claim_code.blank?
-    end
-
-    def time_zone_known
-      errors.add(:time_zone, "isn't a time zone name") unless self.class.known_time_zone?(time_zone)
     end
 end

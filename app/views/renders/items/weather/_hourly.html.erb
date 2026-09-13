@@ -1,7 +1,8 @@
 <div class="hours">
   <% hours.each do |h| %>
     <div class="hour">
-      <div class="t-sm"><%= h["hour"] %></div>
+      <%# "hour" is the label payloads carried before "at"; one refetch replaces it. %>
+      <div class="t-sm"><%= h["at"] ? panel_time(Time.iso8601(h["at"]), :hour) : h["hour"] %></div>
       <%= weather_icon(h["icon"], size: 32) %>
       <div class="t-xs sky-label"><%= h["label"] %></div>
       <div class="t-sm"><%= h["temp"] %>&deg;</div>

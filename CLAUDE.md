@@ -15,6 +15,8 @@ A self-hosted server for ESP32 e-paper panels.
   - `Source` holds fetched data. Its type-specific settings and `fetch!` live in a provider in `app/models/providers` (`WeatherProvider`, `IcalProvider`, `RssProvider`). Providers are discovered from that directory through the `Providable` concern, so adding a provider means adding a file. Each declares its label, icon, description, form attributes and refresh interval with `provides`.
   - `Dashboard` is a grid (columns × rows, plus a theme) of `DashboardItem`s. Each item is a component (clock, calendar, weather, news, text) placed on the grid and fed by one or more sources. `Component` is the registry of each component's layouts, accepted source types and settings.
   - `Device` is a panel: size, bit depth, image format, dithering, refresh schedule and last-reported telemetry. `DeviceDashboard` assigns dashboards to devices. `Frame` stores rendered bitmaps.
+  - `AppSetting` is the app's single settings row, read through `AppSetting.current` (memoized in `Current`). It holds the time zone, the panels' 12/24-hour clock, the week start, the units new weather sources start with, and the check-in schedule new panels start with. The schedule fields and their validations are shared with `Device` through the `CheckInSchedule` concern.
+  - **Time zones.** `ApplicationController` and `ApplicationJob` run everything inside `AppSetting#apply`, which sets `Time.zone` and `Date.beginning_of_week`. A panel with a blank `time_zone` follows the app's (`Device#local_time`). Time zones are stored as IANA names. Times drawn on a panel go through `PanelTimeHelper` and the `panel_*` formats in `config/locales/en.yml`; don't `strftime` them directly.
 - **Data refresh** (`config/recurring.yml`):
   - `FetchDueSourcesJob` runs every minute and queues a `FetchSourceJob` per due source. That job queues re-renders when a source's payload changes.
   - `RenderAllDevicesJob` re-renders every assigned panel every 30 minutes.
@@ -29,6 +31,7 @@ A self-hosted server for ESP32 e-paper panels.
   - `GET /devices/:token/frame` returns the bitmap, composing a fresh one when it is due or forced. It also records telemetry from `X-*` headers and sets `Refresh-Rate`.
 - **Admin UI:** Dashboards, Sources and Devices.
   - A dashboard has no show page. The list's cards show it, and the drag-and-drop builder (`grid_controller.js`) is both its new and edit page.
+  - Settings (`SettingsController`, a singular resource) is a single edit page for `AppSetting`. Saving a change to the time zone, clock or week start asks every claimed panel for a new frame.
   - A device has no show page either. The list claims waiting panels and shows the rest as cards. A device's edit page is its home: status, dashboards (assign, switch, unassign) and settings. Telemetry isn't editable.
   - Cards and the device page show a panel's last frame from `GET /devices/:device_id/last_frame` (`Devices::LastFramesController`). Unlike the device API's frame URL, it only reads: no check-in, no compose. Raw frames are converted to PNG with `Bitmap#to_png`.
   - It is built on the vendored CoreUI 5.9 Bootstrap admin template (`vendor/assets`, `vendor/javascript`), with `AdminFormBuilder` as the default form builder.

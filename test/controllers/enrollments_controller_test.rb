@@ -79,6 +79,19 @@ class EnrollmentsControllerTest < ActionDispatch::IntegrationTest
 
 
 
+  test "a new panel starts on the app's schedule and follows its time zone" do
+    AppSetting.current.update!(refresh_seconds: 1200, night_refresh_seconds: 5400,
+                               active_from_hour: 7, active_until_hour: 22)
+
+    enroll
+
+    device = Device.order(:id).last
+    assert_equal [ 1200, 5400, 7, 22 ],
+                 [ device.refresh_seconds, device.night_refresh_seconds,
+                   device.active_from_hour, device.active_until_hour ]
+    assert_nil device.time_zone
+  end
+
   test "a missing MAC is a bad request" do
     assert_no_difference "Device.count" do
       post enroll_devices_url

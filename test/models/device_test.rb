@@ -119,6 +119,22 @@ class DeviceTest < ActiveSupport::TestCase
     assert @device.overdue?(seen + 601)
   end
 
+  test "a panel without a zone of its own follows the app's" do
+    @device.update!(time_zone: nil, active_from_hour: 6, active_until_hour: 23,
+                    refresh_seconds: 300, night_refresh_seconds: 3600)
+    at = Time.utc(2026, 9, 6, 12) # 8:00 in New York, 5:00 in Los Angeles
+    setting = app_settings(:one)
+
+    setting.update!(time_zone: "America/New_York")
+    setting.apply do
+      assert_equal 8, @device.local_time(at).hour
+      assert_equal 300, @device.sleep_seconds(at)
+    end
+
+    setting.update!(time_zone: "America/Los_Angeles")
+    setting.apply { assert_equal 3600, @device.sleep_seconds(at) }
+  end
+
   test "a panel that has never checked in isn't overdue or due" do
     device = Device.new(name: "Fresh")
 

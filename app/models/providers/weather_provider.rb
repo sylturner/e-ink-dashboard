@@ -8,12 +8,13 @@ class WeatherProvider < ApplicationRecord
            refresh_seconds: 900
 
   ENDPOINT = "https://api.open-meteo.com/v1/forecast".freeze
+  UNITS    = %w[imperial metric].freeze
 
   validates :latitude, :longitude, presence: true
-  validates :units, inclusion: { in: %w[imperial metric] }
+  validates :units, inclusion: { in: UNITS }
 
   def self.defaults
-    { units: "imperial", time_zone: Time.zone.name }
+    { units: AppSetting.current.units, time_zone: Time.zone.tzinfo.name }
   end
 
   def detail
@@ -29,8 +30,8 @@ class WeatherProvider < ApplicationRecord
       "current" => current(data),
       "daily"   => daily(data, zone),
       "hourly"  => hourly(data, zone),
-      "sunrise" => format_time(data.dig("daily", "sunrise", 0), zone),
-      "sunset"  => format_time(data.dig("daily", "sunset", 0), zone)
+      "sunrise" => iso_time(data.dig("daily", "sunrise", 0), zone),
+      "sunset"  => iso_time(data.dig("daily", "sunset", 0), zone)
     }
   end
 
@@ -44,7 +45,8 @@ class WeatherProvider < ApplicationRecord
       hourly: "temperature_2m,weather_code,precipitation_probability,is_day",
       daily: "weather_code,temperature_2m_max,temperature_2m_min," \
              "precipitation_probability_max,sunrise,sunset",
-      timezone: time_zone.presence || "auto",
+      # The zone the reply is parsed in (see #fetch!), so the two agree.
+      timezone: time_zone.presence || Time.zone.tzinfo.name,
       forecast_days: 7,
       temperature_unit: imperial? ? "fahrenheit" : "celsius",
       wind_speed_unit: imperial? ? "mph" : "kmh",
@@ -100,7 +102,9 @@ class WeatherProvider < ApplicationRecord
 
       code = h.dig("weather_code", i)
       {
-        "hour"   => at.strftime("%-l %p"),
+        # An instant with its offset, so the panel formats it on its own
+        # clock (PanelTimeHelper) and still in this source's zone.
+        "at"     => at.iso8601,
         "temp"   => h.dig("temperature_2m", i)&.round,
         "precip" => h.dig("precipitation_probability", i),
         "icon"   => Icons.for_wmo(code, is_day: h.dig("is_day", i)),
@@ -109,10 +113,10 @@ class WeatherProvider < ApplicationRecord
     end.first(24)
   end
 
-  def format_time(stamp, zone)
+  def iso_time(stamp, zone)
     return nil if stamp.blank?
 
     tz = Time.find_zone(zone) || Time.zone
-    tz.parse(stamp).strftime("%-l:%M %p")
+    tz.parse(stamp).iso8601
   end
 end
