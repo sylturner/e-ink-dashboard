@@ -89,13 +89,9 @@
                   <%= link_to "#{device.name} bitmap",
                               device_frame_path(token: device.token),
                               target: "_blank", rel: "noopener", class: "fw-semibold" %>
-                  <div class="small text-body-secondary font-monospace">
-                    <%= device.width %>&times;<%= device.height %> &middot;
-                    <%= device.bit_depth %>-bit <%= device.image_format
-                    %><% if device.rotation.to_i.nonzero? %> &middot; <%= device.rotation %>&deg;<% end %>
-                  </div>
+                  <div class="small text-body-secondary font-monospace"><%= device_spec(device) %></div>
                 </div>
-                <%= link_to device_path(device), class: "btn btn-sm btn-app-outline" do %>
+                <%= link_to edit_device_path(device), class: "btn btn-sm btn-app-outline" do %>
                   Settings<span class="visually-hidden"> for <%= device.name %></span>
                 <% end %>
                 <%= button_to device_dashboard_path(@assignments.fetch(device.id)),
@@ -107,10 +103,7 @@
               </li>
             <% end %>
           </ul>
-          <p class="small text-body-secondary">
-            Opens the live bitmap. Requesting it renders a fresh frame if one
-            is due, and counts as a check-in for that device.
-          </p>
+          <p class="small text-body-secondary"><%= t("devices.live_bitmap_hint") %></p>
         <% else %>
           <p class="small text-body-secondary">
             No device is assigned to this dashboard yet, so there is no bitmap

@@ -3,11 +3,11 @@
     footer is raised above that link so its button stays clickable. %>
 <% width, height = dashboard.screen_size %>
 <% device_count = dashboard.devices.size %>
-<article id="<%= dom_id dashboard %>" class="card h-100 dashboard-card">
+<article id="<%= dom_id dashboard %>" class="card h-100 panel-card">
   <%= image_tag dashboard_thumbnail_path(dashboard, format: :png),
                 alt: dashboard_thumbnail_alt(dashboard), width:, height:,
                 loading: "lazy", decoding: "async",
-                class: "card-img-top h-auto dashboard-thumbnail" %>
+                class: "card-img-top h-auto panel-thumbnail" %>
 
   <div class="card-body">
     <h2 class="h5 card-title">
@@ -18,11 +18,11 @@
       <%= dashboard.grid_columns %>&thinsp;&times;&thinsp;<%= dashboard.grid_rows %> grid
       &middot; <%= dashboard.theme.titleize %> theme
     </p>
-    <span class="<%= class_names("badge",
-                                 "bg-success-subtle text-success-emphasis": device_count.positive?,
-                                 "bg-secondary-subtle text-secondary-emphasis": device_count.zero?) %>">
-      <%= device_count.positive? ? "On #{pluralize(device_count, "device")}" : "Not on a device" %>
-    </span>
+    <% if device_count.positive? %>
+      <%= status_badge "On #{pluralize(device_count, "device")}", :success %>
+    <% else %>
+      <%= status_badge "Not on a device", :secondary %>
+    <% end %>
   </div>
 
   <div class="card-footer bg-transparent d-flex justify-content-end position-relative z-2">

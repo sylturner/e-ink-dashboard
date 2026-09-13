@@ -47,8 +47,28 @@ class Bitmap
     new(width: width, height: height, rows: rows)
   end
 
+  # The inverse of #to_raw, for reading back a stored raw frame.
+  def self.from_raw(bytes, width:, height:)
+    row_bytes = (width + 7) / 8
+    unless bytes.bytesize == row_bytes * height
+      raise ArgumentError, "#{bytes.bytesize} bytes is not a #{width}x#{height} 1-bit bitmap"
+    end
+
+    new(width: width, height: height,
+        rows: Array.new(height) { |y| bytes.byteslice(y * row_bytes, row_bytes) })
+  end
+
   def to_raw
     rows.join.b
+  end
+
+  # A grayscale PNG, for showing the bitmap in a browser: 1 bits are
+  # white, 0 bits black. Only the admin pages use it; panels are sent
+  # #to_format.
+  def to_png
+    pixels = rows.map { |row| row.unpack1("B*").byteslice(0, width) }.join.b.tr("01", "\x00\xFF".b)
+
+    Vips::Image.new_from_memory(pixels, width, height, 1, :uchar).write_to_buffer(".png")
   end
 
   def to_bmp

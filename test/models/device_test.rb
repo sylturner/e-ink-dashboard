@@ -109,6 +109,52 @@ class DeviceTest < ActiveSupport::TestCase
     assert_equal 3600, @device.sleep_seconds(zone.parse("2026-09-06 23:30"))
   end
 
+  test "the next check-in is the sleep after the last one, and missing two is overdue" do
+    @device.update!(time_zone: "UTC", active_from_hour: 0, active_until_hour: 24, refresh_seconds: 300)
+    seen = Time.zone.parse("2026-09-06 12:00")
+    @device.update_columns(last_seen_at: seen)
+
+    assert_equal seen + 300, @device.next_check_in_at
+    assert_not @device.overdue?(seen + 599)
+    assert @device.overdue?(seen + 601)
+  end
+
+  test "a panel that has never checked in isn't overdue or due" do
+    device = Device.new(name: "Fresh")
+
+    assert_nil device.next_check_in_at
+    assert_not device.overdue?
+  end
+
+  test "the time zone must be one the schedule can read" do
+    @device.time_zone = "Mars/Olympus_Mons"
+    assert_not @device.valid?
+    assert_includes @device.errors[:time_zone], "isn't a time zone name"
+
+    [ "America/Chicago", "Pacific Time (US & Canada)", "" ].each do |zone|
+      @device.time_zone = zone
+      assert @device.valid?, "#{zone.inspect} should be accepted"
+    end
+  end
+
+  test "daytime hours must be clock hours, ending as late as midnight" do
+    @device.assign_attributes(active_from_hour: 24, active_until_hour: 0)
+    assert_not @device.valid?
+    assert @device.errors.key?(:active_from_hour)
+    assert @device.errors.key?(:active_until_hour)
+
+    @device.assign_attributes(active_from_hour: 0, active_until_hour: 24)
+    assert @device.valid?
+  end
+
+  test "only settings the frame is rendered from count as frame changes" do
+    @device.update!(refresh_seconds: 900, rotation: 90, name: "Kitchen wall")
+    assert_not @device.frame_settings_changed?
+
+    @device.update!(dither: "none")
+    assert @device.frame_settings_changed?
+  end
+
   # --- enrollment and claiming ---
 
   test "every device gets a claim code, however the row was created" do
@@ -166,6 +212,17 @@ class DeviceTest < ActiveSupport::TestCase
     assert_equal token, again.token
     assert_equal code, again.claim_code
     assert_equal 2, again.bit_depth
+  end
+
+  # Zones and hours weren't validated before, so a saved one can be bad.
+  test "re-enrolling repairs a schedule the panel could not save with" do
+    device = Device.enroll!(mac: "aa:bb:cc:dd:ee:ff")
+    device.update_columns(time_zone: "Mars/Olympus_Mons", active_from_hour: 30, active_until_hour: 0)
+
+    again = Device.enroll!(mac: "aa:bb:cc:dd:ee:ff")
+
+    assert_nil again.time_zone
+    assert_equal [ 6, 23 ], [ again.active_from_hour, again.active_until_hour ]
   end
 
   test "re-enrolling does not reset the name someone chose" do

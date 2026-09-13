@@ -12,19 +12,20 @@
 /* ============================================================
    Admin pages. Applies to every page rendered in the application
    layout, on top of the vendored CoreUI stylesheet; the panel
-   render has its own stylesheet. The page shell, flash and
-   typography come from CoreUI -- the rules below the tokens and
-   components are the pre-CoreUI page styles, to be replaced area by
-   area. Colors use CoreUI's theme variables or the tokens below, so
-   these pages stay readable in dark mode.
+   render has its own stylesheet. The page shell, flash, typography
+   and components come from CoreUI -- the rules here port the
+   template's shell, fix its accessibility, and add the few things
+   the app's pages need that CoreUI doesn't have. Colors use CoreUI's
+   theme variables or the tokens below, so these pages stay readable
+   in dark mode. The builder's styles are in builder.css.
    ============================================================ */
 
 /* ---------- Tokens ----------
    The app's own colors, each chosen to meet WCAG 2.2 AA. "on-light"
-   values are for light surfaces: the light theme, plus the alerts, the
-   pending-device box and the builder canvas, which stay light in dark
-   mode too. "on-dark" values are for the dark theme and the sidebar,
-   which is dark in both themes.
+   values are for light surfaces: the light theme, plus the alerts and
+   the builder canvas, which stay light in dark mode too. "on-dark"
+   values are for the dark theme and the sidebar, which is dark in both
+   themes.
 
    accent: CoreUI's primary #5856d6 is >= 5.1:1 on light surfaces but
            only 2.1-3.0:1 on dark ones. #a6a5e9 keeps its hue (241deg),
@@ -69,7 +70,7 @@
 
 .sidebar-dark { --app-focus-ring: var(--app-accent-on-dark); }
 
-.alert, .pending, .builder-canvas {
+.alert, .builder-canvas {
   --app-focus-ring: var(--app-accent-on-light);
   --app-control-border: var(--app-border-on-light);
 }
@@ -188,55 +189,32 @@ html { scroll-padding-top: calc(var(--app-header-height) + 1rem); }
   .page-hero { padding: 2rem 2.5rem; }
 }
 
-/* ---------- Dashboard list ---------- */
+/* ---------- Panel cards ----------
+   The dashboard and device lists: a card per dashboard or panel, headed
+   by a picture of what the panel shows. */
 
-/* Holds the thumbnail's place while it is captured, which can take a
-   second or two per dashboard. */
-.dashboard-thumbnail {
+/* Holds the picture's place while it loads -- a dashboard thumbnail can
+   take a second or two to capture. */
+.panel-thumbnail {
   background-color: var(--cui-secondary-bg);
   border-bottom: var(--cui-border-width) solid var(--cui-border-color);
 }
+/* Stands in for a device's frame before it has one. Panels are 800x480
+   unless they say otherwise. */
+.panel-placeholder { aspect-ratio: 5 / 3; }
+
 /* The name reads as a heading; hovering anywhere on the card, which is
    all one link, lifts it and underlines the name. */
-.dashboard-card:hover { box-shadow: var(--cui-box-shadow); }
-.dashboard-card:hover .stretched-link { text-decoration: underline !important; }
+.panel-card:hover { box-shadow: var(--cui-box-shadow); }
+.panel-card:hover .stretched-link { text-decoration: underline !important; }
+
+/* ---------- Devices ---------- */
+
+/* The code an unclaimed panel shows on its screen, spaced to read the
+   same way. */
+.claim-code { letter-spacing: .15em; }
 
 /* ---------- Source details ---------- */
 
 /* The last fetched payload scrolls inside its own box. */
 .source-payload { max-height: 32rem; overflow: auto; }
-
-/* ---------- Device form, until it is restyled ---------- */
-
-.field { margin-bottom: 12px; max-width: 460px; }
-.field label { display: block; font-weight: 600; margin-bottom: 2px; }
-.field input[type=text], .field input[type=url], .field input[type=number],
-.field select { width: 100%; padding: 4px 6px; }
-.field input[type=checkbox] { width: auto; }
-
-.hint { color: var(--cui-secondary-color); font-size: 12px; margin: 4px 0 0; }
-
-/* ---------- Devices waiting to be claimed ---------- */
-
-.pending {
-  margin: 12px 0;
-  border: 1px solid var(--cui-warning-border-subtle);
-  background: var(--cui-warning-bg-subtle);
-  color: var(--cui-warning-text-emphasis);
-  padding: 12px;
-}
-.pending h2 { margin-top: 0; }
-
-.claim-row {
-  display: flex; align-items: center; gap: 10px;
-  margin: 0 0 8px;
-  font: 13px system-ui, sans-serif;
-}
-.claim-row .code {
-  font-family: ui-monospace, monospace;
-  font-size: 18px; letter-spacing: 2px;
-  background: #222; color: #fff; padding: 2px 8px;
-}
-/* Inherits the warning text color: CoreUI keeps the warning background
-   light in dark mode, where --cui-secondary-color is near-white. */
-.claim-row .claim-what { color: inherit; }

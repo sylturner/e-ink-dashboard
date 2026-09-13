@@ -12,7 +12,7 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
     assert_select "header.page-hero a[href=?]", new_dashboard_path
     assert_select "#dashboards > li > .card", Dashboard.count
     assert_select "#dashboard_#{@dashboard.id}" do
-      assert_select "img.dashboard-thumbnail[src=?][loading=lazy][width][height]",
+      assert_select "img.panel-thumbnail[src=?][loading=lazy][width][height]",
                     dashboard_thumbnail_path(@dashboard, format: :png)
       assert_select "img[alt=?]", "Preview showing Weather"
       assert_select "a.stretched-link[href=?]", edit_dashboard_path(@dashboard), @dashboard.name
@@ -127,7 +127,8 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".builder-preview .device-list li", 1
     assert_select ".device-list a[href=?][target=_blank]",
                   device_frame_path(token: device.token), device.name.to_s + " bitmap"
-    assert_select ".device-list a[href=?]", device_path(device)
+    assert_select ".device-list a[href=?]", edit_device_path(device)
+    assert_select ".device-list .font-monospace", "800×480 · 1-bit bmp"
   end
 
   test "every assigned device gets its own link" do

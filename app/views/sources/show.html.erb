@@ -19,7 +19,7 @@
           <dd class="col-sm-8"><%= distance_of_time_in_words(@source.refresh_seconds) %></dd>
 
           <dt class="col-sm-4">Last fetch</dt>
-          <dd class="col-sm-8"><%= source_fetched_ago(@source) %></dd>
+          <dd class="col-sm-8"><%= relative_time_tag(@source.fetched_at) %></dd>
 
           <dt class="col-sm-4">Health</dt>
           <dd class="col-sm-8"><%= source_health(@source) %></dd>

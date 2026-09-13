@@ -29,10 +29,12 @@ A self-hosted server for ESP32 e-paper panels.
   - `GET /devices/:token/frame` returns the bitmap, composing a fresh one when it is due or forced. It also records telemetry from `X-*` headers and sets `Refresh-Rate`.
 - **Admin UI:** Dashboards, Sources and Devices.
   - A dashboard has no show page. The list's cards show it, and the drag-and-drop builder (`grid_controller.js`) is both its new and edit page.
+  - A device has no show page either. The list claims waiting panels and shows the rest as cards. A device's edit page is its home: status, dashboards (assign, switch, unassign) and settings. Telemetry isn't editable.
+  - Cards and the device page show a panel's last frame from `GET /devices/:device_id/last_frame` (`Devices::LastFramesController`). Unlike the device API's frame URL, it only reads: no check-in, no compose. Raw frames are converted to PNG with `Bitmap#to_png`.
   - It is built on the vendored CoreUI 5.9 Bootstrap admin template (`vendor/assets`, `vendor/javascript`), with `AdminFormBuilder` as the default form builder.
-  - Section index pages open with the `page_header` helper's banner (`application/_page_header.html.erb`).
-  - It is being restyled one area at a time, so some views are still Rails scaffold.
-- **Tests:** Minitest tests for models, services, controllers, a helper, the form builder and admin-layout integration. The jobs and mailers have no tests. There are no system tests either: `test/system` doesn't exist, though CI still runs `test:system`.
+  - Section index pages open with the `page_header` helper's banner (`application/_page_header.html.erb`); inner pages with `page_title` (breadcrumb and heading).
+  - Every area is restyled. Only the scaffold `dashboard_items` index, show and new pages are left as generated.
+- **Tests:** Minitest tests for models, services, controllers, helpers, the form builder and admin-layout integration. The jobs and mailers have no tests. There are no system tests either: `test/system` doesn't exist, though CI still runs `test:system`.
 - `public/ditherer.html` is a standalone dithering tool, separate from the Rails app.
 
 ## Commands

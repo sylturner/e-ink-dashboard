@@ -4,6 +4,7 @@ class Frame < ApplicationRecord
   before_validation :set_metadata
 
   scope :recent, -> { order(rendered_at: :desc) }
+  scope :rendered, -> { where.not(data: nil) }
 
   private
 

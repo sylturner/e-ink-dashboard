@@ -33,7 +33,7 @@
                 <%= ui_icon source.providable_class.icon, classes: "icon me-1" %><%= source.kind_label %>
               </td>
               <td class="small font-monospace text-body-secondary text-break"><%= source.providable.detail %></td>
-              <td class="text-nowrap"><%= source_fetched_ago(source) %></td>
+              <td class="text-nowrap"><%= relative_time_tag(source.fetched_at) %></td>
               <td><%= source_health(source) %></td>
               <td class="text-nowrap"><%= pluralize(source.dashboard_items.size, "tile") %></td>
               <td class="text-nowrap text-end">

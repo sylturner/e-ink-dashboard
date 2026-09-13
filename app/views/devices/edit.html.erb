@@ -1,12 +1,127 @@
-<% content_for :title, "Editing device" %>
+<%# A device's page. A rejected settings change re-renders it, so all but
+    the settings form read what is saved (@saved_device). %>
+<% device = @saved_device %>
+<%= page_title device.name, parent: [ "Devices", devices_path ], crumb: "Device" %>
 
-<h1>Editing device</h1>
+<div class="row g-4">
+  <div class="col-xl-7 d-flex flex-column gap-4">
+    <section class="card device-status" aria-labelledby="device-status-heading">
+      <div class="card-header d-flex flex-wrap align-items-center gap-2">
+        <h2 id="device-status-heading" class="h6 mb-0 me-auto">Status</h2>
+        <%= button_to "Refresh on next wake", refresh_device_path(device), class: "btn btn-sm btn-app-outline" %>
+      </div>
 
-<%= render "form", device: @device %>
+      <%= render "devices/last_frame", device:, framed: @frame_rendered_at.present?, classes: nil %>
 
-<br>
+      <div class="card-body">
+        <dl class="row mb-0">
+          <dt class="col-sm-4">Showing</dt>
+          <dd class="col-sm-8">
+            <%= device.dashboard ? link_to(device.dashboard.name, edit_dashboard_path(device.dashboard)) : "Nothing yet. Assign a dashboard below." %>
+          </dd>
 
-<div>
-  <%= link_to "Show this device", @device %> |
-  <%= link_to "Back to devices", devices_path %>
+          <dt class="col-sm-4">Frame rendered</dt>
+          <dd class="col-sm-8"><%= relative_time_tag(@frame_rendered_at) %></dd>
+
+          <dt class="col-sm-4">Last check-in</dt>
+          <dd class="col-sm-8"><%= device_check_in(device) %></dd>
+
+          <dt class="col-sm-4">Next check-in</dt>
+          <dd class="col-sm-8"><%= device_next_check_in(device) %></dd>
+
+          <% if device.refresh_requested_at %>
+            <dt class="col-sm-4">Refresh requested</dt>
+            <dd class="col-sm-8"><%= relative_time_tag(device.refresh_requested_at) %></dd>
+          <% end %>
+
+          <dt class="col-sm-4">Battery</dt>
+          <dd class="col-sm-8"><%= device_battery(device) %></dd>
+
+          <dt class="col-sm-4">Signal</dt>
+          <dd class="col-sm-8"><%= device_signal(device) %></dd>
+
+          <dt class="col-sm-4">Firmware</dt>
+          <dd class="col-sm-8"><%= device_firmware(device) %></dd>
+
+          <dt class="col-sm-4">MAC address</dt>
+          <dd class="col-sm-8 font-monospace"><%= device.mac_address.presence || "None" %></dd>
+
+          <dt class="col-sm-4">Enrolled</dt>
+          <dd class="col-sm-8 mb-0"><%= relative_time_tag(device.enrolled_at, never: "Added by hand") %></dd>
+        </dl>
+      </div>
+
+      <div class="card-footer bg-transparent">
+        <%= link_to device_frame_path(token: device.token), target: "_blank", rel: "noopener",
+                    class: "btn btn-sm btn-app-outline", aria: { describedby: "live-bitmap-hint" } do %>
+          <%= ui_icon "cil-external-link", classes: "icon me-1" %> Open the live bitmap<span class="visually-hidden"> (opens in a new tab)</span>
+        <% end %>
+        <p id="live-bitmap-hint" class="small text-body-secondary mt-2 mb-0"><%= t("devices.live_bitmap_hint") %></p>
+      </div>
+    </section>
+
+    <section class="card device-dashboards" aria-labelledby="device-dashboards-heading">
+      <div class="card-header">
+        <h2 id="device-dashboards-heading" class="h6 mb-0">Dashboards</h2>
+      </div>
+
+      <% if @assignments.any? %>
+        <ul class="list-group list-group-flush device-assignments">
+          <% @assignments.each do |assignment| %>
+            <% dashboard = assignment.dashboard %>
+            <li class="list-group-item d-flex flex-wrap align-items-center column-gap-3 row-gap-2">
+              <div class="me-auto">
+                <%= link_to dashboard.name, edit_dashboard_path(dashboard), class: "fw-semibold" %>
+                <% if dashboard.id == device.dashboard_id %>
+                  <%= status_badge "Showing", :success %>
+                <% end %>
+              </div>
+              <% unless dashboard.id == device.dashboard_id %>
+                <%= button_to device_path(device), method: :patch,
+                              params: { device: { dashboard_id: dashboard.id } },
+                              class: "btn btn-sm btn-app-outline" do %>
+                  Switch to<span class="visually-hidden"> <%= dashboard.name %></span>
+                <% end %>
+              <% end %>
+              <%= button_to device_dashboard_path(assignment), method: :delete,
+                            class: "btn btn-sm btn-app-outline" do %>
+                Unassign<span class="visually-hidden"> <%= dashboard.name %></span>
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+      <% end %>
+
+      <div class="<%= class_names("card-body", "border-top": @assignments.any?) %>">
+        <% if @assignments.none? %>
+          <p class="text-body-secondary">No dashboard is assigned, so the panel is showing its claim code.</p>
+        <% elsif @assignments.size > 1 %>
+          <p class="small text-body-secondary">
+            A panel shows one of its dashboards at a time. A switch reaches the
+            panel when it next wakes.
+          </p>
+        <% end %>
+
+        <% if @assignable_dashboards.any? %>
+          <%= form_with model: DeviceDashboard.new, class: "assign-dashboard" do |f| %>
+            <%= f.hidden_field :device_id, value: device.id %>
+            <%= f.label :dashboard_id, "Assign a dashboard" %>
+            <div class="input-group">
+              <%= f.collection_select :dashboard_id, @assignable_dashboards, :id, :name %>
+              <%= f.submit "Assign" %>
+            </div>
+          <% end %>
+        <%# Nothing to assign and nothing assigned: there are no dashboards. %>
+        <% elsif @assignments.none? %>
+          <p class="small text-body-secondary mb-0"><%= link_to "Create a dashboard", new_dashboard_path %> to show on this panel.</p>
+        <% else %>
+          <p class="small text-body-secondary mb-0">Every dashboard is already assigned to this panel.</p>
+        <% end %>
+      </div>
+    </section>
+  </div>
+
+  <div class="col-xl-5">
+    <%= render "form", device: @device %>
+  </div>
 </div>

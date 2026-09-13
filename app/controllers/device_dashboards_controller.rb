@@ -32,7 +32,7 @@ class DeviceDashboardsController < ApplicationController
       case params[:context]
       when "builder" then edit_dashboard_path(dashboard)
       when "devices" then devices_path
-      else device_path(device)
+      else edit_device_path(device)
       end
     end
 end
