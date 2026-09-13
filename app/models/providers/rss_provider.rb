@@ -2,6 +2,8 @@ class RssProvider < ApplicationRecord
   include Providable
 
   provides label:           "RSS feed",
+           icon:            "cil-rss",
+           description:     "Headlines and images from an RSS or Atom feed.",
            attributes:      %i[feed_url max_items],
            refresh_seconds: 1800
 

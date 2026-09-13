@@ -115,11 +115,15 @@ class SourceTest < ActiveSupport::TestCase
 
   # The registry is only as good as the declarations, so a provider that
   # forgets `provides` should fail here rather than in a form.
-  test "every provider declares its label, attributes and refresh interval" do
+  test "every provider declares its label, icon, description, attributes and refresh interval" do
+    sprite = Rails.root.join("vendor/assets/images/coreui-icons-free.svg").read
+
     Source::PROVIDERS.each do |name|
       klass = Source.provider_class(name)
 
       assert klass.label.present?, "#{name} declares no label"
+      assert_includes sprite, %(id="#{klass.icon}"), "#{name} declares an icon the sprite doesn't have"
+      assert klass.description.present?, "#{name} declares no description"
       assert klass.form_attributes.present?, "#{name} declares no form attributes"
       assert_operator klass.default_refresh_seconds.to_i, :>=, 60,
                       "#{name} declares no usable refresh interval"

@@ -1,34 +1,44 @@
-<div data-controller="geocode">
-  <div class="field">
-    <label>Find a place</label>
-    <div class="lookup">
-      <input type="text" data-geocode-target="query"
-             placeholder="Clarkston, GA"
-             data-action="keydown.enter->geocode#search">
-      <button type="button" data-action="geocode#search">Look up</button>
+<div data-controller="geocode" data-geocode-url-value="<%= geocode_sources_path %>">
+  <%# The lookup only fills in the fields below; it has no name, so it is
+      never submitted. %>
+  <div class="mb-3">
+    <label class="form-label" for="geocode_query">Find a place</label>
+    <div class="input-group">
+      <input type="search" id="geocode_query" class="form-control"
+             placeholder="Clarkston, GA" aria-describedby="geocode_status"
+             data-geocode-target="query"
+             data-action="keydown.enter->geocode#search:prevent">
+      <button type="button" class="btn btn-app-outline" data-action="geocode#search">Look up</button>
     </div>
-    <ul class="results" data-geocode-target="results"></ul>
+    <%# A live region, so searching, the result count, a failure and the
+        place chosen are announced (WCAG 4.1.3). %>
+    <div id="geocode_status" class="form-text" role="status" data-geocode-target="status">
+      Look up a place to fill in its coordinates and time zone.
+    </div>
+    <div class="list-group mt-2" data-geocode-target="results"></div>
   </div>
 
-  <div class="field">
-    <%= f.label :latitude %>
-    <%= f.number_field :latitude, step: "any",
-                       data: { geocode_target: "latitude" } %>
+  <div class="row g-3 mb-3">
+    <div class="col-sm-6">
+      <%= f.label :latitude %>
+      <%= f.number_field :latitude, step: "any", data: { geocode_target: "latitude" } %>
+      <%= f.invalid_feedback :latitude %>
+    </div>
+    <div class="col-sm-6">
+      <%= f.label :longitude %>
+      <%= f.number_field :longitude, step: "any", data: { geocode_target: "longitude" } %>
+      <%= f.invalid_feedback :longitude %>
+    </div>
   </div>
 
-  <div class="field">
-    <%= f.label :longitude %>
-    <%= f.number_field :longitude, step: "any",
-                       data: { geocode_target: "longitude" } %>
-  </div>
-
-  <div class="field">
+  <div class="mb-3">
     <%= f.label :time_zone %>
     <%= f.text_field :time_zone, data: { geocode_target: "timeZone" } %>
   </div>
 
-  <div class="field">
+  <div class="mb-3">
     <%= f.label :units %>
     <%= f.select :units, [ [ "Fahrenheit", "imperial" ], [ "Celsius", "metric" ] ] %>
+    <%= f.invalid_feedback :units %>
   </div>
 </div>

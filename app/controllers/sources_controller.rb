@@ -2,7 +2,7 @@ class SourcesController < ApplicationController
   before_action :set_source, only: %i[show edit update destroy test]
 
   def index
-    @sources = Source.order(:name).includes(:providable)
+    @sources = Source.order(:name).includes(:providable, :dashboard_items)
   end
 
   def show

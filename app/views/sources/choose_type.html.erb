@@ -1,14 +1,23 @@
-<% content_for :title, "Add a source" %>
+<%= page_title "Add a source", parent: [ "Sources", sources_path ], crumb: "Add" %>
 
-<h1>Add a source</h1>
+<div class="row">
+  <div class="col-lg-8 col-xl-6">
+    <p>What kind of source is it?</p>
 
-<ul class="type-list">
-  <% Source::PROVIDERS.each do |type| %>
-    <li>
-      <%= link_to Source.provider_label(type),
-                  new_source_path(type: type), class: "btn" %>
-    </li>
-  <% end %>
-</ul>
-
-<p><%= link_to "Back to sources", sources_path %></p>
+    <%# Each provider describes itself (Providable.provides), so a new
+        provider file shows up here with no change to this page. %>
+    <ul class="list-group type-list">
+      <% Source::PROVIDERS.each do |type| %>
+        <% provider = Source.provider_class(type) %>
+        <li class="list-group-item list-group-item-action position-relative d-flex align-items-center gap-3 py-3">
+          <%= ui_icon provider.icon, classes: "icon icon-xl flex-shrink-0" %>
+          <div>
+            <%= link_to provider.label, new_source_path(type: type),
+                        class: "stretched-link fw-semibold link-body-emphasis text-decoration-none" %>
+            <div class="small text-body-secondary"><%= provider.description %></div>
+          </div>
+        </li>
+      <% end %>
+    </ul>
+  </div>
+</div>

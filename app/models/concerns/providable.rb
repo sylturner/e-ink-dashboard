@@ -25,13 +25,18 @@ module Providable
 
   class_methods do
     # Declares how this provider presents itself and what its form takes.
-    def provides(label:, attributes:, refresh_seconds:)
+    # The label, icon (a name from the admin icon sprite, see
+    # NavigationHelper#ui_icon) and description introduce it on the
+    # add-a-source page.
+    def provides(label:, icon:, description:, attributes:, refresh_seconds:)
       @label                   = label
+      @icon                    = icon
+      @description             = description
       @form_attributes         = attributes.map(&:to_sym).freeze
       @default_refresh_seconds = refresh_seconds
     end
 
-    attr_reader :label, :form_attributes, :default_refresh_seconds
+    attr_reader :label, :icon, :description, :form_attributes, :default_refresh_seconds
 
     # Attributes a brand new record starts with. Overridden as a method
     # rather than declared in `provides` so anything zone- or

@@ -31,21 +31,29 @@
            lightened to >= 5.0:1 on every dark surface.
    border: form control boundaries (1.4.11). #737b89 is >= 3.1:1 on the
            light fill, page, alert and warning backgrounds; #8a93a2 is
-           >= 4.2:1 on the dark ones. */
+           >= 4.2:1 on the dark ones.
+   danger: error text. CoreUI's light danger, #e55353, is only 3.7:1 on
+           a white card; darkened to #cc1f1f it is >= 4.5:1 on the light
+           card, page and table-hover backgrounds. #ea868f, CoreUI's own
+           dark error color, is the dark counterpart. */
 :root {
   --app-accent-on-light: #5856d6;
   --app-accent-on-dark: #a6a5e9;
   --app-border-on-light: #737b89;
   --app-border-on-dark: #8a93a2;
+  --app-danger-on-light: #cc1f1f;
+  --app-danger-on-dark: #ea868f;
   --app-header-height: calc(4rem + 1px);
 
   --app-focus-ring: var(--app-accent-on-light);
   --app-control-border: var(--app-border-on-light);
+  --app-danger-text: var(--app-danger-on-light);
 }
 
 [data-coreui-theme=dark] {
   --app-focus-ring: var(--app-accent-on-dark);
   --app-control-border: var(--app-border-on-dark);
+  --app-danger-text: var(--app-danger-on-dark);
 
   /* CoreUI's dark link color is the 2.1-3.0:1 primary. The -rgb triplet
      repeats --app-accent-on-dark: CSS can't split a hex variable. The
@@ -56,11 +64,8 @@
   --cui-link-hover-color-rgb: 190, 189, 239;
 }
 
-/* A field's error message. CoreUI's light value, #e55353, is 3.7:1 on a
-   white card; the same hue darkened to #cc1f1f is 5.6:1 there and 5.0:1
-   on the page background. CoreUI's dark value already passes, so this
-   leaves the dark theme alone. */
-:root:not([data-coreui-theme=dark]) { --cui-form-invalid-color: #cc1f1f; }
+/* A field's error message (.invalid-feedback) takes the danger token. */
+:root { --cui-form-invalid-color: var(--app-danger-text); }
 
 .sidebar-dark { --app-focus-ring: var(--app-accent-on-dark); }
 
@@ -157,6 +162,9 @@ html { scroll-padding-top: calc(var(--app-header-height) + 1rem); }
   --cui-btn-disabled-border-color: var(--app-control-border);
 }
 
+/* Error text outside a form field, e.g. a source's last fetch error. */
+.text-app-danger { color: var(--app-danger-text); }
+
 /* The banner that opens a section's index page (page_header helper). It
    is the light-surface accent in both themes, so its white text and
    white focus ring are 5.6:1 on it; .btn-light actions are dark on
@@ -193,30 +201,12 @@ html { scroll-padding-top: calc(var(--app-header-height) + 1rem); }
 .dashboard-card:hover { box-shadow: var(--cui-box-shadow); }
 .dashboard-card:hover .stretched-link { text-decoration: underline !important; }
 
-/* ---------- Source list ---------- */
+/* ---------- Source details ---------- */
 
-table.sources { border-collapse: collapse; width: 100%; margin-top: 12px; }
-table.sources th, table.sources td {
-  border-bottom: 1px solid var(--cui-border-color); padding: 8px; text-align: left;
-  vertical-align: top;
-}
-table.sources th { font-weight: 600; background: var(--cui-secondary-bg); white-space: nowrap; }
-table.sources .detail { font-family: ui-monospace, monospace; font-size: 12px; color: var(--cui-secondary-color); }
-table.sources .actions { white-space: nowrap; }
-table.sources .actions form { display: inline; margin: 0; }
+/* The last fetched payload scrolls inside its own box. */
+.source-payload { max-height: 32rem; overflow: auto; }
 
-.error { color: var(--cui-danger); font-size: 12px; }
-
-.errors {
-  color: var(--cui-danger-text-emphasis);
-  border: 1px solid var(--cui-danger-border-subtle);
-  background: var(--cui-danger-bg-subtle);
-  padding: 8px 8px 8px 28px; margin-bottom: 12px;
-}
-/* AdminFormBuilder#error_messages already wraps the list in an alert. */
-.alert .errors { border: 0; background: none; color: inherit; padding: 0 0 0 1rem; margin: 0; }
-
-/* ---------- Forms ---------- */
+/* ---------- Device form, until it is restyled ---------- */
 
 .field { margin-bottom: 12px; max-width: 460px; }
 .field label { display: block; font-weight: 600; margin-bottom: 2px; }
@@ -224,27 +214,7 @@ table.sources .actions form { display: inline; margin: 0; }
 .field select { width: 100%; padding: 4px 6px; }
 .field input[type=checkbox] { width: auto; }
 
-fieldset { border: 1px solid var(--cui-border-color); padding: 12px; max-width: 500px; }
-/* CoreUI's reboot floats legends full-width at heading size, which
-   pulls them inside these bordered fieldsets. */
-legend { float: none; width: auto; font-size: inherit; font-weight: 600; padding: 0 4px; margin: 0; }
-
 .hint { color: var(--cui-secondary-color); font-size: 12px; margin: 4px 0 0; }
-
-.type-list { list-style: none; padding: 0; }
-.type-list li { margin: 8px 0; }
-
-/* ---------- Geocode lookup ---------- */
-
-.lookup { display: flex; gap: 8px; }
-.lookup input { flex: 1 1 auto; }
-
-.results { list-style: none; padding: 0; margin: 6px 0 0; }
-.results li { margin: 2px 0; }
-.results button {
-  background: none; border: none; padding: 2px 0;
-  color: var(--cui-link-color); cursor: pointer; text-align: left; font: inherit;
-}
 
 /* ---------- Devices waiting to be claimed ---------- */
 

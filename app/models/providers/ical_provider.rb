@@ -9,6 +9,8 @@ class IcalProvider < ApplicationRecord
   encrypts :ics_data
 
   provides label:           "Calendar (iCal)",
+           icon:            "cil-calendar",
+           description:     "Events from a secret iCal address, or from an uploaded .ics file.",
            attributes:      %i[ical_url include_all_day],
            refresh_seconds: 900
 

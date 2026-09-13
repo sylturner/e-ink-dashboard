@@ -66,7 +66,7 @@ class AdminFormBuilder < ActionView::Helpers::FormBuilder
     return unless object.respond_to?(:errors) && object.errors.any?
 
     @template.tag.div(class: "alert alert-danger", role: "alert") do
-      @template.tag.ul(class: "errors mb-0") do
+      @template.tag.ul(class: "errors mb-0 ps-3") do
         @template.safe_join(object.errors.full_messages.map { |message| @template.tag.li(message) })
       end
     end

@@ -12,7 +12,7 @@ A self-hosted server for ESP32 e-paper panels.
 - It runs on a home LAN and has no authentication.
 
 - **Domain** (`app/models`):
-  - `Source` holds fetched data. Its type-specific settings and `fetch!` live in a provider in `app/models/providers` (`WeatherProvider`, `IcalProvider`, `RssProvider`). Providers are discovered from that directory through the `Providable` concern, so adding a provider means adding a file.
+  - `Source` holds fetched data. Its type-specific settings and `fetch!` live in a provider in `app/models/providers` (`WeatherProvider`, `IcalProvider`, `RssProvider`). Providers are discovered from that directory through the `Providable` concern, so adding a provider means adding a file. Each declares its label, icon, description, form attributes and refresh interval with `provides`.
   - `Dashboard` is a grid (columns × rows, plus a theme) of `DashboardItem`s. Each item is a component (clock, calendar, weather, news, text) placed on the grid and fed by one or more sources. `Component` is the registry of each component's layouts, accepted source types and settings.
   - `Device` is a panel: size, bit depth, image format, dithering, refresh schedule and last-reported telemetry. `DeviceDashboard` assigns dashboards to devices. `Frame` stores rendered bitmaps.
 - **Data refresh** (`config/recurring.yml`):

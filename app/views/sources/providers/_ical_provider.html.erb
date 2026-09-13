@@ -1,30 +1,35 @@
-<div class="field">
+<div class="mb-3">
   <%= f.label :ical_url, "Secret iCal URL" %>
-  <%= f.url_field :ical_url %>
-  <p class="hint">
+  <%= f.url_field :ical_url, aria: { describedby: f.field_id(:ical_url, :hint) } %>
+  <%= f.invalid_feedback :ical_url %>
+  <div id="<%= f.field_id(:ical_url, :hint) %>" class="form-text">
     In Google Calendar: Settings → the calendar → Integrate calendar →
     Secret address in iCal format. Works with Apple, Fastmail and
     Nextcloud too. Treat it like a password.
-  </p>
+  </div>
 </div>
 
-<div class="field">
+<div class="mb-3">
   <%= f.label :ics_file, "…or upload an .ics file" %>
-  <%= f.file_field :ics_file, accept: ".ics,text/calendar" %>
-  <p class="hint">
+  <%= f.file_field :ics_file, accept: ".ics,text/calendar",
+                   aria: { describedby: f.field_id(:ics_file, :hint) } %>
+  <div id="<%= f.field_id(:ics_file, :hint) %>" class="form-text">
     A one-off export instead of a live subscription. It is re-parsed on
     every refresh, so recurring events keep expanding, but new events
     won't appear until you upload again.
     <% if f.object.uploaded? %>
-      <br>
       On file: <strong><%= f.object.ics_filename.presence || "calendar.ics" %></strong>.
-      <%= f.check_box :remove_ics %>
-      <%= f.label :remove_ics, "remove it" %>
     <% end %>
-  </p>
+  </div>
+  <% if f.object.uploaded? %>
+    <div class="form-check mt-2">
+      <%= f.checkbox :remove_ics %>
+      <%= f.label :remove_ics, "Remove the uploaded file", class: "form-check-label" %>
+    </div>
+  <% end %>
 </div>
 
-<div class="field">
+<div class="form-check mb-3">
   <%= f.checkbox :include_all_day %>
-  <%= f.label :include_all_day, "Include all-day events" %>
+  <%= f.label :include_all_day, "Include all-day events", class: "form-check-label" %>
 </div>

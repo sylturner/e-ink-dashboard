@@ -1,8 +1,49 @@
-<%= render @source %>
+<%= page_title @source.name, parent: [ "Sources", sources_path ], crumb: "Details" %>
 
-<div>
-  <%= link_to "Edit this source", edit_source_path(@source) %> |
-  <%= link_to "Back to sources", sources_path %>
+<div class="row g-4">
+  <div class="col-lg-5">
+    <section class="card" aria-labelledby="source-status-heading">
+      <div class="card-header d-flex align-items-center gap-2">
+        <h2 id="source-status-heading" class="h6 mb-0 me-auto">Status</h2>
+        <%= link_to "Edit", edit_source_path(@source), class: "btn btn-sm btn-app-outline" %>
+      </div>
+      <div class="card-body">
+        <dl class="row mb-0">
+          <dt class="col-sm-4">Type</dt>
+          <dd class="col-sm-8"><%= ui_icon @source.providable_class.icon, classes: "icon me-1" %><%= @source.kind_label %></dd>
 
-  <%= button_to "Destroy this source", @source, method: :delete %>
+          <dt class="col-sm-4">Detail</dt>
+          <dd class="col-sm-8 font-monospace small text-break"><%= @source.providable.detail || "—" %></dd>
+
+          <dt class="col-sm-4">Refreshes every</dt>
+          <dd class="col-sm-8"><%= distance_of_time_in_words(@source.refresh_seconds) %></dd>
+
+          <dt class="col-sm-4">Last fetch</dt>
+          <dd class="col-sm-8"><%= source_fetched_ago(@source) %></dd>
+
+          <dt class="col-sm-4">Health</dt>
+          <dd class="col-sm-8"><%= source_health(@source) %></dd>
+
+          <dt class="col-sm-4">Used by</dt>
+          <dd class="col-sm-8 mb-0"><%= pluralize(@source.dashboard_items.size, "tile") %></dd>
+        </dl>
+      </div>
+    </section>
+  </div>
+
+  <div class="col-lg-7">
+    <section class="card" aria-labelledby="source-payload-heading">
+      <div class="card-header">
+        <h2 id="source-payload-heading" class="h6 mb-0">Last payload</h2>
+      </div>
+      <div class="card-body">
+        <% if @source.payload.present? %>
+          <%# Focusable and labeled so keyboard users can scroll it (2.1.1). %>
+          <pre class="source-payload small mb-0" role="region" aria-label="Last payload" tabindex="0"><%= JSON.pretty_generate(@source.payload) %></pre>
+        <% else %>
+          <p class="text-body-secondary mb-0">Nothing has been fetched yet.</p>
+        <% end %>
+      </div>
+    </section>
+  </div>
 </div>
