@@ -1,35 +1,43 @@
-<%= form_with model: source, multipart: true,
-              url: source.new_record? ? sources_path(type: type) : source_path(source) do |f| %>
+<%# A source's own settings, then its provider's (sources/providers/_*). %>
+<div class="row">
+  <div class="col-lg-8 col-xl-6">
+    <div class="card">
+      <div class="card-body">
+        <%= form_with model: source, multipart: true,
+                      url: source.new_record? ? sources_path(type: type) : source_path(source) do |f| %>
+          <%= f.error_messages %>
 
-  <% if source.errors.any? %>
-    <ul class="errors">
-      <% source.errors.full_messages.each do |message| %>
-        <li><%= message %></li>
-      <% end %>
-    </ul>
-  <% end %>
+          <%= f.hidden_field :providable_type, value: type %>
 
-  <%= f.hidden_field :providable_type, value: type %>
+          <div class="mb-3">
+            <%= f.label :name %>
+            <%= f.text_field :name %>
+            <%= f.invalid_feedback :name %>
+          </div>
 
-  <div class="field">
-    <%= f.label :name %>
-    <%= f.text_field :name, placeholder: "Home weather" %>
+          <div class="mb-3">
+            <%= f.label :refresh_seconds, "Refresh every (seconds)" %>
+            <%= f.number_field :refresh_seconds, min: 60, step: 60,
+                               aria: { describedby: f.field_id(:refresh_seconds, :hint) } %>
+            <%= f.invalid_feedback :refresh_seconds %>
+            <div id="<%= f.field_id(:refresh_seconds, :hint) %>" class="form-text">At least 60.</div>
+          </div>
+
+          <fieldset class="border-top pt-3 mb-3">
+            <legend class="fs-6 fw-semibold"><%= Source.provider_label(type) %></legend>
+            <%# fields_for :provider names the inputs source[provider][...], which
+                is what provider_params reads. It deliberately does not match the
+                association name, so Rails never tries to auto-assign it. Its
+                builder's object is the provider, so provider errors mark their
+                own fields. %>
+            <%= f.fields_for :provider, source.providable do |pf| %>
+              <%= render "sources/providers/#{type.underscore}", f: pf %>
+            <% end %>
+          </fieldset>
+
+          <%= f.submit source.new_record? ? "Add source" : "Save source" %>
+        <% end %>
+      </div>
+    </div>
   </div>
-
-  <div class="field">
-    <%= f.label :refresh_seconds, "Refresh every (seconds)" %>
-    <%= f.number_field :refresh_seconds, min: 60, step: 60 %>
-  </div>
-
-  <fieldset>
-    <legend><%= Source.provider_label(type) %></legend>
-    <%# fields_for :provider names the inputs source[provider][...], which
-        is what provider_params reads. It deliberately does not match the
-        association name, so Rails never tries to auto-assign it. %>
-    <%= f.fields_for :provider, source.providable do |pf| %>
-      <%= render "sources/providers/#{type.underscore}", f: pf %>
-    <% end %>
-  </fieldset>
-
-  <%= f.submit %>
-<% end %>
+</div>

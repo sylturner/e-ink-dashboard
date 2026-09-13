@@ -1,47 +1,63 @@
-<% content_for :title, "Sources" %>
+<%= page_header "Sources", icon: "cil-rss",
+                description: "The weather, calendars and feeds your tiles draw from. Each source refreshes on its own schedule." do %>
+  <%= link_to new_source_path, class: "btn btn-light" do %>
+    <%= ui_icon "cil-plus", classes: "icon me-1" %> Add a source
+  <% end %>
+<% end %>
 
-<h1>Sources</h1>
-<%= link_to "Add a source", new_source_path, class: "btn" %>
-
-<%# Scrolls sideways inside its own box on narrow screens rather than
-    widening the page (WCAG 1.4.10); focusable and labeled so keyboard
-    and screen reader users can reach and scroll it. %>
-<div class="table-responsive" role="region" aria-label="Sources" tabindex="0">
-  <table class="sources">
-    <thead>
-      <tr>
-        <th>Name</th><th>Type</th><th>Detail</th>
-        <th>Last fetch</th><th>Health</th><th>Used by</th><th></th>
-      </tr>
-    </thead>
-    <tbody>
-      <% @sources.each do |source| %>
-        <tr>
-          <td><%= link_to source.name, edit_source_path(source) %></td>
-          <td><%= source.kind_label %></td>
-          <td class="detail"><%= source.providable.detail %>
-          </td>
-          <td>
-            <%= source.fetched_at ? time_ago_in_words(source.fetched_at) + " ago" : "never" %>
-          </td>
-          <td>
-            <% if source.healthy? %>
-              OK
-            <% elsif source.fetched_at.present? %>
-              <%= pluralize(source.failure_count, "failure") %>
-              <div class="error"><%= source.last_error %></div>
-            <% else %>
-              <div class="error"><%= source.last_error || "not fetched" %></div>
-            <% end %>
-          </td>
-          <td><%= source.dashboard_items.count %></td>
-          <td class="actions">
-            <%= button_to "Test", test_source_path(source), method: :post %>
-            <%= button_to "Delete", source, method: :delete,
-                          form: { data: { turbo_confirm: "Delete #{source.name}?" } } %>
-          </td>
-        </tr>
-      <% end %>
-    </tbody>
-  </table>
-</div>
+<% if @sources.any? %>
+  <div class="card">
+    <%# Scrolls sideways inside its own box on narrow screens rather than
+        widening the page (WCAG 1.4.10); focusable and labeled so keyboard
+        and screen reader users can reach and scroll it. Positioned, so the
+        buttons' visually hidden text is clipped with the table instead of
+        escaping the box and widening the page after all. %>
+    <div class="table-responsive position-relative" role="region" aria-label="Sources" tabindex="0">
+      <table class="table table-hover align-middle mb-0 sources">
+        <thead class="text-nowrap">
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Type</th>
+            <th scope="col">Detail</th>
+            <th scope="col">Last fetch</th>
+            <th scope="col">Health</th>
+            <th scope="col">Used by</th>
+            <th scope="col"><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @sources.each do |source| %>
+            <tr>
+              <td class="fw-semibold"><%= link_to source.name, edit_source_path(source) %></td>
+              <td class="text-nowrap">
+                <%= ui_icon source.providable_class.icon, classes: "icon me-1" %><%= source.kind_label %>
+              </td>
+              <td class="small font-monospace text-body-secondary text-break"><%= source.providable.detail %></td>
+              <td class="text-nowrap"><%= source_fetched_ago(source) %></td>
+              <td><%= source_health(source) %></td>
+              <td class="text-nowrap"><%= pluralize(source.dashboard_items.size, "tile") %></td>
+              <td class="text-nowrap text-end">
+                <%= button_to test_source_path(source), method: :post,
+                              class: "btn btn-sm btn-app-outline", form: { class: "d-inline-block" } do %>
+                  Test<span class="visually-hidden"> <%= source.name %></span>
+                <% end %>
+                <%= button_to source, method: :delete,
+                              class: "btn btn-sm btn-app-outline",
+                              form: { class: "d-inline-block", data: { turbo_confirm: "Delete #{source.name}?" } } do %>
+                  Delete<span class="visually-hidden"> <%= source.name %></span>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% else %>
+  <div class="card">
+    <div class="card-body text-center py-5">
+      <p>There are no sources yet.</p>
+      <%= link_to "Add a source", new_source_path, class: "btn btn-primary" %>
+    </div>
+  </div>
+<% end %>

@@ -1,13 +1,16 @@
-<div class="field">
+<div class="mb-3">
   <%= f.label :feed_url, "Feed URL" %>
-  <%= f.url_field :feed_url, placeholder: "https://example.com/feed.xml" %>
-  <p class="hint">
+  <%= f.url_field :feed_url, placeholder: "https://example.com/feed.xml",
+                  aria: { describedby: f.field_id(:feed_url, :hint) } %>
+  <%= f.invalid_feedback :feed_url %>
+  <div id="<%= f.field_id(:feed_url, :hint) %>" class="form-text">
     The RSS or Atom URL. Save it, then use Test on the source list to
     confirm it parses before putting it on a dashboard.
-  </p>
+  </div>
 </div>
 
-<div class="field">
+<div class="mb-3">
   <%= f.label :max_items, "Items to keep" %>
   <%= f.number_field :max_items, min: 1, max: 50 %>
+  <%= f.invalid_feedback :max_items %>
 </div>

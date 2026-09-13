@@ -1,7 +1,4 @@
-<% content_for :title, @source.name %>
-
-<h1><%= @source.name %></h1>
+<%# A rejected update re-renders this page, so the heading uses the saved name. %>
+<%= page_title @source.name_in_database, parent: [ "Sources", sources_path ], crumb: "Edit" %>
 
 <%= render "form", source: @source, type: @source.providable_type %>
-
-<p><%= link_to "Back to sources", sources_path %></p>

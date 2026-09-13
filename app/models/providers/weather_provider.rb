@@ -2,6 +2,8 @@ class WeatherProvider < ApplicationRecord
   include Providable
 
   provides label:           "Weather",
+           icon:            "cil-cloud",
+           description:     "Current conditions and forecasts from Open-Meteo for a place you choose.",
            attributes:      %i[latitude longitude units time_zone],
            refresh_seconds: 900
 

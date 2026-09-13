@@ -1,7 +1,3 @@
-<% content_for :title, "Add #{Source.provider_label(@type)}" %>
-
-<h1>Add <%= Source.provider_label(@type) %></h1>
+<%= page_title "Add #{Source.provider_label(@type)}", parent: [ "Sources", sources_path ], crumb: "Add" %>
 
 <%= render "form", source: @source, type: @type %>
-
-<p><%= link_to "Back to sources", sources_path %></p>

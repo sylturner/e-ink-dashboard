@@ -49,8 +49,8 @@
 
   <% settings = Component.settings(item.kind) %>
   <% if settings.any? %>
-    <fieldset class="mb-3 mw-100 border-0 p-0" data-item-form-target="options">
-      <legend class="fs-6 fw-semibold p-0 mb-2">Options</legend>
+    <fieldset class="mb-3" data-item-form-target="options">
+      <legend class="fs-6 fw-semibold mb-2">Options</legend>
 
       <%# Named dashboard_item[settings][key], and styled by the form builder. %>
       <%= f.fields_for :settings do |s| %>

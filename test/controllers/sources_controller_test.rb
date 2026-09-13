@@ -6,17 +6,38 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
     @spare  = sources(:three) # rss, not on any dashboard
   end
 
-  test "should get index" do
+  test "the index lists every source with its health and actions" do
+    @spare.update!(failure_count: 2, last_error: "503 from example.com")
+
     get sources_url
+
     assert_response :success
-    assert_select "table.sources tbody tr", Source.count
+    assert_select "header.page-hero a[href=?]", new_source_path
+    assert_select "table.table.sources tbody tr", Source.count
+    assert_select "table.sources .badge", "OK"
+    assert_select "table.sources .badge", "2 failures"
+    assert_select "table.sources .text-app-danger", "503 from example.com"
+    assert_select "table.sources form[action=?] button", test_source_path(@spare), "Test #{@spare.name}"
+    assert_select "table.sources form[action=?] button", source_path(@spare), "Delete #{@spare.name}"
+  end
+
+  test "with no sources the index offers to add one" do
+    Source.destroy_all
+
+    get sources_url
+
+    assert_select "table.sources", 0
+    assert_select "main a[href=?]", new_source_path, 2
   end
 
   test "new without a type offers the type picker" do
     get new_source_url
     assert_response :success
+    assert_select "nav[aria-label=Breadcrumb] a[href=?]", sources_path
     Source::PROVIDERS.each do |type|
-      assert_select "a[href=?]", new_source_path(type: type)
+      provider = Source.provider_class(type)
+      assert_select "ul.type-list a.stretched-link[href=?]", new_source_path(type: type), provider.label
+      assert_select "ul.type-list li", text: /#{Regexp.escape(provider.description)}/
     end
   end
 
@@ -31,6 +52,25 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "input[name=?]", "source[provider][feed_url]"
     assert_select "input[name=?][value=?]", "source[refresh_seconds]", "1800"
+  end
+
+  test "hints are tied to the fields they describe" do
+    get new_source_url(type: "RssProvider")
+
+    assert_select "input[name=?][aria-describedby=?]", "source[provider][feed_url]", "source_provider_feed_url_hint"
+    assert_select ".form-text#source_provider_feed_url_hint"
+    assert_select "input[name=?][aria-describedby=?]", "source[refresh_seconds]", "source_refresh_seconds_hint"
+  end
+
+  # WCAG 1.3.1 and 4.1.3: the lookup box is labeled, and what it finds is
+  # announced.
+  test "the weather form's place lookup is labeled and announces its results" do
+    get new_source_url(type: "WeatherProvider")
+
+    assert_select "[data-controller=geocode][data-geocode-url-value=?]", geocode_sources_path
+    assert_select "label[for=geocode_query]", "Find a place"
+    assert_select "input#geocode_query[aria-describedby=geocode_status]:not([name])"
+    assert_select "#geocode_status[role=status]"
   end
 
   test "creates a source and its provider together" do
@@ -58,6 +98,7 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_content
     assert_select "ul.errors li", /Feed url is invalid/
+    assert_select "input.is-invalid[name=?] ~ .invalid-feedback", "source[provider][feed_url]", /Feed url is invalid/
   end
 
   test "an invalid source re-renders the form" do
@@ -70,6 +111,7 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_content
     assert_select "ul.errors li", /Name can't be blank/
+    assert_select "input.is-invalid[name=?]", "source[name]"
   end
 
   test "refuses an unknown provider type" do
@@ -84,7 +126,20 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
   test "should get edit" do
     get edit_source_url(@source)
     assert_response :success
+    assert_select "nav[aria-label=Breadcrumb] a[href=?]", sources_path
+    assert_select "h1", @source.name
     assert_select "input[name=?]", "source[provider][latitude]"
+  end
+
+  test "show summarizes the source and its last payload" do
+    @source.update!(payload: { "current" => { "temp" => 71 } })
+
+    get source_url(@source)
+
+    assert_response :success
+    assert_select "h1", @source.name
+    assert_select "dd", "15 minutes"
+    assert_select "pre.source-payload", /"temp": 71/
   end
 
   test "updates the source and the provider" do
@@ -110,6 +165,8 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_content
     assert_select "ul.errors li", /Latitude can't be blank/
+    assert_select "input.is-invalid[name=?]", "source[provider][latitude]"
+    assert_select "h1", "Home weather"
     assert_equal "Home weather", @source.reload.name
   end
 
@@ -213,6 +270,17 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "form[enctype=?]", "multipart/form-data"
     assert_select "input[type=file][name=?]", "source[provider][ics_file]"
+  end
+
+  test "a calendar with an uploaded file offers to remove it" do
+    ical = sources(:two)
+    ical.providable.update!(ics_data: "BEGIN:VCALENDAR", ics_filename: "team.ics")
+
+    get edit_source_url(ical)
+
+    assert_select ".form-text", /On file: team\.ics/
+    assert_select ".form-check input[type=checkbox][name=?]", "source[provider][remove_ics]"
+    assert_select "label.form-check-label[for=?]", "source_provider_remove_ics"
   end
 
   test "creates a calendar source from an uploaded .ics file" do
