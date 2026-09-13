@@ -214,13 +214,47 @@ class DevicesControllerTest < ActionDispatch::IntegrationTest
     assert_not_nil @device.refresh_requested_at
   end
 
-  test "a rename alone doesn't ask for a fresh frame" do
+  test "a rename or schedule change doesn't ask for a fresh frame" do
     @device.update_columns(refresh_requested_at: nil)
 
-    patch device_url(@device), params: { device: { name: "Kitchen wall" } }
+    patch device_url(@device), params: { device: { name: "Kitchen wall", refresh_seconds: 900, active_from_hour: 7 } }
 
-    assert_equal "Kitchen wall", @device.reload.name
+    assert_redirected_to edit_device_url(@device)
+    assert_equal [ "Kitchen wall", 900, 7 ], @device.reload.attributes.values_at("name", "refresh_seconds", "active_from_hour")
     assert_nil @device.refresh_requested_at
+  end
+
+  test "the sleep hint gives the longest sleep in words" do
+    get edit_device_url(@device)
+
+    assert_select "#device_refresh_seconds_hint", /21600 seconds \(about 6 hours\)/
+  end
+
+  # Hours weren't validated before, so a saved one can be out of range.
+  test "a saved hour outside the range is shown as it is, not replaced" do
+    @device.update_columns(active_until_hour: 0)
+
+    get edit_device_url(@device)
+
+    assert_select "select[name=?] option[selected]", "device[active_until_hour]", "00:00"
+  end
+
+  test "with no dashboards at all the device page offers to create one" do
+    Dashboard.destroy_all
+
+    get edit_device_url(@device)
+
+    assert_select ".device-dashboards a[href=?]", new_dashboard_path
+    assert_select ".device-dashboards form.assign-dashboard", 0
+  end
+
+  test "with every dashboard assigned the device page says so" do
+    @device.dashboards = Dashboard.all
+
+    get edit_device_url(@device)
+
+    assert_select ".device-dashboards", /Every dashboard is already assigned/
+    assert_select ".device-dashboards a[href=?]", new_dashboard_path, 0
   end
 
   test "telemetry posted to the form is ignored" do

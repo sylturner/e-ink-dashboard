@@ -85,20 +85,20 @@
           </div>
           <div id="<%= f.field_id(:refresh_seconds, :hint) %>" class="form-text mt-1">
             How long the panel sleeps between check-ins: <%= Device::MIN_SLEEP %> to
-            <%= Device::MAX_SLEEP %> seconds (6 hours).
+            <%= Device::MAX_SLEEP %> seconds (<%= distance_of_time_in_words(Device::MAX_SLEEP) %>).
           </div>
         </div>
 
         <div class="row g-3 mb-3">
           <div class="col-6">
             <%= f.label :active_from_hour, "Daytime starts" %>
-            <%= f.select :active_from_hour, hour_options(0..23), {},
+            <%= f.select :active_from_hour, hour_options(Device::DAYTIME_START_HOURS, device.active_from_hour), {},
                          aria: { describedby: f.field_id(:active_from_hour, :hint) } %>
             <%= f.invalid_feedback :active_from_hour %>
           </div>
           <div class="col-6">
             <%= f.label :active_until_hour, "Daytime ends" %>
-            <%= f.select :active_until_hour, hour_options(1..24), {},
+            <%= f.select :active_until_hour, hour_options(Device::DAYTIME_END_HOURS, device.active_until_hour), {},
                          aria: { describedby: f.field_id(:active_from_hour, :hint) } %>
             <%= f.invalid_feedback :active_until_hour %>
           </div>

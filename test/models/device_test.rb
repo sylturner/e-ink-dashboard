@@ -137,6 +137,24 @@ class DeviceTest < ActiveSupport::TestCase
     end
   end
 
+  test "daytime hours must be clock hours, ending as late as midnight" do
+    @device.assign_attributes(active_from_hour: 24, active_until_hour: 0)
+    assert_not @device.valid?
+    assert @device.errors.key?(:active_from_hour)
+    assert @device.errors.key?(:active_until_hour)
+
+    @device.assign_attributes(active_from_hour: 0, active_until_hour: 24)
+    assert @device.valid?
+  end
+
+  test "only settings the frame is rendered from count as frame changes" do
+    @device.update!(refresh_seconds: 900, rotation: 90, name: "Kitchen wall")
+    assert_not @device.frame_settings_changed?
+
+    @device.update!(dither: "none")
+    assert @device.frame_settings_changed?
+  end
+
   # --- enrollment and claiming ---
 
   test "every device gets a claim code, however the row was created" do
@@ -194,6 +212,17 @@ class DeviceTest < ActiveSupport::TestCase
     assert_equal token, again.token
     assert_equal code, again.claim_code
     assert_equal 2, again.bit_depth
+  end
+
+  # Zones and hours weren't validated before, so a saved one can be bad.
+  test "re-enrolling repairs a schedule the panel could not save with" do
+    device = Device.enroll!(mac: "aa:bb:cc:dd:ee:ff")
+    device.update_columns(time_zone: "Mars/Olympus_Mons", active_from_hour: 30, active_until_hour: 0)
+
+    again = Device.enroll!(mac: "aa:bb:cc:dd:ee:ff")
+
+    assert_nil again.time_zone
+    assert_equal [ 6, 23 ], [ again.active_from_hour, again.active_until_hour ]
   end
 
   test "re-enrolling does not reset the name someone chose" do

@@ -52,6 +52,20 @@ class Devices::LastFramesControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_modified
   end
 
+  test "a 304 doesn't read the bitmap" do
+    @device.frames.create!(data: white.to_bmp, format: "bmp")
+    get device_last_frame_url(@device)
+    etag = response.headers["ETag"]
+
+    queries = []
+    ActiveSupport::Notifications.subscribed(->(*, payload) { queries << payload[:sql] }, "sql.active_record") do
+      get device_last_frame_url(@device), headers: { "If-None-Match" => etag }
+    end
+
+    assert_response :not_modified
+    assert_empty queries.grep(/SELECT "frames"\.(\*|"data")/)
+  end
+
   test "a device with no frame yet has nothing to show" do
     get device_last_frame_url(@device)
     assert_response :not_found

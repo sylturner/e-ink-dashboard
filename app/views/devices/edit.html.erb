@@ -41,7 +41,7 @@
           <dd class="col-sm-8"><%= device_signal(device) %></dd>
 
           <dt class="col-sm-4">Firmware</dt>
-          <dd class="col-sm-8"><%= device.firmware_version.presence || tag.span("Not reporting", class: "text-body-secondary") %></dd>
+          <dd class="col-sm-8"><%= device_firmware(device) %></dd>
 
           <dt class="col-sm-4">MAC address</dt>
           <dd class="col-sm-8 font-monospace"><%= device.mac_address.presence || "None" %></dd>
@@ -111,7 +111,8 @@
               <%= f.submit "Assign" %>
             </div>
           <% end %>
-        <% elsif Dashboard.none? %>
+        <%# Nothing to assign and nothing assigned: there are no dashboards. %>
+        <% elsif @assignments.none? %>
           <p class="small text-body-secondary mb-0"><%= link_to "Create a dashboard", new_dashboard_path %> to show on this panel.</p>
         <% else %>
           <p class="small text-body-secondary mb-0">Every dashboard is already assigned to this panel.</p>

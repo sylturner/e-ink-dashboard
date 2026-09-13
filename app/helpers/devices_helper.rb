@@ -65,17 +65,24 @@ module DevicesHelper
     safe_join([ ui_icon("cil-wifi-signal-#{bars}", classes: "icon me-1"), "#{word} (#{rssi} dBm)" ])
   end
 
-  # Choices for the daytime hour selects, as 24-hour clock times.
-  def hour_options(hours)
-    hours.map { [ format("%02d:00", it), it ] }
+  # The firmware version the panel last reported.
+  def device_firmware(device)
+    device.firmware_version.presence || not_reporting
+  end
+
+  # Choices for a daytime hour select, as 24-hour clock times. A saved
+  # hour outside `hours` stays a choice, so the select shows it -- and
+  # saving flags it -- rather than quietly showing, and saving, another.
+  def hour_options(hours, current = nil)
+    [ *hours, current ].compact.uniq.sort.map { [ format("%02d:00", it), it ] }
   end
 
   private
-    # The icon tells a card's battery and signal lines apart at a glance;
+    # An icon tells a card's battery and signal lines apart at a glance;
     # screen readers get a label before each.
-    def not_reporting(icon)
+    def not_reporting(icon = nil)
       tag.span class: "text-body-secondary" do
-        safe_join([ ui_icon(icon, classes: "icon me-1"), "Not reporting" ])
+        safe_join([ (ui_icon(icon, classes: "icon me-1") if icon), "Not reporting" ].compact)
       end
     end
 end

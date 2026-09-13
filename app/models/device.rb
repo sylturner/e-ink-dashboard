@@ -15,6 +15,15 @@ class Device < ApplicationRecord
   IMAGE_FORMATS = %w[bmp raw].freeze
   ROTATIONS     = [ 0, 90, 180, 270 ].freeze
 
+  # Daytime runs from the start hour up to, but not including, the end
+  # hour, so it can end at midnight (24).
+  DAYTIME_START_HOURS = (0..23)
+  DAYTIME_END_HOURS   = (1..24)
+
+  # The settings a frame is rendered from: changing one leaves the frame
+  # on the panel out of date. Rotation isn't used when rendering.
+  FRAME_SETTINGS = %w[dashboard_id width height bit_depth image_format dither time_zone].freeze
+
   # Every dashboard this panel is allowed to show.
   has_many :device_dashboards, -> { order(:position) }, dependent: :destroy
   has_many :dashboards, through: :device_dashboards
@@ -35,6 +44,8 @@ class Device < ApplicationRecord
   validates :bit_depth, inclusion: { in: BIT_DEPTHS }
   validates :image_format, inclusion: { in: IMAGE_FORMATS }
   validates :rotation, inclusion: { in: ROTATIONS }
+  validates :active_from_hour, inclusion: { in: DAYTIME_START_HOURS }
+  validates :active_until_hour, inclusion: { in: DAYTIME_END_HOURS }
 
   # "none" keeps the plain black/white threshold.
   DITHER_OPTIONS = [ "none", *Dither::ALGORITHMS ].freeze
@@ -42,7 +53,7 @@ class Device < ApplicationRecord
 
   # The schedule and the render both read the panel's clock in this zone,
   # so an unknown one would make every check-in fail.
-  validate :time_zone_known, if: -> { time_zone.present? }
+  validate :time_zone_known
 
   # Idempotent by MAC, so a device retrying after a timeout does not
   # create duplicates and a re-flashed one reattaches to its old row.
@@ -60,6 +71,12 @@ class Device < ApplicationRecord
       device.assign_attributes(
         attributes.slice(:width, :height, :bit_depth, :image_format, :firmware_version)
       )
+
+      # A schedule saved before it was validated would fail this save, and
+      # the panel could never re-enroll, so it falls back to the defaults.
+      device.time_zone = nil unless known_time_zone?(device.time_zone)
+      device.active_from_hour = column_defaults["active_from_hour"] unless DAYTIME_START_HOURS.cover?(device.active_from_hour)
+      device.active_until_hour = column_defaults["active_until_hour"] unless DAYTIME_END_HOURS.cover?(device.active_until_hour)
     end
 
     device.save!
@@ -71,6 +88,11 @@ class Device < ApplicationRecord
       code = Array.new(4) { CLAIM_ALPHABET.sample }.join
       break code unless exists?(claim_code: code)
     end
+  end
+
+  # Blank is allowed: the server's zone stands in.
+  def self.known_time_zone?(name)
+    name.blank? || ActiveSupport::TimeZone[name].present?
   end
 
   # A panel is claimed once it has something to show.
@@ -126,6 +148,11 @@ class Device < ApplicationRecord
     update_columns(refresh_requested_at: Time.current)
   end
 
+  # Whether the last save changed anything in FRAME_SETTINGS.
+  def frame_settings_changed?
+    saved_changes.keys.intersect?(FRAME_SETTINGS)
+  end
+
   def sleep_seconds(at = Time.current)
     return UNCLAIMED_SLEEP unless claimed?
 
@@ -156,6 +183,6 @@ class Device < ApplicationRecord
     end
 
     def time_zone_known
-      errors.add(:time_zone, "isn't a time zone name") unless ActiveSupport::TimeZone[time_zone]
+      errors.add(:time_zone, "isn't a time zone name") unless self.class.known_time_zone?(time_zone)
     end
 end

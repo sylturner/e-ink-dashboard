@@ -77,9 +77,16 @@ class DevicesHelperTest < ActionView::TestCase
   test "telemetry the panel hasn't sent isn't reporting" do
     assert_includes device_battery(Device.new), "Not reporting"
     assert_includes device_signal(Device.new), "Not reporting"
+    assert_includes device_firmware(Device.new), "Not reporting"
+    assert_equal "1.0.0", device_firmware(@device)
   end
 
   test "hour options read as 24-hour clock times" do
     assert_equal [ [ "00:00", 0 ], [ "24:00", 24 ] ], hour_options(0..24).values_at(0, -1)
+  end
+
+  test "a saved hour outside the range stays a choice, in order" do
+    assert_equal [ 0, 1, 2 ], hour_options(1..2, 0).map(&:last)
+    assert_equal [ 1, 2 ], hour_options(1..2, 2).map(&:last)
   end
 end

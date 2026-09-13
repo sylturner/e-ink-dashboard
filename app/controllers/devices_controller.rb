@@ -47,7 +47,7 @@ class DevicesController < ApplicationController
     if @device.update(device_params)
       # A frame is only composed when one is due, so without this a new
       # dashboard or dither would wait for the next scheduled render.
-      @device.request_refresh! if @device.saved_changes.except("name", "updated_at").any?
+      @device.request_refresh! if @device.frame_settings_changed?
 
       redirect_to edit_device_path(@device), notice: update_notice, status: :see_other
     else
