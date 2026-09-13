@@ -486,7 +486,7 @@ body {
 
 
 /* Source marker beside a merged calendar entry. Inverted rather than
-   coloured, because there is no colour to spend. */
+   colored, because there is no color to spend. */
 .tag {
   flex: 0 0 auto;
   margin-right: var(--pad-tight);

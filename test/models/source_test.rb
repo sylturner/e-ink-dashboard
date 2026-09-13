@@ -157,7 +157,7 @@ class SourceTest < ActiveSupport::TestCase
     assert_equal "Nope", Source.provider_label("Nope")
   end
 
-  test "each provider summarises itself for the source list" do
+  test "each provider summarizes itself for the source list" do
     assert_equal "https://example.com/feed.xml", @spare.providable.detail
     assert_match(/47\.6062, -122\.3321/, @weather.providable.detail)
     assert_equal "https://example.com/calendar.ics", ical_providers(:one).detail

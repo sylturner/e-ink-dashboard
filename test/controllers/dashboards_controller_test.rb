@@ -146,6 +146,47 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
     assert_match(/already been taken/i, flash[:alert])
   end
 
+  # WCAG 2.1.1 and 4.1.3: tiles can be reached and selected without a
+  # pointer, say where they sit, and saves are announced.
+  test "builder tiles are keyboard buttons that announce their position" do
+    dashboard = dashboards(:two)
+    item = dashboard_items(:two)
+
+    get builder_dashboard_url(dashboard)
+
+    assert_select ".tile[role=button][tabindex='0'][aria-pressed=false][data-id=?]", item.id.to_s do |tiles|
+      assert_match(/, column #{item.col}, row #{item.row}, #{item.col_span} by #{item.row_span}\z/,
+                   tiles.first["aria-label"])
+    end
+    assert_select ".tile .tile-label[aria-hidden=true]"
+    assert_select ".builder-status[role=status]"
+  end
+
+  # WCAG 2.5.7: every drag has a single-click alternative.
+  test "the builder offers move and resize buttons as an alternative to dragging" do
+    get builder_dashboard_url(dashboards(:two))
+
+    assert_select ".builder-movers[role=group][aria-label]" do
+      assert_select "button[type=button][disabled][data-action=?]", "grid#moveBy", 8
+      %w[Move\ left Move\ right Move\ up Move\ down Narrower Wider Shorter Taller].each do |label|
+        assert_select "button", label
+      end
+    end
+  end
+
+  test "a refused assignment is shown on the builder" do
+    device = devices(:one)
+    device.dashboards = [ @dashboard ]
+
+    post device_dashboards_url, params: {
+      context: "builder",
+      device_dashboard: { device_id: device.id, dashboard_id: @dashboard.id }
+    }
+    follow_redirect!
+
+    assert_select ".alert.alert-danger", /already been taken/i
+  end
+
   test "only unassigned devices are offered" do
     devices(:one).dashboards = [ @dashboard ]
 

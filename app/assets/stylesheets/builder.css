@@ -3,24 +3,24 @@
    here may leak into the render, and nothing there styles this page.
    ============================================================ */
 
-.builder { display: flex; flex-direction: column; gap: 24px; padding: 24px; }
+.builder { display: flex; flex-direction: column; gap: 24px; padding-bottom: 24px; }
 
 .builder-bar {
-  display: flex; align-items: center; gap: 16px;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 16px;
 }
 .builder-bar h1 { font-size: 20px; margin-right: auto; }
 
-.builder-flash {
-  font: 13px system-ui, sans-serif;
-  padding: 8px 12px;
-  border: 1px solid #333;
-  background: #ffd;
-}
+.builder-main { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
 
-.builder-main { display: flex; gap: 24px; align-items: flex-start; }
+/* The canvas and preview are fixed 800px pictures of the panel -- a
+   two-dimensional layout WCAG 1.4.10 exempts from reflow. On a narrow
+   screen they scroll inside their own boxes and the inspector wraps
+   below, so the page itself never scrolls sideways. */
+.builder-canvas-wrap { flex: 0 1 auto; min-width: 0; max-width: 100%; overflow-x: auto; }
 
-.builder-canvas-wrap { flex: 0 0 auto; }
-
+/* The canvas stands in for the white e-paper panel, so it and its
+   tiles stay light (with their own text color) in dark mode too; it
+   takes the light-surface tokens in application.css. */
 .builder-canvas {
   position: relative;
   background: #fff;
@@ -47,11 +47,17 @@
   position: absolute;
   box-sizing: border-box;
   background: #f4f4f4;
+  color: #222;
   border: 1px solid #333;
   cursor: grab;
   overflow: hidden;
   transition: box-shadow .1s;
 }
+
+/* Tiles are keyboard-focusable. The ring is drawn inside the tile (the
+   light-surface accent is ~5:1 on #f4f4f4) so the scrolling canvas box
+   can't clip it at the canvas edges. */
+.tile:focus-visible { outline-offset: -4px !important; }
 
 .tile-label {
   display: flex; flex-direction: column; gap: 2px;
@@ -77,16 +83,20 @@
   border-color: #c00;
 }
 
-.builder-status { font: 12px system-ui, sans-serif; color: #666; margin-top: 8px; }
+.builder-status { font: 12px system-ui, sans-serif; color: var(--cui-secondary-color); margin-top: 8px; }
 
-.builder-side { flex: 1 1 auto; min-width: 260px; }
+/* Move/resize buttons under the canvas (styled by .btn-app-outline). */
+.builder-movers { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 
+.builder-side { flex: 1 1 260px; min-width: 0; }
+
+.builder-preview { min-width: 0; overflow-x: auto; }
 .builder-preview iframe {
   border: 1px solid #999;
   display: block;
 }
 
-.muted { color: #777; font: 13px system-ui, sans-serif; }
+.muted { color: var(--cui-secondary-color); font: 13px system-ui, sans-serif; }
 
 /* Links to the real bitmap each device is served, under the preview. */
 .device-previews { margin-top: 12px; }
@@ -94,18 +104,18 @@
 
 .device-list { list-style: none; padding: 0; margin: 0; }
 .device-list li {
-  display: flex; align-items: baseline; gap: 10px;
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px;
   padding: 4px 0;
   font: 12px system-ui, sans-serif;
 }
 
-.device-spec { color: #666; font-family: ui-monospace, monospace; }
-.device-settings { color: #06c; }
+.device-spec { color: var(--cui-secondary-color); font-family: ui-monospace, monospace; }
+.device-settings { color: var(--cui-link-color); }
 
 .device-list .inline-form, .assign-device { display: inline-block; }
 .device-list .inline-form button {
   background: none; border: none; padding: 0; margin-left: 4px;
-  color: #06c; cursor: pointer; font: inherit;
+  color: var(--cui-link-color); cursor: pointer; font: inherit;
 }
 .assign-device { margin-top: 8px; font: 12px system-ui, sans-serif; }
 .assign-device label { margin-right: 6px; }

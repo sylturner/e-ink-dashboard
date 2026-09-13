@@ -78,7 +78,7 @@ class WeatherProvider < ApplicationRecord
         "high"   => d.dig("temperature_2m_max", i)&.round,
         "low"    => d.dig("temperature_2m_min", i)&.round,
         "precip" => d.dig("precipitation_probability_max", i),
-        # Daily codes summarise the day, and there's no is_day to go on.
+        # Daily codes summarize the day, and there's no is_day to go on.
         "icon"   => Icons.for_wmo(code, is_day: 1),
         "label"  => Icons.label_for_wmo(code, short: true)
       }

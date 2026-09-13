@@ -1,11 +1,12 @@
 <% content_for :title, "Sources" %>
 
-<p class="notice"><%= notice %></p>
-<p class="alert"><%= alert %></p>
-
 <h1>Sources</h1>
 <%= link_to "Add a source", new_source_path, class: "btn" %>
 
+<%# Scrolls sideways inside its own box on narrow screens rather than
+    widening the page (WCAG 1.4.10); focusable and labeled so keyboard
+    and screen reader users can reach and scroll it. %>
+<div class="table-responsive" role="region" aria-label="Sources" tabindex="0">
 <table class="sources">
   <thead>
     <tr>
@@ -43,3 +44,4 @@
     <% end %>
   </tbody>
 </table>
+</div>

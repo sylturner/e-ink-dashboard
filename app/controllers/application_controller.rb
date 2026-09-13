@@ -4,4 +4,7 @@ class ApplicationController < ActionController::Base
 
   # Changes to the importmap will invalidate the etag for HTML responses
   stale_when_importmap_changes
+
+  # CoreUI classes on form controls; see app/form_builders.
+  default_form_builder AdminFormBuilder
 end

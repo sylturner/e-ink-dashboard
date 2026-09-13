@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["canvas", "tile", "preview", "status"]
+  static targets = ["canvas", "tile", "preview", "status", "mover"]
   static values = { cols: Number, rows: Number }
 
   connect() {
@@ -151,29 +151,63 @@ export default class extends Controller {
     this.commit(tile, next, origin)
   }
 
-  nudge(event) {
+  // Single-click buttons for the same one-step moves, so a tile can be
+  // moved and resized without dragging (WCAG 2.5.7).
+  moveBy({ params: { dx, dy, resize } }) {
     if (!this.selected || this.drag) return
+
+    this.shift(dx, dy, resize)
+  }
+
+  // --- keyboard -----------------------------------------------------
+
+  // Enter or Space on a focused tile selects it, the keyboard
+  // counterpart of pressing it with a pointer. The view binds it with
+  // Stimulus key filters: keydown.enter->grid#pick:prevent.
+  pick({ currentTarget }) {
+    this.select(currentTarget)
+  }
+
+  nudge(event) {
+    if (this.drag) return
     if (!event.key.startsWith("Arrow")) return
     if (event.target.matches("input, textarea, select")) return
 
-    const o = this.coordsOf(this.selected)
+    // Arrow keys act on the tile that has focus, so they never move a
+    // tile selected earlier that the keyboard user has since left.
+    const focused = this.tileTargets.find((t) => t === event.target)
+    if (focused && focused !== this.selected) this.select(focused)
+    if (!this.selected) return
+
     const step = { ArrowLeft: [-1, 0], ArrowRight: [1, 0],
                    ArrowUp: [0, -1], ArrowDown: [0, 1] }[event.key]
     if (!step) return
 
     event.preventDefault()
+    this.shift(step[0], step[1], event.shiftKey)
+  }
 
-    const resize = event.shiftKey
+  // Moves (or with `resize`, grows or shrinks) the selected tile by one
+  // grid step, if the space is free.
+  shift(dx, dy, resize) {
+    const o = this.coordsOf(this.selected)
+
     let next = resize
-      ? { ...o, colSpan: o.colSpan + step[0], rowSpan: o.rowSpan + step[1] }
-      : { ...o, col: o.col + step[0], row: o.row + step[1] }
+      ? { ...o, colSpan: o.colSpan + dx, rowSpan: o.rowSpan + dy }
+      : { ...o, col: o.col + dx, row: o.row + dy }
 
     next = this.clamp(next)
-    if (!this.isFree(next, this.selected)) return
+    if (!this.isFree(next, this.selected)) {
+      this.status("That space is taken by another tile.")
+      return
+    }
 
     const unchanged = next.col === o.col && next.row === o.row &&
                       next.colSpan === o.colSpan && next.rowSpan === o.rowSpan
-    if (unchanged) return
+    if (unchanged) {
+      this.status("The tile is already at the edge of the grid.")
+      return
+    }
 
     this.place(this.selected, next)
     this.commit(this.selected, next, o)
@@ -207,7 +241,7 @@ export default class extends Controller {
         throw new Error((body.errors || ["rejected"]).join(", "))
       }
 
-      this.status("Saved")
+      this.status(`Saved: ${tile.getAttribute("aria-label")}`)
       this.refreshPreview()
     } catch (error) {
       this.write(tile, origin)
@@ -221,17 +255,29 @@ export default class extends Controller {
     tile.dataset.row = c.row
     tile.dataset.colSpan = c.colSpan
     tile.dataset.rowSpan = c.rowSpan
+    this.describe(tile)
   }
 
   // --- ui -----------------------------------------------------------
 
   select(tile) {
-    this.tileTargets.forEach((t) => t.classList.remove("tile--selected"))
-    tile.classList.add("tile--selected")
+    this.tileTargets.forEach((t) => {
+      t.classList.toggle("tile--selected", t === tile)
+      t.setAttribute("aria-pressed", t === tile)
+    })
     this.selected = tile
+    this.moverTargets.forEach((button) => { button.disabled = false })
 
     const frame = document.getElementById("inspector")
     if (frame) frame.src = `/dashboard_items/${tile.dataset.id}/edit`
+  }
+
+  // Keeps a tile's accessible name in step with where it sits. Mirrors
+  // DashboardsHelper#builder_tile_label, which renders the first one.
+  describe(tile) {
+    const c = this.coordsOf(tile)
+    tile.setAttribute("aria-label",
+      `${tile.dataset.name}, column ${c.col}, row ${c.row}, ${c.colSpan} by ${c.rowSpan}`)
   }
 
   // Submits the enclosing form without an inline onchange handler, so

@@ -1,0 +1,26 @@
+<%# Ported from the CoreUI free admin template's sidebar.pug. The active
+    entry is chosen server-side by sidebar_link rather than by CoreUI's
+    Navigation component, which only reads the URL on a full page load.
+    A <nav> landmark rather than the template's <div>; CoreUI styles it by
+    class, and wrapping only the <ul> would break the sidebar's flex layout. %>
+<nav class="sidebar sidebar-dark sidebar-fixed border-end" id="sidebar" aria-label="Main" data-sidebar-target="sidebar">
+  <div class="sidebar-header border-bottom">
+    <%= link_to root_path, class: "sidebar-brand fw-semibold text-decoration-none" do %>
+      <span class="sidebar-brand-full"><%= t("app.name") %></span>
+      <span class="sidebar-brand-narrow"><%= t("app.short_name") %></span>
+    <% end %>
+    <button class="btn-close d-lg-none" type="button" data-coreui-theme="dark"
+            aria-label="Close" data-action="sidebar#toggle"></button>
+  </div>
+
+  <ul class="sidebar-nav">
+    <%= sidebar_link "Dashboards", dashboards_path, icon: "cil-speedometer", controllers: %w[dashboards dashboard_items] %>
+    <%= sidebar_link "Sources", sources_path, icon: "cil-rss", controllers: %w[sources] %>
+    <%= sidebar_link "Devices", devices_path, icon: "cil-devices", controllers: %w[devices device_dashboards] %>
+  </ul>
+
+  <div class="sidebar-footer border-top d-none d-md-flex">
+    <button class="sidebar-toggler" type="button" data-coreui-toggle="unfoldable"
+            aria-label="Narrow the sidebar"></button>
+  </div>
+</nav>

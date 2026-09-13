@@ -125,6 +125,15 @@ class RendersControllerTest < ActionDispatch::IntegrationTest
     assert_select "span.tag", 0
   end
 
+  # The render is screenshotted into the device bitmap, so none of the
+  # admin layout or its CoreUI assets may reach it.
+  test "the render carries none of the admin layout" do
+    body = render_view("today")
+
+    assert_no_match(/coreui|importmap|<link[^>]+stylesheet/i, body)
+    assert_select "#sidebar", 0
+  end
+
   test "markers show in the agenda layouts too" do
     second = Source.create!(
       name: "Family", refresh_seconds: 900,

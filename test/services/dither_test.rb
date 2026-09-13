@@ -21,7 +21,7 @@ class DitherTest < ActiveSupport::TestCase
     end
   end
 
-  test "floyd_steinberg renders mid-grey as roughly half white" do
+  test "floyd_steinberg renders mid-gray as roughly half white" do
     output = Dither.call(flat(128, width: 32, height: 32), width: 32, height: 32)
     white  = output.bytes.count(255)
 

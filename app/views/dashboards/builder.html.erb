@@ -1,4 +1,6 @@
 <% content_for :title, "#{@dashboard.name} builder" %>
+<%# The 800px canvas and the inspector side by side outgrow container-lg. %>
+<% content_for :container_class, "container-fluid" %>
 
 <%
   # Canvas metrics. These mirror render.css exactly: an 800x480 panel
@@ -35,10 +37,6 @@
     <%= link_to "Dashboards", dashboards_path, class: "btn" %>
   </header>
 
-  <% if flash[:alert].present? || flash[:notice].present? %>
-    <p class="builder-flash"><%= flash[:alert] || flash[:notice] %></p>
-  <% end %>
-
   <div class="builder-main">
 
     <section class="builder-canvas-wrap">
@@ -52,16 +50,25 @@
         <div class="builder-rules" aria-hidden="true"></div>
 
         <% @items.each do |item| %>
+          <%# Focusable buttons, so the canvas works without a pointer (WCAG
+              2.1.1): Enter or Space selects a tile, then the arrow keys move
+              it. grid_controller#describe keeps the label current as the
+              tile moves. %>
           <div class="tile"
+               role="button" tabindex="0" aria-pressed="false"
+               aria-label="<%= builder_tile_label(item) %>"
                data-grid-target="tile"
                data-id="<%= item.id %>"
+               data-name="<%= builder_tile_name(item) %>"
                data-col="<%= item.col %>"
                data-row="<%= item.row %>"
                data-col-span="<%= item.col_span %>"
                data-row-span="<%= item.row_span %>"
-               data-action="pointerdown->grid#start">
-            <div class="tile-label">
-              <strong><%= item.title.presence || item.kind %></strong>
+               data-action="pointerdown->grid#start
+                            keydown.enter->grid#pick:prevent
+                            keydown.space->grid#pick:prevent">
+            <div class="tile-label" aria-hidden="true">
+              <strong><%= builder_tile_title(item) %></strong>
               <span><%= item.kind %><%= " · #{item.view}" if item.view.present? %></span>
             </div>
             <span class="tile-handle" data-handle="se"></span>
@@ -69,9 +76,26 @@
         <% end %>
       </div>
 
-      <p class="builder-status" data-grid-target="status">
-        Drag to move. Drag the corner to resize. Arrow keys nudge, shift+arrow resizes.
+      <%# A live region, so "Saving…", "Saved" and errors are announced (4.1.3). %>
+      <p class="builder-status" data-grid-target="status" role="status">
+        Drag a tile to move it, or its corner to resize it. Or select a tile
+        and use the buttons below. From the keyboard: tab to a tile and press
+        Enter, then use the arrow keys to move it and Shift+arrow to resize it.
       </p>
+
+      <%# The pointer alternative to dragging (WCAG 2.5.7): the same one-step
+          moves as the arrow keys, enabled once a tile is selected. %>
+      <div class="builder-movers" role="group" aria-label="Move or resize the selected tile">
+        <% [ [ "Move left", -1, 0, false ], [ "Move right", 1, 0, false ],
+             [ "Move up", 0, -1, false ], [ "Move down", 0, 1, false ],
+             [ "Narrower", -1, 0, true ], [ "Wider", 1, 0, true ],
+             [ "Shorter", 0, -1, true ], [ "Taller", 0, 1, true ] ].each do |label, dx, dy, resize| %>
+          <button type="button" class="btn btn-sm btn-app-outline" disabled
+                  data-grid-target="mover" data-action="grid#moveBy"
+                  data-grid-dx-param="<%= dx %>" data-grid-dy-param="<%= dy %>"
+                  data-grid-resize-param="<%= resize %>"><%= label %></button>
+        <% end %>
+      </div>
     </section>
 
     <aside class="builder-side">
