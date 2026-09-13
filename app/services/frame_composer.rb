@@ -15,7 +15,7 @@ class FrameComposer
       assigns: {
         dashboard: dashboard,
         device: device,
-        now: Time.current.in_time_zone(device&.time_zone.presence || Time.zone.name)
+        now: device ? device.local_time : Time.current
       }
     )
   end

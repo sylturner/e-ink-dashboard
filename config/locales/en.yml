@@ -36,3 +36,20 @@ en:
     # Beside links to a panel's live frame URL: the builder's device list
     # and the device page.
     live_bitmap_hint: "Opening the live bitmap renders a fresh frame if one is due, and counts as a check-in for the panel."
+  weather:
+    units:
+      imperial: "Fahrenheit"
+      metric: "Celsius"
+  time:
+    formats:
+      # Times drawn on a panel, one for each of AppSetting's clocks. Read
+      # through PanelTimeHelper#panel_time.
+      panel_clock_12h: "%-l:%M"
+      panel_clock_24h: "%H:%M"
+      panel_time_12h: "%-l:%M %p"
+      panel_time_24h: "%H:%M"
+      panel_hour_12h: "%-l %p"
+      panel_hour_24h: "%H:%M"
+      # event_time_label cuts the 12-hour meridiem to one letter: "12:00p".
+      panel_event_12h: "%-l:%M%P"
+      panel_event_24h: "%H:%M"

@@ -1,0 +1,39 @@
+<%# The check-in schedule (CheckInSchedule): on a device's settings, and on
+    the app settings as the schedule a new panel starts with. %>
+<div class="row g-3 mb-3">
+  <div class="col-sm-6">
+    <%= f.label :refresh_seconds, "Daytime check-in (seconds)" %>
+    <%= f.number_field :refresh_seconds, min: CheckInSchedule::MIN_SLEEP, max: CheckInSchedule::MAX_SLEEP,
+                       aria: { describedby: f.field_id(:refresh_seconds, :hint) } %>
+    <%= f.invalid_feedback :refresh_seconds %>
+  </div>
+  <div class="col-sm-6">
+    <%= f.label :night_refresh_seconds, "Nighttime check-in (seconds)" %>
+    <%= f.number_field :night_refresh_seconds, min: CheckInSchedule::MIN_SLEEP, max: CheckInSchedule::MAX_SLEEP,
+                       aria: { describedby: f.field_id(:refresh_seconds, :hint) } %>
+    <%= f.invalid_feedback :night_refresh_seconds %>
+  </div>
+  <div id="<%= f.field_id(:refresh_seconds, :hint) %>" class="form-text mt-1">
+    How long the panel sleeps between check-ins: <%= CheckInSchedule::MIN_SLEEP %> to
+    <%= CheckInSchedule::MAX_SLEEP %> seconds (<%= distance_of_time_in_words(CheckInSchedule::MAX_SLEEP) %>).
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-6">
+    <%= f.label :active_from_hour, "Daytime starts" %>
+    <%= f.select :active_from_hour, hour_options(CheckInSchedule::DAYTIME_START_HOURS, f.object.active_from_hour), {},
+                 aria: { describedby: f.field_id(:active_from_hour, :hint) } %>
+    <%= f.invalid_feedback :active_from_hour %>
+  </div>
+  <div class="col-6">
+    <%= f.label :active_until_hour, "Daytime ends" %>
+    <%= f.select :active_until_hour, hour_options(CheckInSchedule::DAYTIME_END_HOURS, f.object.active_until_hour), {},
+                 aria: { describedby: f.field_id(:active_from_hour, :hint) } %>
+    <%= f.invalid_feedback :active_until_hour %>
+  </div>
+  <div id="<%= f.field_id(:active_from_hour, :hint) %>" class="form-text mt-1">
+    In the panel's time zone. Outside these hours it checks in at the
+    nighttime rate.
+  </div>
+</div>

@@ -5,6 +5,18 @@ class ApplicationHelperTest < ActionView::TestCase
     @time = Time.zone.parse("2026-09-12 09:00")
   end
 
+  test "time zone choices are valued by IANA name, one choice per zone" do
+    options = time_zone_options
+
+    assert_includes options, [ "(GMT+00:00) Edinburgh, London", "Europe/London" ]
+    assert_equal options.map(&:last).uniq, options.map(&:last)
+    assert_equal options, time_zone_options("Europe/London")
+  end
+
+  test "a saved zone that isn't one of Rails' stays a choice" do
+    assert_equal [ "America/Boise", "America/Boise" ], time_zone_options("America/Boise").last
+  end
+
   test "a past time reads as ago, with the exact time in datetime" do
     travel_to @time + 2.hours do
       @rendered = relative_time_tag(@time)

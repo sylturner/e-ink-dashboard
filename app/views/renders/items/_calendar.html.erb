@@ -25,12 +25,12 @@
              events: events, now: now, days: days, times: times, tags: tags %>
 
 <% when "week" %>
-  <%# Sunday-start, to match the month grid. Rails' default week ends on
-      Sunday, which would collapse "this week" to a single day whenever
-      the panel is read on a Sunday. %>
+  <%# To the end of the week, which starts on the app's chosen day
+      (Date.beginning_of_week, set by AppSetting#apply), as the month grid
+      does. On the week's last day that is only today. %>
   <%= render "renders/items/calendar/agenda",
              events: events, now: now,
-             days: (now.to_date.end_of_week(:sunday) - now.to_date).to_i + 1,
+             days: (now.to_date.end_of_week - now.to_date).to_i + 1,
              times: times, tags: tags %>
 
 <% when "month" %>

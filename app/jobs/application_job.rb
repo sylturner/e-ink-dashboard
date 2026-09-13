@@ -4,4 +4,7 @@ class ApplicationJob < ActiveJob::Base
 
   # Most jobs are safe to ignore if the underlying records are no longer available
   # discard_on ActiveJob::DeserializationError
+
+  # Fetches and renders read times and weeks as requests do.
+  around_perform { |_job, block| AppSetting.current.apply(&block) }
 end

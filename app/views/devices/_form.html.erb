@@ -70,52 +70,17 @@
       <fieldset class="border-top pt-3 mb-3">
         <legend class="fs-6 fw-semibold">Schedule</legend>
 
-        <div class="row g-3 mb-3">
-          <div class="col-sm-6">
-            <%= f.label :refresh_seconds, "Daytime check-in (seconds)" %>
-            <%= f.number_field :refresh_seconds, min: Device::MIN_SLEEP, max: Device::MAX_SLEEP,
-                               aria: { describedby: f.field_id(:refresh_seconds, :hint) } %>
-            <%= f.invalid_feedback :refresh_seconds %>
-          </div>
-          <div class="col-sm-6">
-            <%= f.label :night_refresh_seconds, "Nighttime check-in (seconds)" %>
-            <%= f.number_field :night_refresh_seconds, min: Device::MIN_SLEEP, max: Device::MAX_SLEEP,
-                               aria: { describedby: f.field_id(:refresh_seconds, :hint) } %>
-            <%= f.invalid_feedback :night_refresh_seconds %>
-          </div>
-          <div id="<%= f.field_id(:refresh_seconds, :hint) %>" class="form-text mt-1">
-            How long the panel sleeps between check-ins: <%= Device::MIN_SLEEP %> to
-            <%= Device::MAX_SLEEP %> seconds (<%= distance_of_time_in_words(Device::MAX_SLEEP) %>).
-          </div>
-        </div>
-
-        <div class="row g-3 mb-3">
-          <div class="col-6">
-            <%= f.label :active_from_hour, "Daytime starts" %>
-            <%= f.select :active_from_hour, hour_options(Device::DAYTIME_START_HOURS, device.active_from_hour), {},
-                         aria: { describedby: f.field_id(:active_from_hour, :hint) } %>
-            <%= f.invalid_feedback :active_from_hour %>
-          </div>
-          <div class="col-6">
-            <%= f.label :active_until_hour, "Daytime ends" %>
-            <%= f.select :active_until_hour, hour_options(Device::DAYTIME_END_HOURS, device.active_until_hour), {},
-                         aria: { describedby: f.field_id(:active_from_hour, :hint) } %>
-            <%= f.invalid_feedback :active_until_hour %>
-          </div>
-          <div id="<%= f.field_id(:active_from_hour, :hint) %>" class="form-text mt-1">
-            In the panel's time zone. Outside these hours it checks in at the
-            nighttime rate.
-          </div>
-        </div>
+        <%= render "devices/schedule_fields", f: %>
 
         <div class="mb-0">
           <%= f.label :time_zone %>
-          <%= f.text_field :time_zone, autocomplete: "off", spellcheck: false,
-                           aria: { describedby: f.field_id(:time_zone, :hint) } %>
+          <%= f.select :time_zone, time_zone_options(device.time_zone),
+                       { include_blank: "App time zone (#{AppSetting.current.time_zone})" },
+                       aria: { describedby: f.field_id(:time_zone, :hint) } %>
           <%= f.invalid_feedback :time_zone %>
           <div id="<%= f.field_id(:time_zone, :hint) %>" class="form-text">
-            A name like America/Los_Angeles. Leave it blank to use the server's,
-            <%= Time.zone.name %>.
+            Only for a panel somewhere other than the rest. The app time zone is
+            set in <%= link_to "Settings", edit_settings_path %>.
           </div>
         </div>
       </fieldset>

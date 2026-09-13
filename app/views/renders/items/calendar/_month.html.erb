@@ -1,13 +1,15 @@
 <%
+  # Weeks start on the app's chosen day (Date.beginning_of_week, set by
+  # AppSetting#apply).
   first = now.to_date.beginning_of_month
-  start = first.beginning_of_week(:sunday)
-  last  = now.to_date.end_of_month.end_of_week(:sunday)
+  start = first.beginning_of_week
+  last  = now.to_date.end_of_month.end_of_week
 %>
 
 <div class="month">
   <div class="month-head">
-    <% %w[S M T W T F S].each do |initial| %>
-      <div class="t-xs"><%= initial %></div>
+    <% (start...start + 7).each do |day| %>
+      <div class="t-xs"><%= l(day, format: "%a")[0] %></div>
     <% end %>
   </div>
 

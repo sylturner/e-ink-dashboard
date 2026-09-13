@@ -24,13 +24,6 @@ class EventFeed
     def multi_day?
       starts_at.to_date != last_date
     end
-
-    def time_label
-      date = starts_at.strftime("%-m/%-d")
-      return "#{date} All day" if all_day
-
-      "#{date} #{starts_at.strftime('%-l:%M%P').chop}"
-    end
   end
 
   def self.for(item, zone:)

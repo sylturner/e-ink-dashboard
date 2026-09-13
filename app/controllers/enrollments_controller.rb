@@ -11,7 +11,7 @@ class EnrollmentsController < ApplicationController
   def create
     return head :bad_request if mac.blank?
 
-    device = Device.enroll!(mac: mac, attributes: geometry)
+    device = Device.enroll!(mac: mac, attributes: enrollment_attributes)
 
     # Plain text, so the firmware needs no JSON parser.
     render plain: device.token
@@ -27,19 +27,16 @@ class EnrollmentsController < ApplicationController
       request.headers["X-Device-Mac"].to_s.downcase.strip
     end
 
-    def geometry
+    # What the panel reports about itself, on the app's schedule. No time
+    # zone: a panel follows the app's until it is given one.
+    def enrollment_attributes
       {
         width: header_int("X-Device-Width") || 800,
         height: header_int("X-Device-Height") || 480,
         bit_depth: header_int("X-Device-Bit-Depth") || 1,
         image_format: request.headers["X-Device-Format"].presence || "bmp",
-        firmware_version: request.headers["X-Firmware-Version"].presence,
-        refresh_seconds: 900,
-        night_refresh_seconds: 3600,
-        active_from_hour: 6,
-        active_until_hour: 23,
-        time_zone: Time.zone.name
-      }.compact
+        firmware_version: request.headers["X-Firmware-Version"].presence
+      }.compact.merge(AppSetting.current.panel_defaults)
     end
 
     def header_int(name)

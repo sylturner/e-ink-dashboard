@@ -1,0 +1,70 @@
+<%= page_header "Settings", icon: "cil-settings",
+                description: "How panels tell the time, and what new panels and sources start with." %>
+
+<div class="row">
+  <div class="col-xl-7">
+    <section class="card app-settings" aria-labelledby="app-settings-heading">
+      <div class="card-header">
+        <h2 id="app-settings-heading" class="h6 mb-0">App settings</h2>
+      </div>
+
+      <div class="card-body">
+        <%= form_with model: @setting, url: settings_path do |f| %>
+          <%= f.error_messages %>
+
+          <fieldset class="mb-3">
+            <legend class="fs-6 fw-semibold">Time</legend>
+
+            <div class="mb-3">
+              <%= f.label :time_zone %>
+              <%= f.select :time_zone, time_zone_options(@setting.time_zone), {},
+                           aria: { describedby: f.field_id(:time_zone, :hint) } %>
+              <%= f.invalid_feedback :time_zone %>
+              <div id="<%= f.field_id(:time_zone, :hint) %>" class="form-text">
+                Panel clocks, calendars and check-in hours use this, unless a
+                panel has a time zone of its own.
+              </div>
+            </div>
+
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <%= f.label :clock %>
+                <%= f.select :clock, clock_options %>
+                <%= f.invalid_feedback :clock %>
+              </div>
+              <div class="col-sm-6">
+                <%= f.label :week_start, "Weeks start on" %>
+                <%= f.select :week_start, week_start_options %>
+                <%= f.invalid_feedback :week_start %>
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset class="border-top pt-3 mb-3">
+            <legend class="fs-6 fw-semibold">New weather sources</legend>
+
+            <%= f.label :units %>
+            <%= f.select :units, weather_units_options, {},
+                         aria: { describedby: f.field_id(:units, :hint) } %>
+            <%= f.invalid_feedback :units %>
+            <div id="<%= f.field_id(:units, :hint) %>" class="form-text">
+              What a new weather source starts with. Existing sources keep their own.
+            </div>
+          </fieldset>
+
+          <fieldset class="border-top pt-3 mb-3" aria-describedby="new-panels-hint">
+            <legend class="fs-6 fw-semibold">New panels</legend>
+            <p id="new-panels-hint" class="form-text mt-0 mb-3">
+              The schedule a panel starts with when it enrolls. Each panel's own
+              is on its page.
+            </p>
+
+            <%= render "devices/schedule_fields", f: %>
+          </fieldset>
+
+          <%= f.submit "Save settings" %>
+        <% end %>
+      </div>
+    </section>
+  </div>
+</div>

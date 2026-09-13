@@ -81,6 +81,42 @@ class RendersControllerTest < ActionDispatch::IntegrationTest
     assert_select "span.month-dots", 3 # 6th, 7th and 10th carry events
   end
 
+  # The preview draws the panel it stands in for: the office panel is in
+  # New York, and the app is in UTC.
+  test "the preview reads the time in the panel's zone" do
+    body = render_view("today")
+
+    assert_includes body, "9/6 9:00a"
+  end
+
+  test "a panel without a zone reads the app's" do
+    devices(:two).update!(time_zone: nil)
+    AppSetting.current.update!(time_zone: "America/Los_Angeles")
+
+    body = render_view("today")
+
+    assert_includes body, "9/6 6:00a"
+  end
+
+  test "times follow the app's clock" do
+    AppSetting.current.update!(clock: "24h")
+
+    body = render_view("today")
+
+    assert_includes body, "9/6 09:00"
+  end
+
+  test "month starts its weeks on the app's chosen day" do
+    AppSetting.current.update!(week_start: "monday")
+
+    render_view("month")
+
+    assert_equal %w[M T W T F S S], css_select("div.month-head div").map { it.text.strip }
+    assert_select "div.month-cell", 35
+    assert_select "div.month-cell:first-child span", "31"
+    assert_select "div.month-cell--outside", 5
+  end
+
   test "show_times can be switched off" do
     @item.update!(settings: { "show_times" => "0" })
     body = render_view("today")
