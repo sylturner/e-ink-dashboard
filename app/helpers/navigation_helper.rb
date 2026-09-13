@@ -1,6 +1,14 @@
 # Markup for the admin layout's sidebar and icons. Kept apart from
 # IconHelper, which draws the panel's weather icons into the bitmap.
 module NavigationHelper
+  # The header's color-mode menu, as [mode, label, icon]. The mode names
+  # are the ones theme_controller.js and the layout's inline script store.
+  COLOR_MODES = [
+    %w[light Light cil-sun],
+    %w[dark Dark cil-moon],
+    %w[auto Auto cil-contrast]
+  ].freeze
+
   # A sidebar entry, highlighted while any of `controllers` is serving
   # the page, so the builder still counts as Dashboards.
   def sidebar_link(label, path, icon:, controllers:)

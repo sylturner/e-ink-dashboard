@@ -141,6 +141,22 @@ class DashboardItemsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "settings fields are styled by the form builder" do
+    get edit_dashboard_item_url(dashboard_items(:two)) # calendar: show_times is on
+
+    assert_select ".setting.form-check" do
+      assert_select "input[type=hidden][name=?][value='0']", "dashboard_item[settings][show_times]"
+      assert_select "input.form-check-input[type=checkbox][name=?][checked]", "dashboard_item[settings][show_times]"
+      assert_select "label.form-check-label[for=?]", "dashboard_item_settings_show_times"
+    end
+
+    get edit_dashboard_item_url(@dashboard_item) # weather: day_count is a number
+
+    assert_select "label[for=?]", "dashboard_item_settings_day_count"
+    assert_select "input.form-control[type=number][id=?][name=?]",
+                  "dashboard_item_settings_day_count", "dashboard_item[settings][day_count]"
+  end
+
   test "a kind with no sources renders no source select" do
     get edit_dashboard_item_url(@dashboard_item, kind: "clock")
 

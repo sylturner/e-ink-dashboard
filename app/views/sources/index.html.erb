@@ -7,41 +7,41 @@
     widening the page (WCAG 1.4.10); focusable and labeled so keyboard
     and screen reader users can reach and scroll it. %>
 <div class="table-responsive" role="region" aria-label="Sources" tabindex="0">
-<table class="sources">
-  <thead>
-    <tr>
-      <th>Name</th><th>Type</th><th>Detail</th>
-      <th>Last fetch</th><th>Health</th><th>Used by</th><th></th>
-    </tr>
-  </thead>
-  <tbody>
-    <% @sources.each do |source| %>
+  <table class="sources">
+    <thead>
       <tr>
-        <td><%= link_to source.name, edit_source_path(source) %></td>
-        <td><%= source.kind_label %></td>
-        <td class="detail"><%= source.providable.detail %>
-        </td>
-        <td>
-          <%= source.fetched_at ? time_ago_in_words(source.fetched_at) + " ago" : "never" %>
-        </td>
-        <td>
-          <% if source.healthy? %>
-            OK
-          <% elsif source.fetched_at.present? %>
-            <%= pluralize(source.failure_count, "failure") %>
-            <div class="error"><%= source.last_error %></div>
-          <% else %>
-            <div class="error"><%= source.last_error || "not fetched" %></div>
-          <% end %>
-        </td>
-        <td><%= source.dashboard_items.count %></td>
-        <td class="actions">
-          <%= button_to "Test", test_source_path(source), method: :post %>
-          <%= button_to "Delete", source, method: :delete,
-                        form: { data: { turbo_confirm: "Delete #{source.name}?" } } %>
-        </td>
+        <th>Name</th><th>Type</th><th>Detail</th>
+        <th>Last fetch</th><th>Health</th><th>Used by</th><th></th>
       </tr>
-    <% end %>
-  </tbody>
-</table>
+    </thead>
+    <tbody>
+      <% @sources.each do |source| %>
+        <tr>
+          <td><%= link_to source.name, edit_source_path(source) %></td>
+          <td><%= source.kind_label %></td>
+          <td class="detail"><%= source.providable.detail %>
+          </td>
+          <td>
+            <%= source.fetched_at ? time_ago_in_words(source.fetched_at) + " ago" : "never" %>
+          </td>
+          <td>
+            <% if source.healthy? %>
+              OK
+            <% elsif source.fetched_at.present? %>
+              <%= pluralize(source.failure_count, "failure") %>
+              <div class="error"><%= source.last_error %></div>
+            <% else %>
+              <div class="error"><%= source.last_error || "not fetched" %></div>
+            <% end %>
+          </td>
+          <td><%= source.dashboard_items.count %></td>
+          <td class="actions">
+            <%= button_to "Test", test_source_path(source), method: :post %>
+            <%= button_to "Delete", source, method: :delete,
+                          form: { data: { turbo_confirm: "Delete #{source.name}?" } } %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
 </div>

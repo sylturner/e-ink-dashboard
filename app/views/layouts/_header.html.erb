@@ -14,7 +14,7 @@
           <%= ui_icon "cil-contrast", classes: "icon icon-lg" %>
         </button>
         <ul class="dropdown-menu dropdown-menu-end color-mode-menu">
-          <% [ [ "light", "Light", "cil-sun" ], [ "dark", "Dark", "cil-moon" ], [ "auto", "Auto", "cil-contrast" ] ].each do |mode, label, icon| %>
+          <% NavigationHelper::COLOR_MODES.each do |mode, label, icon| %>
             <li>
               <button class="dropdown-item d-flex align-items-center" type="button"
                       data-theme-target="option" data-action="theme#pick" data-theme-mode-param="<%= mode %>">

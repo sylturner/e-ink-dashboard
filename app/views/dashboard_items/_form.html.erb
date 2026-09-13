@@ -1,30 +1,21 @@
 <%= form_with model: item, data: { controller: "item-form",
                                    turbo_frame: item.new_record? ? nil : "_top" } do |f| %>
-
-  <% if item.errors.any? %>
-    <ul class="errors">
-      <% item.errors.full_messages.each do |message| %>
-        <li><%= message %></li>
-      <% end %>
-    </ul>
-  <% end %>
+  <%= f.error_messages %>
 
   <% if item.new_record? %>
-    <div class="field">
+    <div class="mb-3">
       <%= f.label :dashboard_id, "Dashboard" %>
       <%= f.collection_select :dashboard_id, Dashboard.order(:name), :id, :name %>
     </div>
   <% end %>
 
-  <div class="field">
+  <div class="mb-3">
     <%= f.label :kind, "Component" %>
-    <%= f.select :kind,
-                 Component::KINDS.map { |k| [ Component.label(k), k ] },
-                 {},
+    <%= f.select :kind, component_options, {},
                  data: { action: "change->item-form#kindChanged" } %>
   </div>
 
-  <div class="field">
+  <div class="mb-3">
     <%= f.label :view, "Layout" %>
     <%= f.select :view,
                  Component.views(item.kind).map { |value, label| [ label, value ] },
@@ -33,65 +24,68 @@
                          item_form_target: "view" } %>
   </div>
 
-  <div class="field">
+  <div class="mb-3">
     <%= f.label :title, "Header (blank for none)" %>
     <%= f.text_field :title %>
   </div>
 
   <% allowed = Component.source_types(item.kind) %>
   <% if allowed.any? %>
-    <div class="field">
-      <%= f.label :source_ids,
-                  Component.multi_source?(item.kind) ? "Sources" : "Source" %>
+    <% multi = Component.multi_source?(item.kind) %>
+    <div class="mb-3">
+      <%= f.label :source_ids, multi ? "Sources" : "Source" %>
       <%= f.collection_select :source_ids,
                               Source.where(providable_type: allowed).order(:name),
                               :id, :name,
-                              { include_blank: !Component.multi_source?(item.kind) },
-                              { multiple: Component.multi_source?(item.kind),
-                                size: Component.multi_source?(item.kind) ? 4 : 1 } %>
-      <% if Component.multi_source?(item.kind) %>
-        <p class="hint">Select several to combine them into one view.</p>
-      <% end %>
-      <p class="hint"><%= link_to "Manage sources", sources_path %></p>
+                              { include_blank: !multi },
+                              { multiple: multi, size: multi ? 4 : 1,
+                                aria: { describedby: "item_sources_hint" } } %>
+      <div id="item_sources_hint" class="form-text">
+        <% if multi %>Select several to combine them into one view.<% end %>
+        <%= link_to "Manage sources", sources_path %>
+      </div>
     </div>
   <% end %>
 
   <% settings = Component.settings(item.kind) %>
   <% if settings.any? %>
-    <fieldset>
-      <legend>Options</legend>
-      <% settings.each do |setting| %>
-        <div class="field setting"
-             data-item-form-target="setting"
-             data-views="<%= Array(setting.views).join(" ") %>">
-          <% name = "dashboard_item[settings][#{setting.key}]" %>
-          <% id   = "setting_#{setting.key}" %>
-          <% case setting.type %>
-          <% when :boolean %>
-            <%# The hidden partner is what lets a box be turned back off:
-                settings are assigned as a whole hash, so an omitted key
-                would silently fall back to the registry default. %>
-            <%= hidden_field_tag name, "0", id: nil %>
-            <%= checkbox_tag name, "1", item.setting(setting.key), id: id %>
-            <%= label_tag id, setting.label %>
-          <% when :integer %>
-            <%= label_tag id, setting.label %>
-            <%= number_field_tag name, item.setting(setting.key), min: 1, id: id %>
-          <% when :text %>
-            <%= label_tag id, setting.label %>
-            <%= text_area_tag name, item.setting(setting.key), rows: 3, id: id %>
-          <% else %>
-            <%= label_tag id, setting.label %>
-            <%= text_field_tag name, item.setting(setting.key), id: id %>
-          <% end %>
-        </div>
+    <fieldset class="mb-3 mw-100 border-0 p-0" data-item-form-target="options">
+      <legend class="fs-6 fw-semibold p-0 mb-2">Options</legend>
+
+      <%# Named dashboard_item[settings][key], and styled by the form builder. %>
+      <%= f.fields_for :settings do |s| %>
+        <% settings.each do |setting| %>
+          <% value = item.setting(setting.key) %>
+          <div class="<%= class_names("setting mb-3", "form-check": setting.type == :boolean) %>"
+               data-item-form-target="setting"
+               data-views="<%= Array(setting.views).join(" ") %>">
+            <% case setting.type %>
+            <% when :boolean %>
+              <%# The checkbox's hidden "0" partner is what lets a box be
+                  turned back off: settings are assigned as a whole hash, so
+                  an omitted key would silently fall back to the registry
+                  default. %>
+              <%= s.checkbox setting.key, checked: value %>
+              <%= s.label setting.key, setting.label, class: "form-check-label" %>
+            <% when :integer %>
+              <%= s.label setting.key, setting.label %>
+              <%= s.number_field setting.key, value:, min: 1 %>
+            <% when :text %>
+              <%= s.label setting.key, setting.label %>
+              <%= s.textarea setting.key, value:, rows: 3 %>
+            <% else %>
+              <%= s.label setting.key, setting.label %>
+              <%= s.text_field setting.key, value: %>
+            <% end %>
+          </div>
+        <% end %>
       <% end %>
     </fieldset>
   <% end %>
 
-  <div class="field">
+  <div class="form-check mb-3">
     <%= f.checkbox :visible %>
-    <%= f.label :visible, "Show on dashboard" %>
+    <%= f.label :visible, "Show on dashboard", class: "form-check-label" %>
   </div>
 
   <%= f.submit "Save" %>

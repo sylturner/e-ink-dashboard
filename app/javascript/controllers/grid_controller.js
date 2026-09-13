@@ -220,7 +220,7 @@ export default class extends Controller {
     this.status("Saving…")
 
     try {
-      const response = await fetch(`/dashboard_items/${tile.dataset.id}/reposition`, {
+      const response = await fetch(tile.dataset.repositionUrl, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -268,8 +268,10 @@ export default class extends Controller {
     this.selected = tile
     this.moverTargets.forEach((button) => { button.disabled = false })
 
+    // The view renders each tile's URLs from the routes, so none are
+    // spelled out here.
     const frame = document.getElementById("inspector")
-    if (frame) frame.src = `/dashboard_items/${tile.dataset.id}/edit`
+    if (frame) frame.src = tile.dataset.editUrl
   }
 
   // Keeps a tile's accessible name in step with where it sits. Mirrors

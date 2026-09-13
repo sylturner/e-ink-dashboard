@@ -188,10 +188,28 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
 
     assert_select ".builder-movers[role=group][aria-label]" do
       assert_select "button[type=button][disabled][data-action=?]", "grid#moveBy", 8
-      %w[Move\ left Move\ right Move\ up Move\ down Narrower Wider Shorter Taller].each do |label|
+      [ "Move left", "Move right", "Move up", "Move down", "Narrower", "Wider", "Shorter", "Taller" ].each do |label|
         assert_select "button", label
       end
     end
+  end
+
+  test "each tile carries the URLs the grid controller loads and saves it with" do
+    item = dashboard_items(:two)
+
+    get builder_dashboard_url(dashboards(:two))
+
+    assert_select ".tile[data-id=?][data-edit-url=?][data-reposition-url=?]",
+                  item.id.to_s, edit_dashboard_item_path(item), reposition_dashboard_item_path(item)
+  end
+
+  # The inspector loads a second dashboard_item form beside the palette.
+  test "the add-a-tile form's ids can't collide with the tile inspector's" do
+    get builder_dashboard_url(@dashboard)
+
+    assert_select ".palette label[for=?]", "palette_dashboard_item_kind"
+    assert_select ".palette select#palette_dashboard_item_kind"
+    assert_select "#dashboard_item_kind", 0
   end
 
   test "a refused assignment is shown on the builder" do
@@ -204,7 +222,7 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
     }
     follow_redirect!
 
-    assert_select ".alert.alert-danger", /already been taken/i
+    assert_select ".alert.alert-danger[role=alert]", /already been taken/i
   end
 
   test "only unassigned devices are offered" do

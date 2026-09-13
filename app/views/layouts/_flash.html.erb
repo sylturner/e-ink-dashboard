@@ -1,6 +1,8 @@
-<% { notice: "success", alert: "danger" }.each do |type, tone| %>
+<%# A notice is a status message, announced when the reader is idle; an
+    alert interrupts (WCAG 4.1.3). %>
+<% { notice: [ "success", "status" ], alert: [ "danger", "alert" ] }.each do |type, (tone, role)| %>
   <% if flash[type].present? %>
-    <div class="alert alert-<%= tone %> alert-dismissible fade show" role="alert">
+    <div class="alert alert-<%= tone %> alert-dismissible fade show" role="<%= role %>">
       <%= flash[type] %>
       <button type="button" class="btn-close" data-coreui-dismiss="alert" aria-label="Close"></button>
     </div>

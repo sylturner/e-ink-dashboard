@@ -1,34 +1,39 @@
-<section class="palette">
-  <h2>Add a component</h2>
+<%# The palette's fields are namespaced: the tile inspector beside it is
+    also a dashboard_item form, and without a prefix their ids collide
+    and the labels point at the wrong fields. %>
+<section class="card palette" aria-labelledby="palette-heading">
+  <div class="card-header">
+    <h2 id="palette-heading" class="h6 mb-0">Add a tile</h2>
+  </div>
 
-  <%= form_with model: DashboardItem.new, url: dashboard_items_path do |f| %>
-    <%= f.hidden_field :dashboard_id, value: dashboard.id %>
+  <div class="card-body">
+    <%= form_with model: DashboardItem.new, url: dashboard_items_path, namespace: "palette" do |f| %>
+      <%= f.hidden_field :dashboard_id, value: dashboard.id %>
 
-    <p>
-      <%= f.label :kind %>
-      <%= f.select :kind, DashboardItem::KINDS.map { |k| [ k.titleize, k ] } %>
-    </p>
+      <div class="mb-3">
+        <%= f.label :kind, "Component" %>
+        <%= f.select :kind, component_options %>
+      </div>
 
-    <p>
-      <%= f.label :title %>
-      <%= f.text_field :title %>
-    </p>
+      <div class="mb-3">
+        <%= f.label :title, "Header (blank for none)" %>
+        <%= f.text_field :title %>
+      </div>
 
-    <p>
-      <%= f.label :source_ids, "Sources" %>
-      <%= f.collection_select :source_ids, sources, :id, :name,
-                              {}, { multiple: true, size: 4 } %>
-    </p>
+      <div class="mb-3">
+        <%= f.label :source_ids, "Sources" %>
+        <%= f.collection_select :source_ids, sources, :id, :name,
+                                {}, { multiple: true, size: 4, aria: { describedby: "palette_sources_hint" } } %>
+        <div id="palette_sources_hint" class="form-text">
+          <%= link_to "Manage sources", sources_path %> to add a weather location, RSS feed or calendar.
+        </div>
+      </div>
 
-    <p class="hint">
-      <%= link_to "Manage sources", sources_path %>
-      — add a weather location, RSS feed, or calendar.
-    </p>
+      <%= f.hidden_field :col_span, value: 2 %>
+      <%= f.hidden_field :row_span, value: 2 %>
+      <%= f.hidden_field :visible, value: true %>
 
-    <%= f.hidden_field :col_span, value: 2 %>
-    <%= f.hidden_field :row_span, value: 2 %>
-    <%= f.hidden_field :visible, value: true %>
-
-    <%= f.submit "Add" %>
-  <% end %>
+      <%= f.submit "Add tile" %>
+    <% end %>
+  </div>
 </section>

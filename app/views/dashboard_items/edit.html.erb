@@ -4,10 +4,19 @@
     would leave the tiles behind it stale. Still renders standalone on a
     direct visit. %>
 <turbo-frame id="inspector">
-  <h2><%= Component.label(@dashboard_item.kind) %></h2>
+  <section class="card" aria-labelledby="inspector-heading">
+    <div class="card-header">
+      <h2 id="inspector-heading" class="h6 mb-0"><%= Component.label(@dashboard_item.kind) %> tile</h2>
+    </div>
 
-  <%= render "form", item: @dashboard_item %>
+    <div class="card-body">
+      <%= render "form", item: @dashboard_item %>
+    </div>
 
-  <%= button_to "Delete", @dashboard_item, method: :delete,
-                form: { data: { turbo_frame: "_top" } } %>
+    <div class="card-footer bg-transparent">
+      <%= button_to "Delete tile", @dashboard_item, method: :delete,
+                    class: "btn btn-sm btn-app-outline",
+                    form: { data: { turbo_frame: "_top", turbo_confirm: "Delete this tile?" } } %>
+    </div>
+  </section>
 </turbo-frame>

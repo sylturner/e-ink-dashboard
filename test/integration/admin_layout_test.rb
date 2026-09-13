@@ -29,6 +29,15 @@ class AdminLayoutTest < ActionDispatch::IntegrationTest
     assert_select "main#main-content h1", "Dashboards"
   end
 
+  # WCAG 4.1.3: a notice waits for the reader; an alert interrupts.
+  test "a notice is a status message" do
+    patch dashboard_url(dashboards(:one)), params: { dashboard: { name: "Renamed" } }
+    follow_redirect!
+
+    assert_select ".alert.alert-success[role=status]"
+    assert_select ".alert[role=alert]", 0
+  end
+
   test "the app name comes from the locale file" do
     get dashboards_url
 

@@ -1,4 +1,17 @@
 module DashboardsHelper
+  # The builder's single-click alternatives to dragging (WCAG 2.5.7), in
+  # two groups of [label, resize?, [[button label, dx, dy], ...]].
+  # grid_controller#moveBy applies them as the arrow keys do.
+  BUILDER_MOVERS = [
+    [ "Move", false, [ [ "Move left", -1, 0 ], [ "Move right", 1, 0 ], [ "Move up", 0, -1 ], [ "Move down", 0, 1 ] ] ],
+    [ "Resize", true, [ [ "Narrower", -1, 0 ], [ "Wider", 1, 0 ], [ "Shorter", 0, -1 ], [ "Taller", 0, 1 ] ] ]
+  ].freeze
+
+  # Choices for a component select, labeled from the registry.
+  def component_options
+    Component::KINDS.map { [ Component.label(it), it ] }
+  end
+
   # A builder tile's heading: its custom header, or the component's name.
   def builder_tile_title(item)
     item.title.presence || Component.label(item.kind)

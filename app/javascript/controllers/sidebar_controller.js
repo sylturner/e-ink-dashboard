@@ -8,14 +8,20 @@ export default class extends Controller {
   static targets = [ "sidebar" ]
 
   sidebarTargetConnected(element) {
-    window.coreui.Sidebar.getOrCreateInstance(element)
+    this.Sidebar.getOrCreateInstance(element)
   }
 
   sidebarTargetDisconnected(element) {
-    window.coreui.Sidebar.getInstance(element)?.dispose()
+    this.Sidebar.getInstance(element)?.dispose()
   }
 
   toggle() {
-    window.coreui.Sidebar.getOrCreateInstance(this.sidebarTarget).toggle()
+    this.Sidebar.getOrCreateInstance(this.sidebarTarget).toggle()
+  }
+
+  // The bundle is a UMD build: importing it defines window.coreui rather
+  // than exporting the classes.
+  get Sidebar() {
+    return window.coreui.Sidebar
   }
 }
