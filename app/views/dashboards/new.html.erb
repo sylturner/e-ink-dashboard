@@ -1,11 +1,20 @@
-<% content_for :title, "New dashboard" %>
+<%# The builder before there is a dashboard. Tiles can only be added to a
+    saved one, so the grid is empty and the settings come first. %>
+<% content_for :container_class, "container-fluid" %>
 
-<h1>New dashboard</h1>
+<%= page_title "New dashboard", parent: [ "Dashboards", dashboards_path ], crumb: "New" %>
 
-<%= render "form", dashboard: @dashboard %>
+<div class="builder-main">
+  <%= render layout: "dashboards/canvas",
+             locals: { items: [],
+                       cols: @dashboard.grid_columns_in_database,
+                       rows: @dashboard.grid_rows_in_database } do %>
+    <p class="small text-body-secondary mb-0">
+      Name the dashboard and create it, then add tiles to its grid.
+    </p>
+  <% end %>
 
-<br>
-
-<div>
-  <%= link_to "Back to dashboards", dashboards_path %>
+  <div class="builder-side">
+    <%= render "form", dashboard: @dashboard %>
+  </div>
 </div>

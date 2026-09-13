@@ -22,12 +22,15 @@ A self-hosted server for ESP32 e-paper panels.
   - `FrameComposer` renders `renders/dashboard` inside `layouts/render.html.erb`, whose only stylesheet is `render.css` (inlined by `InlineAssets`).
   - It screenshots the page in headless Chrome (`lib/browser_pool.rb`, via Ferrum) and converts the PNG to the device's format with `Bitmap` and `Dither`.
   - `GET /render/dashboard` serves the same HTML, which the builder's preview iframe shows.
+  - `DashboardThumbnail` captures the same page, undithered, for the dashboard list (`GET /dashboards/:id/thumbnail.png`). Captures are cached under a digest of the HTML, which is also the ETag.
   - **Admin styling must never reach the render.** Don't add `render.css` to the admin layout, or admin CSS or JS to the render layout. After admin UI work, check that the `/render/dashboard` HTML is unchanged.
 - **Device API.** It is used by the firmware in `esp32/esp32_dashboard/` and is deliberately unauthenticated.
   - `POST /devices/enroll` gives a panel a token for its MAC, plus a claim code shown on its screen until it is assigned a dashboard.
   - `GET /devices/:token/frame` returns the bitmap, composing a fresh one when it is due or forced. It also records telemetry from `X-*` headers and sets `Refresh-Rate`.
-- **Admin UI:** Dashboards (including the drag-and-drop builder, `grid_controller.js`), Sources and Devices.
+- **Admin UI:** Dashboards, Sources and Devices.
+  - A dashboard has no show page. The list's cards show it, and the drag-and-drop builder (`grid_controller.js`) is both its new and edit page.
   - It is built on the vendored CoreUI 5.9 Bootstrap admin template (`vendor/assets`, `vendor/javascript`), with `AdminFormBuilder` as the default form builder.
+  - Section index pages open with the `page_header` helper's banner (`application/_page_header.html.erb`).
   - It is being restyled one area at a time, so some views are still Rails scaffold.
 - **Tests:** Minitest tests for models, services, controllers, a helper, the form builder and admin-layout integration. The jobs and mailers have no tests. There are no system tests either: `test/system` doesn't exist, though CI still runs `test:system`.
 - `public/ditherer.html` is a standalone dithering tool, separate from the Rails app.

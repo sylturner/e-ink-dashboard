@@ -1,0 +1,65 @@
+<%# The builder's Layout card: the canvas with the dashboard's tiles, then
+    what the page puts under it. Rendered with `render layout:`, so the
+    edit page can add its move buttons and the new page its next step. %>
+<%
+  # Canvas metrics. These mirror render.css exactly: an 800x480 panel
+  # divided into equal 1fr tracks with --grid-gap between them. The
+  # guide lines below are drawn from the same arithmetic, so a tile in
+  # the builder lands on the same pixels as it does in the render.
+  gap    = 8
+  canvas = { w: 800, h: 480 }
+  step_x = (canvas[:w] - (cols - 1) * gap) / cols.to_f + gap
+  step_y = (canvas[:h] - (rows - 1) * gap) / rows.to_f + gap
+%>
+<section class="card builder-stage" aria-labelledby="builder-layout-heading">
+  <div class="card-header d-flex align-items-center gap-2">
+    <h2 id="builder-layout-heading" class="h6 mb-0 me-auto">Layout</h2>
+    <span class="small text-body-secondary"><%= cols %>&thinsp;&times;&thinsp;<%= rows %> grid</span>
+  </div>
+
+  <div class="card-body p-2">
+    <div class="builder-canvas-wrap">
+      <div class="builder-canvas"
+           data-grid-target="canvas"
+           style="--grid-gap: <%= gap %>px;
+                  --rule-x: <%= step_x.round(3) %>px;
+                  --rule-y: <%= step_y.round(3) %>px;
+                  width: <%= canvas[:w] %>px; height: <%= canvas[:h] %>px;">
+
+        <div class="builder-rules" aria-hidden="true"></div>
+
+        <% items.each do |item| %>
+          <%# Focusable buttons, so the canvas works without a pointer (WCAG
+              2.1.1): Enter or Space selects a tile, then the arrow keys move
+              it. grid_controller#describe keeps the label current as the
+              tile moves. %>
+          <div class="tile"
+               role="button" tabindex="0" aria-pressed="false"
+               aria-label="<%= builder_tile_label(item) %>"
+               data-grid-target="tile"
+               data-id="<%= item.id %>"
+               data-name="<%= builder_tile_name(item) %>"
+               data-col="<%= item.col %>"
+               data-row="<%= item.row %>"
+               data-col-span="<%= item.col_span %>"
+               data-row-span="<%= item.row_span %>"
+               data-edit-url="<%= edit_dashboard_item_path(item) %>"
+               data-reposition-url="<%= reposition_dashboard_item_path(item) %>"
+               data-action="pointerdown->grid#start
+                            keydown.enter->grid#pick:prevent
+                            keydown.space->grid#pick:prevent">
+            <div class="tile-label" aria-hidden="true">
+              <strong><%= builder_tile_title(item) %></strong>
+              <span><%= item.kind %><%= " · #{item.view}" if item.view.present? %></span>
+            </div>
+            <span class="tile-handle" data-handle="se"></span>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-body pt-2 builder-caption">
+    <%= yield %>
+  </div>
+</section>

@@ -1,22 +1,41 @@
 /* ============================================================
-   Builder chrome. Kept strictly separate from render.css: nothing
-   here may leak into the render, and nothing there styles this page.
+   Builder. Kept strictly separate from render.css: nothing here may
+   leak into the render, and nothing there styles this page. The cards
+   around the canvas are CoreUI; this file holds the page's two-column
+   arrangement and the canvas and tile mechanics grid_controller.js
+   depends on.
    ============================================================ */
 
-.builder { display: flex; flex-direction: column; gap: 24px; padding-bottom: 24px; }
-
-.builder-bar {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 16px;
+/* One column on narrower screens. From 1400px the canvas and preview
+   sit on the left at the canvas's full width, and the tile inspector
+   and palette take what is left beside them. The spare height goes to
+   the preview row, so the canvas row stays tight. */
+.builder-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
 }
-.builder-bar h1 { font-size: 20px; margin-right: auto; }
+@media (min-width: 1400px) {
+  .builder-main {
+    grid-template-columns: minmax(0, max-content) minmax(15rem, 1fr);
+    grid-template-rows: auto 1fr;
+    grid-template-areas: "stage side" "preview side";
+  }
+  .builder-stage { grid-area: stage; }
+  .builder-side { grid-area: side; max-width: 36rem; }
+  .builder-preview { grid-area: preview; }
+}
 
-.builder-main { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+/* Text beside the canvas and preview wraps to their width instead of
+   widening the left column to the length of its longest line. */
+.builder-caption { contain: inline-size; }
 
 /* The canvas and preview are fixed 800px pictures of the panel -- a
    two-dimensional layout WCAG 1.4.10 exempts from reflow. On a narrow
-   screen they scroll inside their own boxes and the inspector wraps
-   below, so the page itself never scrolls sideways. */
-.builder-canvas-wrap { flex: 0 1 auto; min-width: 0; max-width: 100%; overflow-x: auto; }
+   screen they scroll inside their own boxes, so the page itself never
+   scrolls sideways. */
+.builder-canvas-wrap, .builder-preview-frame { overflow-x: auto; }
 
 /* The canvas stands in for the white e-paper panel, so it and its
    tiles stay light (with their own text color) in dark mode too; it
@@ -83,39 +102,9 @@
   border-color: #c00;
 }
 
-.builder-status { font: 12px system-ui, sans-serif; color: var(--cui-secondary-color); margin-top: 8px; }
-
-/* Move/resize buttons under the canvas (styled by .btn-app-outline). */
-.builder-movers { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-
-.builder-side { flex: 1 1 260px; min-width: 0; }
-
-.builder-preview { min-width: 0; overflow-x: auto; }
 .builder-preview iframe {
   border: 1px solid #999;
   display: block;
 }
 
-.muted { color: var(--cui-secondary-color); font: 13px system-ui, sans-serif; }
-
-/* Links to the real bitmap each device is served, under the preview. */
-.device-previews { margin-top: 12px; }
-.device-previews h3 { font-size: 13px; margin: 0 0 6px; }
-
-.device-list { list-style: none; padding: 0; margin: 0; }
-.device-list li {
-  display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px;
-  padding: 4px 0;
-  font: 12px system-ui, sans-serif;
-}
-
-.device-spec { color: var(--cui-secondary-color); font-family: ui-monospace, monospace; }
-.device-settings { color: var(--cui-link-color); }
-
-.device-list .inline-form, .assign-device { display: inline-block; }
-.device-list .inline-form button {
-  background: none; border: none; padding: 0; margin-left: 4px;
-  color: var(--cui-link-color); cursor: pointer; font: inherit;
-}
-.assign-device { margin-top: 8px; font: 12px system-ui, sans-serif; }
-.assign-device label { margin-right: 6px; }
+.assign-device { max-width: 28rem; }

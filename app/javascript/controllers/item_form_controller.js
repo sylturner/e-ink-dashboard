@@ -1,13 +1,14 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["view", "setting"]
+  static targets = ["view", "setting", "options"]
 
   connect() {
     this.viewChanged()
   }
 
-  // Settings declare which layouts they apply to; hide the rest.
+  // Settings declare which layouts they apply to; hide the rest, and the
+  // Options group itself when none are left.
   viewChanged() {
     const view = this.hasViewTarget ? this.viewTarget.value : null
 
@@ -16,6 +17,10 @@ export default class extends Controller {
       const applies = views.length === 0 || views.includes(view)
       field.hidden = !applies
     })
+
+    if (this.hasOptionsTarget) {
+      this.optionsTarget.hidden = this.settingTargets.every((field) => field.hidden)
+    }
   }
 
   // Kind determines which views and source types exist, so the server

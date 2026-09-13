@@ -1,84 +1,69 @@
 class DashboardsController < ApplicationController
-  before_action :set_dashboard, only: %i[ show edit update destroy builder ]
+  before_action :set_dashboard, only: %i[ edit update destroy ]
 
-  # GET /dashboards or /dashboards.json
+  # GET /dashboards
   def index
-    @dashboards = Dashboard.all
-  end
-
-  # GET /dashboards/1 or /dashboards/1.json
-  def show
+    # Each card sizes its thumbnail from the devices and describes it
+    # from the tiles.
+    @dashboards = Dashboard.includes(:devices, :dashboard_items)
   end
 
   # GET /dashboards/new
+  #
+  # The builder before there is a dashboard: tiles can only be added once
+  # it is saved, so only its settings can be filled in.
   def new
     @dashboard = Dashboard.new
   end
 
   # GET /dashboards/1/edit
+  #
+  # The builder.
   def edit
+    load_builder
   end
 
-  # GET /dashboards/1/builder
-  def builder
-    @items   = @dashboard.dashboard_items.order(:position)
-    @sources = Source.order(:name)
-    @devices = @dashboard.devices.order(:name)
-    @assignments = @dashboard.device_dashboards.index_by(&:device_id)
-    @assignable_devices = Device.where.not(id: @devices.map(&:id)).order(:name)
-  end
-
-  # POST /dashboards or /dashboards.json
+  # POST /dashboards
   def create
     @dashboard = Dashboard.new(dashboard_params)
 
-    respond_to do |format|
-      if @dashboard.save
-        format.html { redirect_to @dashboard, notice: "Dashboard was successfully created." }
-        format.json { render :show, status: :created, location: @dashboard }
-      else
-        format.html { render :new, status: :unprocessable_content }
-        format.json { render json: @dashboard.errors, status: :unprocessable_content }
-      end
+    if @dashboard.save
+      redirect_to edit_dashboard_path(@dashboard), notice: "#{@dashboard.name} was created. Add some tiles to it."
+    else
+      render :new, status: :unprocessable_content
     end
   end
 
-  # PATCH/PUT /dashboards/1 or /dashboards/1.json
+  # PATCH/PUT /dashboards/1
   def update
-    respond_to do |format|
-      if @dashboard.update(dashboard_params)
-        format.html { redirect_to after_update_path, notice: "Dashboard was successfully updated.", status: :see_other }
-        format.json { render :show, status: :ok, location: @dashboard }
-      else
-        format.html { render :edit, status: :unprocessable_content }
-        format.json { render json: @dashboard.errors, status: :unprocessable_content }
-      end
+    if @dashboard.update(dashboard_params)
+      redirect_to edit_dashboard_path(@dashboard), notice: "Dashboard settings saved.", status: :see_other
+    else
+      load_builder
+      render :edit, status: :unprocessable_content
     end
   end
 
-  # DELETE /dashboards/1 or /dashboards/1.json
+  # DELETE /dashboards/1
   def destroy
     @dashboard.destroy!
 
-    respond_to do |format|
-      format.html { redirect_to dashboards_path, notice: "Dashboard was successfully destroyed.", status: :see_other }
-      format.json { head :no_content }
-    end
+    redirect_to dashboards_path, notice: "#{@dashboard.name} was deleted.", status: :see_other
   end
 
   private
-    # The builder posts the theme picker with this flag so a save returns
-    # to the canvas instead of navigating away to the show page.
-    def after_update_path
-      params[:from_builder].present? ? builder_dashboard_path(@dashboard) : @dashboard
-    end
-
-    # Use callbacks to share common setup or constraints between actions.
     def set_dashboard
       @dashboard = Dashboard.find(params.expect(:id))
     end
 
-    # Only allow a list of trusted parameters through.
+    def load_builder
+      @items   = @dashboard.dashboard_items.order(:position)
+      @sources = Source.order(:name)
+      @devices = @dashboard.devices.order(:name)
+      @assignments = @dashboard.device_dashboards.index_by(&:device_id)
+      @assignable_devices = Device.where.not(id: @devices.map(&:id)).order(:name)
+    end
+
     def dashboard_params
       params.expect(dashboard: [ :name, :theme, :grid_columns, :grid_rows ])
     end

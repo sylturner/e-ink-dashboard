@@ -6,6 +6,20 @@ class FrameComposer
     new(device).call
   end
 
+  # The page a panel is captured from, at the device's local time.
+  # DashboardThumbnail captures the same page for the dashboard list.
+  def self.html(dashboard:, device:, template: "renders/dashboard")
+    ApplicationController.renderer.render(
+      template: template,
+      layout: "render",
+      assigns: {
+        dashboard: dashboard,
+        device: device,
+        now: Time.current.in_time_zone(device&.time_zone.presence || Time.zone.name)
+      }
+    )
+  end
+
   def initialize(device)
     @device = device
   end
@@ -32,15 +46,7 @@ class FrameComposer
     # code comes out at the same crispness as everything else.
     template = @device.claimed? ? "renders/dashboard" : "renders/setup"
 
-    ApplicationController.renderer.render(
-      template: template,
-      layout: "render",
-      assigns: {
-        dashboard: @device.dashboard,
-        device: @device,
-        now: Time.current.in_time_zone(@device.time_zone.presence || Time.zone.name)
-      }
-    )
+    self.class.html(dashboard: @device.dashboard, device: @device, template: template)
   end
 
   def prune

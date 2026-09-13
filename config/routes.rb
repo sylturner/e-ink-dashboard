@@ -22,11 +22,13 @@ Rails.application.routes.draw do
 
   resources :device_dashboards, only: %i[create destroy]
 
-  resources :dashboards do
-    member do
-      get :builder
-    end
+  resources :dashboards, except: :show do
+    resource :thumbnail, only: :show, module: :dashboards
   end
+  # The builder is a dashboard's new and edit page, and the list's cards
+  # stand in for a show page. Old links to either land in the builder.
+  get "dashboards/:id",         to: redirect("/dashboards/%{id}/edit"), constraints: { id: /\d+/ }
+  get "dashboards/:id/builder", to: redirect("/dashboards/%{id}/edit")
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.

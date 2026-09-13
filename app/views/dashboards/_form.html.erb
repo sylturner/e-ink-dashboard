@@ -1,37 +1,48 @@
-<%= form_with(model: dashboard) do |form| %>
-  <% if dashboard.errors.any? %>
-    <div style="color: red">
-      <h2><%= pluralize(dashboard.errors.count, "error") %> prohibited this dashboard from being saved:</h2>
+<%# The dashboard's own settings, a card beside the builder's canvas. On
+    the new page it is all there is to fill in. %>
+<section class="card dashboard-settings" aria-labelledby="dashboard-settings-heading">
+  <div class="card-header">
+    <h2 id="dashboard-settings-heading" class="h6 mb-0">Dashboard</h2>
+  </div>
 
-      <ul>
-        <% dashboard.errors.each do |error| %>
-          <li><%= error.full_message %></li>
-        <% end %>
-      </ul>
+  <div class="card-body">
+    <%= form_with model: dashboard do |f| %>
+      <%= f.error_messages %>
+
+      <div class="mb-3">
+        <%= f.label :name %>
+        <%= f.text_field :name %>
+        <%= f.invalid_feedback :name %>
+      </div>
+
+      <div class="mb-3">
+        <%= f.label :theme %>
+        <%= f.select :theme, Dashboard::THEMES.map { |t| [ t.titleize, t ] } %>
+        <%= f.invalid_feedback :theme %>
+      </div>
+
+      <div class="row g-3 mb-3">
+        <div class="col-6">
+          <%= f.label :grid_columns, "Columns" %>
+          <%= f.number_field :grid_columns, min: 1, max: 24 %>
+          <%= f.invalid_feedback :grid_columns %>
+        </div>
+        <div class="col-6">
+          <%= f.label :grid_rows, "Rows" %>
+          <%= f.number_field :grid_rows, min: 1, max: 24 %>
+          <%= f.invalid_feedback :grid_rows %>
+        </div>
+      </div>
+
+      <%= f.submit dashboard.new_record? ? "Create dashboard" : "Save dashboard" %>
+    <% end %>
+  </div>
+
+  <% if dashboard.persisted? %>
+    <div class="card-footer bg-transparent">
+      <%= button_to "Delete dashboard", dashboard, method: :delete,
+                    class: "btn btn-sm btn-app-outline",
+                    form: { data: { turbo_confirm: "Delete #{dashboard.name_in_database}?" } } %>
     </div>
   <% end %>
-
-  <div>
-    <%= form.label :name, style: "display: block" %>
-    <%= form.text_field :name %>
-  </div>
-
-  <div>
-    <%= form.label :theme, style: "display: block" %>
-    <%= form.text_field :theme %>
-  </div>
-
-  <div>
-    <%= form.label :grid_columns, style: "display: block" %>
-    <%= form.number_field :grid_columns %>
-  </div>
-
-  <div>
-    <%= form.label :grid_rows, style: "display: block" %>
-    <%= form.number_field :grid_rows %>
-  </div>
-
-  <div>
-    <%= form.submit %>
-  </div>
-<% end %>
+</section>

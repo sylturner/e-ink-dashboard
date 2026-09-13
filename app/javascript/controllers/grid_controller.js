@@ -220,7 +220,7 @@ export default class extends Controller {
     this.status("Saving…")
 
     try {
-      const response = await fetch(`/dashboard_items/${tile.dataset.id}/reposition`, {
+      const response = await fetch(tile.dataset.repositionUrl, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -268,8 +268,10 @@ export default class extends Controller {
     this.selected = tile
     this.moverTargets.forEach((button) => { button.disabled = false })
 
+    // The view renders each tile's URLs from the routes, so none are
+    // spelled out here.
     const frame = document.getElementById("inspector")
-    if (frame) frame.src = `/dashboard_items/${tile.dataset.id}/edit`
+    if (frame) frame.src = tile.dataset.editUrl
   }
 
   // Keeps a tile's accessible name in step with where it sits. Mirrors
@@ -278,12 +280,6 @@ export default class extends Controller {
     const c = this.coordsOf(tile)
     tile.setAttribute("aria-label",
       `${tile.dataset.name}, column ${c.col}, row ${c.row}, ${c.colSpan} by ${c.rowSpan}`)
-  }
-
-  // Submits the enclosing form without an inline onchange handler, so
-  // the page keeps working under a strict CSP.
-  submit(event) {
-    event.target.form?.requestSubmit()
   }
 
   status(message) {
