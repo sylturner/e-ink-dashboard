@@ -33,6 +33,26 @@ class BitmapTest < ActiveSupport::TestCase
     assert_equal [ 0xFF ], Bitmap.from_png(clear).rows.first.bytes
   end
 
+  test "from_raw reads back what to_raw wrote" do
+    bitmap = Bitmap.from_png(png)
+
+    assert_equal bitmap.rows, Bitmap.from_raw(bitmap.to_raw, width: 16, height: 2).rows
+  end
+
+  test "from_raw refuses bytes that don't fit the size" do
+    assert_raises(ArgumentError) { Bitmap.from_raw("\xFF".b * 3, width: 16, height: 2) }
+  end
+
+  test "to_png draws 1 bits white and 0 bits black, at the bitmap's size" do
+    # 10 wide, so the last byte's six padding bits must be dropped.
+    bitmap = Bitmap.new(width: 10, height: 1, rows: [ [ 0b1010_0000, 0b0100_0000 ].pack("C*") ])
+
+    image = Vips::Image.new_from_buffer(bitmap.to_png, "")
+
+    assert_equal [ 10, 1 ], [ image.width, image.height ]
+    assert_equal [ 255, 0, 255, 0, 0, 0, 0, 0, 0, 255 ], image.to_a.flatten
+  end
+
   test "to_bmp emits a valid 1-bit BMP header" do
     bytes = Bitmap.from_png(png).to_bmp
 

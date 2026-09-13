@@ -109,6 +109,34 @@ class DeviceTest < ActiveSupport::TestCase
     assert_equal 3600, @device.sleep_seconds(zone.parse("2026-09-06 23:30"))
   end
 
+  test "the next check-in is the sleep after the last one, and missing two is overdue" do
+    @device.update!(time_zone: "UTC", active_from_hour: 0, active_until_hour: 24, refresh_seconds: 300)
+    seen = Time.zone.parse("2026-09-06 12:00")
+    @device.update_columns(last_seen_at: seen)
+
+    assert_equal seen + 300, @device.next_check_in_at
+    assert_not @device.overdue?(seen + 599)
+    assert @device.overdue?(seen + 601)
+  end
+
+  test "a panel that has never checked in isn't overdue or due" do
+    device = Device.new(name: "Fresh")
+
+    assert_nil device.next_check_in_at
+    assert_not device.overdue?
+  end
+
+  test "the time zone must be one the schedule can read" do
+    @device.time_zone = "Mars/Olympus_Mons"
+    assert_not @device.valid?
+    assert_includes @device.errors[:time_zone], "isn't a time zone name"
+
+    [ "America/Chicago", "Pacific Time (US & Canada)", "" ].each do |zone|
+      @device.time_zone = zone
+      assert @device.valid?, "#{zone.inspect} should be accepted"
+    end
+  end
+
   # --- enrollment and claiming ---
 
   test "every device gets a claim code, however the row was created" do

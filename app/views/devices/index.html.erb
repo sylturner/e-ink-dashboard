@@ -1,39 +1,71 @@
-<% content_for :title, "Devices" %>
-
-<h1>Devices</h1>
+<%= page_header "Devices", icon: "cil-devices",
+                description: "Your e-paper panels. A new panel adds itself the first time it connects, then waits here for a dashboard." do %>
+  <%= link_to new_device_path, class: "btn btn-light" do %>
+    <%= ui_icon "cil-plus", classes: "icon me-1" %> Add a device
+  <% end %>
+<% end %>
 
 <%# Claiming goes through DeviceDashboard, not device.dashboard_id:
     sync_active_dashboard reverts a bare dashboard_id when there is no
     assignment behind it, so setting it directly would silently fail. %>
 <% if @pending.any? %>
-  <section class="pending">
-    <h2>Waiting to be set up</h2>
+  <section class="card pending mb-4" aria-labelledby="pending-heading">
+    <div class="card-header">
+      <h2 id="pending-heading" class="h6 mb-0">Waiting to be set up</h2>
+    </div>
+    <div class="card-body pb-0">
+      <p class="small text-body-secondary">
+        Each of these panels is showing its claim code. Find the code on the
+        screen, then choose a dashboard for it.
+      </p>
+    </div>
 
-    <% @pending.each do |device| %>
-      <%= form_with model: DeviceDashboard.new, class: "claim-row" do |f| %>
-        <%= f.hidden_field :device_id, value: device.id %>
-        <%= hidden_field_tag :context, "devices" %>
+    <ul class="list-group list-group-flush">
+      <% @pending.each do |device| %>
+        <li class="list-group-item">
+          <%# Namespaced, so each row's controls have their own ids. %>
+          <%= form_with model: DeviceDashboard.new, namespace: dom_id(device, :claim),
+                        class: "claim-row d-flex flex-wrap align-items-center column-gap-3 row-gap-2" do |f| %>
+            <%= f.hidden_field :device_id, value: device.id %>
+            <%= hidden_field_tag :context, "devices", id: nil %>
 
-        <strong class="code"><%= device.claim_code %></strong>
-        <span class="claim-what">
-          <%= device.name %><%= " · #{device.mac_address}" if device.mac_address.present? %>
-        </span>
+            <strong class="code claim-code badge bg-body-secondary text-body-emphasis border font-monospace fs-5"><%= device.claim_code %></strong>
+            <div class="me-auto">
+              <%= link_to device.name, edit_device_path(device), class: "fw-semibold" %>
+              <% if device.mac_address.present? %>
+                <div class="small text-body-secondary font-monospace"><%= device.mac_address %></div>
+              <% end %>
+            </div>
 
-        <%= f.collection_select :dashboard_id, Dashboard.order(:name), :id, :name,
-                                { include_blank: "Choose a dashboard" } %>
-        <%= f.submit "Assign" %>
+            <div>
+              <%= f.label :dashboard_id, "Dashboard for #{device.name}", class: "visually-hidden" %>
+              <div class="input-group">
+                <%= f.collection_select :dashboard_id, @dashboards, :id, :name,
+                                        { include_blank: "Choose a dashboard" }, { required: true } %>
+                <%= f.button type: "submit", class: "btn btn-primary" do %>
+                  Assign<span class="visually-hidden"> to <%= device.name %></span>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </li>
       <% end %>
-    <% end %>
+    </ul>
   </section>
 <% end %>
 
-<div id="devices">
-  <% @devices.each do |device| %>
-    <%= render device %>
-    <p>
-      <%= link_to "Show this device", device %>
-    </p>
-  <% end %>
-</div>
-
-<%= link_to "New device", new_device_path %>
+<% if @devices.any? %>
+  <ul id="devices" class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 row-cols-xxl-4 g-4 list-unstyled">
+    <% @devices.each do |device| %>
+      <li class="col"><%= render device, framed: @framed_ids.include?(device.id) %></li>
+    <% end %>
+  </ul>
+<% elsif @pending.none? %>
+  <div class="card">
+    <div class="card-body text-center py-5">
+      <p class="mb-1">There are no devices yet.</p>
+      <p class="text-body-secondary">Turn on a panel and it will appear here, waiting to be set up.</p>
+      <%= link_to "Add a device by hand", new_device_path, class: "btn btn-primary" %>
+    </div>
+  </div>
+<% end %>

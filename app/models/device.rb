@@ -11,6 +11,10 @@ class Device < ApplicationRecord
   # Omits I, L, O, 0, 1 -- those get misread off a low-res panel.
   CLAIM_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789".chars.freeze
 
+  BIT_DEPTHS    = [ 1, 2, 4 ].freeze
+  IMAGE_FORMATS = %w[bmp raw].freeze
+  ROTATIONS     = [ 0, 90, 180, 270 ].freeze
+
   # Every dashboard this panel is allowed to show.
   has_many :device_dashboards, -> { order(:position) }, dependent: :destroy
   has_many :dashboards, through: :device_dashboards
@@ -28,13 +32,17 @@ class Device < ApplicationRecord
   before_create :assign_claim_code
 
   validates :name, presence: true
-  validates :bit_depth, inclusion: { in: [ 1, 2, 4 ] }
-  validates :image_format, inclusion: { in: %w[bmp raw] }
-  validates :rotation, inclusion: { in: [ 0, 90, 180, 270 ] }
+  validates :bit_depth, inclusion: { in: BIT_DEPTHS }
+  validates :image_format, inclusion: { in: IMAGE_FORMATS }
+  validates :rotation, inclusion: { in: ROTATIONS }
 
   # "none" keeps the plain black/white threshold.
   DITHER_OPTIONS = [ "none", *Dither::ALGORITHMS ].freeze
   validates :dither, inclusion: { in: DITHER_OPTIONS }
+
+  # The schedule and the render both read the panel's clock in this zone,
+  # so an unknown one would make every check-in fail.
+  validate :time_zone_known, if: -> { time_zone.present? }
 
   # Idempotent by MAC, so a device retrying after a timeout does not
   # create duplicates and a re-flashed one reattaches to its old row.
@@ -129,9 +137,25 @@ class Device < ApplicationRecord
     value.to_i.clamp(MIN_SLEEP, MAX_SLEEP)
   end
 
+  # When the panel should check in again: the sleep it was given the last
+  # time it did. Nil until it first checks in.
+  def next_check_in_at
+    last_seen_at && last_seen_at + sleep_seconds(last_seen_at)
+  end
+
+  # It has missed a check-in: twice the sleep it was given has passed, so
+  # a slow Wi-Fi join or a late wake doesn't count.
+  def overdue?(now = Time.current)
+    last_seen_at.present? && now > last_seen_at + 2 * sleep_seconds(last_seen_at)
+  end
+
   private
 
     def assign_claim_code
       self.claim_code = self.class.generate_claim_code if claim_code.blank?
+    end
+
+    def time_zone_known
+      errors.add(:time_zone, "isn't a time zone name") unless ActiveSupport::TimeZone[time_zone]
     end
 end

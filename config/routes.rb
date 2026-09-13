@@ -14,11 +14,16 @@ Rails.application.routes.draw do
     end
   end
 
-  resources :devices do
+  resources :devices, except: :show do
     member { post :refresh }
     # Self-enrollment: a panel with no token posts here to get one.
     collection { post :enroll, to: "enrollments#create" }
+    # Read-only, for the admin pages. Not nested at /frame: that would
+    # take the panels' own devices/:token/frame route below.
+    resource :last_frame, only: :show, module: :devices
   end
+  # A device's edit page is its home. Old links to a show page land there.
+  get "devices/:id", to: redirect("/devices/%{id}/edit"), constraints: { id: /\d+/ }
 
   resources :device_dashboards, only: %i[create destroy]
 

@@ -1,11 +1,12 @@
-<% content_for :title, "New device" %>
+<%= page_title "New device", parent: [ "Devices", devices_path ], crumb: "New" %>
 
-<h1>New device</h1>
+<div class="row">
+  <div class="col-lg-8 col-xl-6">
+    <p class="text-body-secondary">
+      Panels normally add themselves the first time they connect, then wait on
+      the Devices page for a dashboard.
+    </p>
 
-<%= render "form", device: @device %>
-
-<br>
-
-<div>
-  <%= link_to "Back to devices", devices_path %>
+    <%= render "form", device: @device %>
+  </div>
 </div>

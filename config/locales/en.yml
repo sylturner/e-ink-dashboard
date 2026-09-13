@@ -32,3 +32,7 @@ en:
     name: "E Ink Dashboard"
     # Shown in place of the name when the sidebar is narrowed.
     short_name: "EI"
+  devices:
+    # Beside links to a panel's live frame URL: the builder's device list
+    # and the device page.
+    live_bitmap_hint: "Opening the live bitmap renders a fresh frame if one is due, and counts as a check-in for the panel."

@@ -1,0 +1,14 @@
+<%# The frame a panel was last sent, as the panel shows it -- or, until it
+    has one, a placeholder in its place. Loading it records no check-in
+    (Devices::LastFramesController). %>
+<% if framed %>
+  <%= image_tag device_last_frame_path(device),
+                alt: "The last frame sent to #{device.name}",
+                width: device.width, height: device.height,
+                loading: "lazy", decoding: "async",
+                class: class_names("w-100 h-auto panel-thumbnail", classes) %>
+<% else %>
+  <div class="<%= class_names("panel-thumbnail panel-placeholder d-flex align-items-center justify-content-center gap-2", classes) %>">
+    <%= ui_icon "cil-image", classes: "icon icon-lg" %> No frame yet
+  </div>
+<% end %>
