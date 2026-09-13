@@ -15,6 +15,14 @@ class Dashboard < ApplicationRecord
   validates :grid_columns, :grid_rows,
             numericality: { greater_than: 0, less_than_or_equal_to: 24 }
 
+  # The panel size the dashboard renders at: its first device's, or the
+  # default panel's when none is assigned (the same fallback as
+  # layouts/render.html.erb).
+  def screen_size
+    device = devices.first
+    device ? [ device.width, device.height ] : Device.column_defaults.values_at("width", "height")
+  end
+
   def sources
     Source.joins(dashboard_item_sources: :dashboard_item)
           .where(dashboard_items: { dashboard_id: id })

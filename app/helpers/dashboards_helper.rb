@@ -17,4 +17,11 @@ module DashboardsHelper
   def builder_tile_label(item)
     "#{builder_tile_name(item)}, column #{item.col}, row #{item.row}, #{item.col_span} by #{item.row_span}"
   end
+
+  # The text alternative for a dashboard's thumbnail: the tiles its
+  # render shows, by heading.
+  def dashboard_thumbnail_alt(dashboard)
+    titles = dashboard.dashboard_items.select(&:visible?).map { builder_tile_title(it) }
+    titles.any? ? "Preview showing #{titles.to_sentence}" : "Preview of an empty dashboard"
+  end
 end

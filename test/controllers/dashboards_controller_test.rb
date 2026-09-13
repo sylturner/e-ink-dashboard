@@ -5,9 +5,29 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
     @dashboard = dashboards(:one)
   end
 
-  test "should get index" do
+  test "the index shows each dashboard as a card with its thumbnail" do
     get dashboards_url
+
     assert_response :success
+    assert_select "header.page-hero a[href=?]", new_dashboard_path
+    assert_select "#dashboards > li > .card", Dashboard.count
+    assert_select "#dashboard_#{@dashboard.id}" do
+      assert_select "img.dashboard-thumbnail[src=?][loading=lazy][width][height]",
+                    dashboard_thumbnail_path(@dashboard, format: :png)
+      assert_select "img[alt=?]", "Preview showing Weather"
+      assert_select "a.stretched-link[href=?]", builder_dashboard_path(@dashboard), @dashboard.name
+      assert_select ".card-footer a[href=?]", edit_dashboard_path(@dashboard), "Settings for #{@dashboard.name}"
+      assert_select ".card-footer form[action=?] button", dashboard_path(@dashboard), "Delete #{@dashboard.name}"
+    end
+  end
+
+  test "with no dashboards the index offers to create one" do
+    Dashboard.destroy_all
+
+    get dashboards_url
+
+    assert_select "#dashboards", 0
+    assert_select "main a[href=?]", new_dashboard_path, 2
   end
 
   test "should get new" do

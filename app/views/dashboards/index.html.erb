@@ -1,15 +1,21 @@
-<% content_for :title, "Dashboards" %>
-
-<h1>Dashboards</h1>
-
-<div id="dashboards">
-  <% @dashboards.each do |dashboard| %>
-    <%= render dashboard %>
-    <p>
-      <%= link_to "Open builder", builder_dashboard_path(dashboard) %> |
-      <%= link_to "Show this dashboard", dashboard %>
-    </p>
+<%= page_header "Dashboards", icon: "cil-speedometer",
+                description: "Lay out tiles on a grid for your e-paper panels. Open a dashboard to edit it in the builder." do %>
+  <%= link_to new_dashboard_path, class: "btn btn-light" do %>
+    <%= ui_icon "cil-plus", classes: "icon me-1" %> New dashboard
   <% end %>
-</div>
+<% end %>
 
-<%= link_to "New dashboard", new_dashboard_path %>
+<% if @dashboards.any? %>
+  <ul id="dashboards" class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 row-cols-xxl-4 g-4 list-unstyled">
+    <% @dashboards.each do |dashboard| %>
+      <li class="col"><%= render dashboard %></li>
+    <% end %>
+  </ul>
+<% else %>
+  <div class="card">
+    <div class="card-body text-center py-5">
+      <p>There are no dashboards yet.</p>
+      <%= link_to "Create a dashboard", new_dashboard_path, class: "btn btn-primary" %>
+    </div>
+  </div>
+<% end %>

@@ -3,7 +3,9 @@ class DashboardsController < ApplicationController
 
   # GET /dashboards or /dashboards.json
   def index
-    @dashboards = Dashboard.all
+    # Each card sizes its thumbnail from the devices and describes it
+    # from the tiles.
+    @dashboards = Dashboard.includes(:devices, :dashboard_items)
   end
 
   # GET /dashboards/1 or /dashboards/1.json

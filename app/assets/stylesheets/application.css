@@ -151,6 +151,42 @@ html { scroll-padding-top: calc(var(--app-header-height) + 1rem); }
   --cui-btn-disabled-border-color: var(--app-control-border);
 }
 
+/* The banner that opens a section's index page (page_header helper). It
+   is the light-surface accent in both themes, so its white text and
+   white focus ring are 5.6:1 on it; .btn-light actions are dark on
+   near-white. */
+.page-hero {
+  --app-focus-ring: var(--cui-white);
+  padding: 1.5rem;
+  border-radius: var(--cui-border-radius-xl);
+  background-color: var(--app-accent-on-light);
+  color: var(--cui-white);
+}
+.page-hero h1 { color: inherit; }
+.page-hero p { max-width: 40rem; }
+.page-hero-icon {
+  display: inline-grid; place-items: center; flex: none;
+  width: 3rem; height: 3rem;
+  border-radius: var(--cui-border-radius-lg);
+  background-color: rgb(255 255 255 / .15);
+}
+@media (min-width: 768px) {
+  .page-hero { padding: 2rem 2.5rem; }
+}
+
+/* ---------- Dashboard list ---------- */
+
+/* Holds the thumbnail's place while it is captured, which can take a
+   second or two per dashboard. */
+.dashboard-thumbnail {
+  background-color: var(--cui-secondary-bg);
+  border-bottom: var(--cui-border-width) solid var(--cui-border-color);
+}
+/* The name reads as a heading; hovering anywhere on the card, which is
+   all one link, lifts it and underlines the name. */
+.dashboard-card:hover { box-shadow: var(--cui-box-shadow); }
+.dashboard-card:hover .stretched-link { text-decoration: underline !important; }
+
 /* ---------- Source list ---------- */
 
 table.sources { border-collapse: collapse; width: 100%; margin-top: 12px; }

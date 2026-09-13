@@ -24,4 +24,13 @@ class DashboardsHelperTest < ActionView::TestCase
 
     assert_equal "Weather, Right now, column 1, row 1, 4 by 3", builder_tile_label(item)
   end
+
+  test "a thumbnail's alt text lists the visible tiles by heading" do
+    dashboard = dashboards(:one) # one tile, headed "Weather"
+    dashboard.dashboard_items.build(kind: "calendar", title: "", visible: true)
+    dashboard.dashboard_items.build(kind: "calendar", title: "Hidden", visible: false)
+
+    assert_equal "Preview showing Weather and Calendar", dashboard_thumbnail_alt(dashboard)
+    assert_equal "Preview of an empty dashboard", dashboard_thumbnail_alt(Dashboard.new)
+  end
 end
