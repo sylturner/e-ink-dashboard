@@ -1,5 +1,7 @@
 class Frame < ApplicationRecord
   belongs_to :device
+  # What it was rendered from; nil for an unclaimed panel's setup screen.
+  belongs_to :dashboard, optional: true
 
   before_validation :set_metadata
 

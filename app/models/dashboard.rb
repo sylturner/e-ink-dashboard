@@ -10,6 +10,10 @@ class Dashboard < ApplicationRecord
   # `devices` above is the assignment relationship.
   has_many :showing_devices, class_name: "Device", dependent: :nullify
 
+  # Frames rendered from it, the newest of which is its thumbnail. They
+  # belong to their panels, so they outlive the dashboard.
+  has_many :frames, dependent: :nullify
+
   validates :name, presence: true
   validates :theme, inclusion: { in: THEMES }
   validates :grid_columns, :grid_rows,

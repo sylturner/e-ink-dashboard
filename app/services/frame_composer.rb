@@ -7,7 +7,6 @@ class FrameComposer
   end
 
   # The page a panel is captured from, at the device's local time.
-  # DashboardThumbnail captures the same page for the dashboard list.
   def self.html(dashboard:, device:, template: "renders/dashboard")
     ApplicationController.renderer.render(
       template: template,
@@ -30,6 +29,7 @@ class FrameComposer
     bytes  = bitmap.to_format(@device.image_format)
 
     frame = @device.frames.create!(
+      dashboard: @device.dashboard,
       data: bytes,
       format: @device.image_format,
       rendered_at: Time.current

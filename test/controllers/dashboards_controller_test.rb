@@ -6,6 +6,8 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "the index shows each dashboard as a card with its thumbnail" do
+    devices(:one).frames.create!(dashboard: @dashboard, data: Bitmap.new(width: 8, height: 1, rows: [ "\xFF".b ]).to_bmp, format: "bmp")
+
     get dashboards_url
 
     assert_response :success
@@ -17,6 +19,15 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
       assert_select "img[alt=?]", "Preview showing Weather"
       assert_select "a.stretched-link[href=?]", edit_dashboard_path(@dashboard), @dashboard.name
       assert_select ".card-footer form[action=?] button", dashboard_path(@dashboard), "Delete #{@dashboard.name}"
+    end
+  end
+
+  test "a dashboard with no frame yet shows a placeholder for its thumbnail" do
+    get dashboards_url
+
+    assert_select "#dashboard_#{@dashboard.id}" do
+      assert_select "img.panel-thumbnail", 0
+      assert_select ".panel-thumbnail.panel-placeholder", /No frame yet/
     end
   end
 
