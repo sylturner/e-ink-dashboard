@@ -2,6 +2,7 @@
 
 one:
   device: one
+  dashboard: one
   checksum: 0000000000000000000000000000000000000000000000000000000000000001
   byte_size: 48000
   format: bmp
@@ -10,6 +11,7 @@ one:
 
 two:
   device: two
+  dashboard: two
   checksum: 0000000000000000000000000000000000000000000000000000000000000002
   byte_size: 48000
   format: raw

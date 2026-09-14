@@ -34,6 +34,12 @@ news = Source.find_or_create_by!(name: "NPR News") do |s|
   s.refresh_seconds = 1800
 end
 
+note = Source.find_or_create_by!(name: "Fridge note") do |s|
+  s.providable = NoteProvider.new(body: "**Groceries**\n- [ ] milk\n- [x] eggs")
+  s.refresh_seconds = NoteProvider.default_refresh_seconds
+  s.payload = s.providable.fetch!
+end
+
 items = [
   { kind: "clock", title: nil, col: 1, row: 1, col_span: 3, row_span: 3 },
   { kind: "calendar", title: "Today", col: 4, row: 1, col_span: 5, row_span: 3 },
@@ -41,8 +47,8 @@ items = [
     source: weather },
   { kind: "news", title: "Headlines", col: 4, row: 4, col_span: 5, row_span: 3,
     source: news },
-  { kind: "text", title: nil, col: 1, row: 7, col_span: 8, row_span: 2,
-    settings: { "body" => "Phase 2 wiring check" } }
+  { kind: "note", title: nil, col: 1, row: 7, col_span: 8, row_span: 2,
+    source: note }
 ]
 
 items.each_with_index do |attrs, i|

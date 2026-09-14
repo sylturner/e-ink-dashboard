@@ -498,6 +498,91 @@ body {
 }
 
 /* ============================================================
+   Notes: Markdown from MarkdownHelper
+   ============================================================ */
+
+.note-tile {
+  display: flex;
+  gap: var(--pad);
+  height: 100%;
+}
+
+.note {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* In the bottom corner at its own exact size, so every module stays on
+   whole pixels. */
+.note-qr {
+  flex: none;
+  align-self: flex-end;
+}
+.note-qr svg { display: block; }
+
+.note > * + * { margin-top: var(--pad-tight); }
+
+.note h1 { font-size: var(--fs-lg); line-height: var(--lh-lg); }
+.note h2 { font-size: var(--fs-md); line-height: var(--lh-md); }
+.note h3,
+.note h4,
+.note h5,
+.note h6 { font-size: inherit; line-height: inherit; }
+
+.note h1, .note h2, .note h3, .note h4, .note h5, .note h6,
+.note strong,
+.note th { font-weight: 700; }
+
+/* There is no italic face and synthesis is off, so emphasis underlines. */
+.note em { font-style: normal; text-decoration: underline; }
+.note del { text-decoration: line-through; }
+
+/* Markers sit inside the text, where the note's overflow can't clip them:
+   an outside "10." is wider than any indent worth the pixels. */
+.note ul,
+.note ol { list-style-position: inside; }
+.note ul { list-style-type: square; }
+.note li > ul,
+.note li > ol { padding-left: var(--pad-loose); }
+
+/* A task list's checkboxes are its markers. Native checkboxes antialias,
+   so draw a plain box that fills with ink when checked. */
+.note ul:has(> li > input[type="checkbox"]) { list-style: none; }
+.note input[type="checkbox"] {
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  margin: 0 var(--pad-tight) 0 0;
+  border: var(--rule) solid var(--ink);
+  background: var(--paper);
+  vertical-align: -1px;
+}
+.note input[type="checkbox"]:checked { background: var(--ink); }
+
+.note blockquote {
+  padding-left: var(--pad);
+  border-left: 2px solid var(--ink);
+}
+
+.note hr {
+  border: none;
+  border-top: var(--rule) solid var(--ink);
+}
+
+.note code,
+.note pre { font-family: "Spleen", monospace; }
+.note pre { white-space: pre-wrap; }
+
+.note table { border-collapse: collapse; }
+.note th,
+.note td {
+  padding: 0 var(--pad-tight);
+  border: var(--rule) solid var(--ink);
+  text-align: left;
+}
+
+/* ============================================================
    Setup screen for a panel that has not been claimed yet
    ============================================================ */
 

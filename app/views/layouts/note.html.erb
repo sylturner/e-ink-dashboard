@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <%= render "layouts/head" %>
+  </head>
+
+  <%# A note's phone page (NotesController), opened from a panel's QR code
+      or an NFC tag. With no sidebar or header there is nothing for a skip
+      link to jump past. %>
+  <body>
+    <main id="main-content" class="container note-page py-4">
+      <%= render "layouts/flash" %>
+      <%= yield %>
+    </main>
+  </body>
+</html>

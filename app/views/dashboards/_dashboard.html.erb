@@ -1,13 +1,11 @@
-<%# A dashboard as a card: its render as the panel shows it, then its
-    name, which opens the builder and makes the whole card a link. The
+<%# A dashboard as a card: the last frame a panel was sent of it, then
+    its name, which opens the builder and makes the whole card a link. The
     footer is raised above that link so its button stays clickable. %>
 <% width, height = dashboard.screen_size %>
 <% device_count = dashboard.devices.size %>
 <article id="<%= dom_id dashboard %>" class="card h-100 panel-card">
-  <%= image_tag dashboard_thumbnail_path(dashboard, format: :png),
-                alt: dashboard_thumbnail_alt(dashboard), width:, height:,
-                loading: "lazy", decoding: "async",
-                class: "card-img-top h-auto panel-thumbnail" %>
+  <%= render "application/panel_picture", src: (dashboard_thumbnail_path(dashboard, format: :png) if framed),
+             alt: dashboard_thumbnail_alt(dashboard), width:, height:, classes: "card-img-top" %>
 
   <div class="card-body">
     <h2 class="h5 card-title">

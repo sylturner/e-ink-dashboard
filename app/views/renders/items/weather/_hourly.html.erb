@@ -3,9 +3,18 @@
     <div class="hour">
       <%# "hour" is the label payloads carried before "at"; one refetch replaces it. %>
       <div class="t-sm"><%= h["at"] ? panel_time(Time.iso8601(h["at"]), :hour) : h["hour"] %></div>
-      <%= weather_icon(h["icon"], size: 32) %>
-      <div class="t-xs sky-label"><%= h["label"] %></div>
-      <div class="t-sm"><%= h["temp"] %>&deg;</div>
+      <% if item.shows?("icon") %>
+        <%= weather_icon(h["icon"], size: item.size_of("icon")) %>
+      <% end %>
+      <% if item.shows?("condition") %>
+        <div class="t-xs sky-label"><%= h["label"] %></div>
+      <% end %>
+      <% if item.shows?("temperature") %>
+        <div class="t-sm"><%= h["temp"] %>&deg;</div>
+      <% end %>
+      <% if item.shows?("precip") && h["precip"] %>
+        <div class="t-xs"><%= h["precip"] %>%</div>
+      <% end %>
     </div>
   <% end %>
 </div>

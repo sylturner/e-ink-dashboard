@@ -41,6 +41,19 @@
           </fieldset>
 
           <fieldset class="border-top pt-3 mb-3">
+            <legend class="fs-6 fw-semibold">Server</legend>
+
+            <%= f.label :server_url %>
+            <%= f.url_field :server_url, placeholder: "http://192.168.1.10:3000",
+                            aria: { describedby: f.field_id(:server_url, :hint) } %>
+            <%= f.invalid_feedback :server_url %>
+            <div id="<%= f.field_id(:server_url, :hint) %>" class="form-text">
+              The address a phone on your network uses to reach this server,
+              not localhost. A note tile's QR code links to it.
+            </div>
+          </fieldset>
+
+          <fieldset class="border-top pt-3 mb-3">
             <legend class="fs-6 fw-semibold">New weather sources</legend>
 
             <%= f.label :units %>

@@ -1,0 +1,42 @@
+<%# One "Show" group for each layout that has parts. Every layout's group
+    is in the form, so saving keeps each layout's own choices;
+    item_form_controller shows only the selected layout's. %>
+<% Component.views(item.kind).each_key do |view| %>
+  <% parts = Component.parts(item.kind, view) %>
+  <% next if parts.empty? %>
+  <% toggles, sizes = part_fields(f, :parts, view), part_fields(f, :sizes, view) %>
+
+  <%= tag.fieldset class: "mb-3", hidden: view != item.view,
+                   data: { item_form_target: "setting", views: view } do %>
+    <legend class="fs-6 fw-semibold mb-2"><%= t("components.show") %></legend>
+
+    <% parts.each do |part| %>
+      <% name = t("components.parts.#{item.kind}.#{part.key}") %>
+      <% hint = part_hint(item, part) %>
+      <div class="mb-2">
+        <div class="form-check mb-0">
+          <%# The checkbox's hidden "0" partner is what turns a part off:
+              a missing value falls back to the layout's default. %>
+          <%= toggles.checkbox part.key, checked: item.shows?(part.key, view:),
+                               aria: { describedby: (toggles.field_id(part.key, :hint) if hint) } %>
+          <%= toggles.label part.key, name, class: "form-check-label" %>
+        </div>
+
+        <%# On its own line, indented to the part's label, so it reads as
+            belonging to that part at any width. %>
+        <% if part.sized? %>
+          <div class="d-flex align-items-center gap-2 mt-1 ps-4">
+            <%= sizes.label part.key, class: "mb-0" do %><span class="visually-hidden"><%= name %> </span><%= t("components.size") %><% end %>
+            <%= sizes.select part.key, part_size_options,
+                             { selected: item.size_name(part.key, view:) },
+                             { class: "form-select-sm w-auto" } %>
+          </div>
+        <% end %>
+
+        <% if hint %>
+          <div id="<%= toggles.field_id(part.key, :hint) %>" class="form-text mt-1 ps-4"><%= hint %></div>
+        <% end %>
+      </div>
+    <% end %>
+  <% end %>
+<% end %>

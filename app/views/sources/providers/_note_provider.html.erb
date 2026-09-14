@@ -1,0 +1,21 @@
+<%= render "notes/body_field", f:, rows: 8 %>
+
+<%# A saved note has a phone page to link to. The field only shows the
+    link for copying: it has no name, so it is never submitted. %>
+<% if f.object.persisted? %>
+  <% url = note_phone_url(f.object) %>
+  <div class="mb-3">
+    <label class="form-label" for="note_phone_link"><%= t("notes.phone_link") %></label>
+    <div class="input-group">
+      <input type="url" id="note_phone_link" class="form-control" value="<%= url %>"
+             readonly aria-describedby="note_phone_link_hint">
+      <%= link_to t("notes.open_phone_page"), url, class: "btn btn-app-outline" %>
+    </div>
+    <div id="note_phone_link_hint" class="form-text">
+      <%= t("notes.phone_link_hint") %>
+      <% unless AppSetting.current.server_url? %>
+        <%= t("notes.needs_server_address_html", settings: link_to(t("notes.settings"), edit_settings_path)) %>
+      <% end %>
+    </div>
+  </div>
+<% end %>

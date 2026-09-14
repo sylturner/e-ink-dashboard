@@ -47,9 +47,11 @@
     </div>
   <% end %>
 
+  <%= render "dashboard_items/parts", f:, item: %>
+
   <% settings = Component.settings(item.kind) %>
   <% if settings.any? %>
-    <fieldset class="mb-3" data-item-form-target="options">
+    <fieldset class="mb-3" data-item-form-target="group">
       <legend class="fs-6 fw-semibold mb-2">Options</legend>
 
       <%# Named dashboard_item[settings][key], and styled by the form builder. %>

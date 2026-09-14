@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_13_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_13_220100) do
   create_table "app_settings", force: :cascade do |t|
     t.integer "active_from_hour", default: 6, null: false
     t.integer "active_until_hour", default: 23, null: false
@@ -18,6 +18,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_13_120000) do
     t.datetime "created_at", null: false
     t.integer "night_refresh_seconds", default: 3600, null: false
     t.integer "refresh_seconds", default: 900, null: false
+    t.string "server_url"
     t.string "time_zone", default: "Etc/UTC", null: false
     t.string "units", default: "imperial", null: false
     t.datetime "updated_at", null: false
@@ -110,11 +111,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_13_120000) do
     t.integer "byte_size"
     t.string "checksum"
     t.datetime "created_at", null: false
+    t.integer "dashboard_id"
     t.binary "data"
     t.integer "device_id", null: false
     t.string "format", default: "bmp"
     t.datetime "rendered_at"
     t.datetime "updated_at", null: false
+    t.index ["dashboard_id"], name: "index_frames_on_dashboard_id"
     t.index ["device_id", "rendered_at"], name: "index_frames_on_device_id_and_rendered_at"
     t.index ["device_id"], name: "index_frames_on_device_id"
   end
@@ -125,6 +128,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_13_120000) do
     t.text "ics_data"
     t.string "ics_filename"
     t.boolean "include_all_day", default: true
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "note_providers", force: :cascade do |t|
+    t.text "body"
+    t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
 
@@ -165,5 +174,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_13_120000) do
   add_foreign_key "device_dashboards", "dashboards"
   add_foreign_key "device_dashboards", "devices"
   add_foreign_key "devices", "dashboards"
+  add_foreign_key "frames", "dashboards"
   add_foreign_key "frames", "devices"
 end

@@ -8,7 +8,7 @@
 <% if @dashboards.any? %>
   <ul id="dashboards" class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 row-cols-xxl-4 g-4 list-unstyled">
     <% @dashboards.each do |dashboard| %>
-      <li class="col"><%= render dashboard %></li>
+      <li class="col"><%= render dashboard, framed: @framed_ids.include?(dashboard.id) %></li>
     <% end %>
   </ul>
 <% else %>

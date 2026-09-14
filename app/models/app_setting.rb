@@ -10,10 +10,16 @@ class AppSetting < ApplicationRecord
   WEEK_STARTS = %w[sunday monday].freeze
 
   # The settings a frame is drawn with: changing one leaves the frame on
-  # every panel out of date.
-  FRAME_SETTINGS = %w[time_zone clock week_start].freeze
+  # every panel out of date. A note tile's QR code links to the server
+  # address.
+  FRAME_SETTINGS = %w[time_zone clock week_start server_url].freeze
+
+  # "http://192.168.1.10:3000/ " is stored without the slash and spaces, and
+  # a cleared field as nil.
+  normalizes :server_url, with: -> { it.strip.chomp("/").presence }
 
   validates :time_zone, presence: true
+  validate :server_url_is_an_address, if: :server_url?
   validates :units, inclusion: { in: WeatherProvider::UNITS }
   validates :clock, inclusion: { in: CLOCKS }
   validates :week_start, inclusion: { in: WEEK_STARTS }
@@ -44,4 +50,28 @@ class AppSetting < ApplicationRecord
   def frame_settings_changed?
     saved_changes.keys.intersect?(FRAME_SETTINGS)
   end
+
+  # The server address as url_for options, for links drawn on a panel: a
+  # frame is often rendered in a job, with no request to take a host from.
+  # Nil until the address is set.
+  def url_options
+    return unless server_url?
+
+    uri = URI.parse(server_url)
+    { protocol: uri.scheme, host: uri.host, port: uri.port }
+  end
+
+  private
+
+    # A scheme, a host and an optional port, and nothing after them: the
+    # routes supply the path.
+    def server_url_is_an_address
+      uri = URI.parse(server_url)
+      return if uri.is_a?(URI::HTTP) && uri.host.present? && uri.path.empty? &&
+                [ uri.userinfo, uri.query, uri.fragment ].none?
+
+      errors.add(:server_url, :not_an_address)
+    rescue URI::InvalidURIError
+      errors.add(:server_url, :not_an_address)
+    end
 end

@@ -9,4 +9,12 @@ class DashboardTest < ActiveSupport::TestCase
     assert_equal [ 1200, 825 ], dashboard.reload.screen_size
     assert_equal [ 800, 480 ], Dashboard.new.screen_size
   end
+
+  test "deleting a dashboard keeps its panels' frames" do
+    frame = frames(:one)
+
+    dashboards(:one).destroy!
+
+    assert_nil frame.reload.dashboard_id
+  end
 end

@@ -21,9 +21,6 @@ class FetchSourceJob < ApplicationJob
   end
 
   def enqueue_renders(source)
-    Device.joins(dashboard: { dashboard_items: :dashboard_item_sources })
-          .where(dashboard_item_sources: { source_id: source.id })
-          .distinct
-          .find_each { |device| RenderDashboardJob.perform_later(device) }
+    source.showing_devices.find_each { |device| RenderDashboardJob.perform_later(device) }
   end
 end

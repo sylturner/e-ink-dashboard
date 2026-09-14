@@ -118,7 +118,7 @@ class DashboardItemsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "option[value=?]", "month"
-    assert_select "input[name=?]", "dashboard_item[settings][show_times]"
+    assert_select "input[name=?]", "dashboard_item[settings][parts][today][times]"
     assert_equal "weather", @dashboard_item.reload.kind, "the preview must not persist"
   end
 
@@ -142,19 +142,42 @@ class DashboardItemsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "settings fields are styled by the form builder" do
-    get edit_dashboard_item_url(dashboard_items(:two)) # calendar: show_times is on
-
-    assert_select ".setting.form-check" do
-      assert_select "input[type=hidden][name=?][value='0']", "dashboard_item[settings][show_times]"
-      assert_select "input.form-check-input[type=checkbox][name=?][checked]", "dashboard_item[settings][show_times]"
-      assert_select "label.form-check-label[for=?]", "dashboard_item_settings_show_times"
-    end
-
     get edit_dashboard_item_url(@dashboard_item) # weather: day_count is a number
 
     assert_select "label[for=?]", "dashboard_item_settings_day_count"
     assert_select "input.form-control[type=number][id=?][name=?]",
                   "dashboard_item_settings_day_count", "dashboard_item[settings][day_count]"
+  end
+
+  test "each layout gets a Show group of its parts, and only the current one is visible" do
+    get edit_dashboard_item_url(@dashboard_item) # weather / current
+
+    assert_select "fieldset[data-views=?]:not([hidden])", "current" do
+      assert_select "legend", "Show"
+
+      # The hidden "0" partner is what turns a part off.
+      assert_select "input[type=hidden][name=?][value='0']", "dashboard_item[settings][parts][current][icon]"
+      assert_select "input.form-check-input[type=checkbox][name=?][checked]", "dashboard_item[settings][parts][current][icon]"
+      assert_select "label.form-check-label[for=?]", "dashboard_item_settings_parts_current_icon", "Icon"
+
+      assert_select "input[type=checkbox][name=?]", "dashboard_item[settings][parts][current][humidity]" do |boxes|
+        assert_nil boxes.first["checked"], "humidity starts hidden"
+      end
+
+      assert_select "label[for=?]", "dashboard_item_settings_sizes_current_icon", text: /\AIcon\s*Size\z/
+      assert_select "select.form-select[name=?] option[selected]", "dashboard_item[settings][sizes][current][icon]", "Medium"
+      assert_select "select[name=?]", "dashboard_item[settings][sizes][current][condition]", 0
+    end
+
+    assert_select "fieldset[data-views=?][hidden]", "forecast"
+    assert_select "fieldset[data-views=?][hidden]", "hourly"
+  end
+
+  test "a kind without parts renders no Show group" do
+    get edit_dashboard_item_url(@dashboard_item, kind: "text")
+
+    assert_response :success
+    assert_select "legend", text: "Show", count: 0
   end
 
   test "a kind with no sources renders no source select" do
@@ -176,17 +199,37 @@ class DashboardItemsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 7, @dashboard_item.setting("day_count")
   end
 
-  test "a boolean setting can be switched off through the form" do
-    item = dashboard_items(:two) # calendar, show_times defaults to true
-    assert_equal true, item.setting("show_times")
+  test "parts and sizes round-trip through the form, per layout" do
+    patch dashboard_item_url(@dashboard_item), params: {
+      dashboard_item: {
+        kind: "weather", view: "current",
+        settings: {
+          "parts" => { "current" => { "icon" => "0", "humidity" => "1" },
+                       "forecast" => { "precip" => "1" } },
+          "sizes" => { "current" => { "temperature" => "large" } }
+        }
+      }
+    }
+
+    assert_redirected_to edit_dashboard_url(@dashboard_item.dashboard)
+    @dashboard_item.reload
+    assert_not @dashboard_item.shows?("icon")
+    assert @dashboard_item.shows?("humidity")
+    assert @dashboard_item.shows?("precip", view: "forecast")
+    assert_equal "t-xl", @dashboard_item.size_of("temperature")
+  end
+
+  test "a part can be switched off through the form" do
+    item = dashboard_items(:two) # calendar / week, times default to shown
+    assert item.shows?("times")
 
     patch dashboard_item_url(item), params: {
-      dashboard_item: { kind: "calendar", view: "today",
-                        settings: { "show_times" => "0" } }
+      dashboard_item: { kind: "calendar", view: "week",
+                        settings: { "parts" => { "week" => { "times" => "0" } } } }
     }
 
     assert_redirected_to edit_dashboard_url(item.dashboard)
-    assert_equal false, item.reload.setting("show_times")
+    assert_not item.reload.shows?("times")
   end
 
   test "an incompatible layout is rejected with an error" do
@@ -212,5 +255,55 @@ class DashboardItemsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_content
     assert_select "ul.errors li", /only one is allowed for Weather/
+  end
+
+  test "saving a tile asks its dashboard's panels for a new frame" do
+    at = Time.utc(2026, 9, 13, 12)
+
+    travel_to(at) do
+      patch dashboard_item_url(@dashboard_item), params: { dashboard_item: { title: "Outside" } }
+    end
+
+    assert_equal at, devices(:one).reload.refresh_requested_at # shows dashboard one
+    assert_not_equal at, devices(:two).reload.refresh_requested_at, "another dashboard's panel is left alone"
+  end
+
+  test "moving, adding and deleting a tile ask for a new frame too" do
+    requests = [
+      -> { patch reposition_dashboard_item_url(@dashboard_item), params: { dashboard_item: { col: 3, row: 2, col_span: 2, row_span: 2 } }, as: :json },
+      -> { post dashboard_items_url, params: { dashboard_item: { dashboard_id: @dashboard_item.dashboard_id, kind: "clock", col_span: 2, row_span: 2 } } },
+      -> { delete dashboard_item_url(@dashboard_item) }
+    ]
+
+    requests.each.with_index(1) do |request, hour|
+      at = Time.utc(2026, 9, 13, hour)
+      travel_to(at) { request.call }
+
+      assert_equal at, devices(:one).reload.refresh_requested_at
+    end
+  end
+
+  test "a rejected change asks for nothing" do
+    assert_no_changes -> { devices(:one).reload.refresh_requested_at } do
+      patch dashboard_item_url(@dashboard_item), params: {
+        dashboard_item: { kind: "weather", view: "month" }
+      }
+    end
+  end
+
+  test "a note's QR code part says what it needs until the server address is set" do
+    box  = "dashboard_item[settings][parts][formatted][qr_code]"
+    hint = "dashboard_item_settings_parts_formatted_qr_code_hint"
+
+    get edit_dashboard_item_url(@dashboard_item, kind: "note")
+
+    assert_select "input[type=checkbox][name=?][aria-describedby=?]", box, hint
+    assert_select ".form-text##{hint} a[href=?][data-turbo-frame=_top]", edit_settings_path, "Settings"
+
+    AppSetting.current.update!(server_url: "http://nas.local")
+    get edit_dashboard_item_url(@dashboard_item, kind: "note")
+
+    assert_select "input[type=checkbox][name=?]:not([aria-describedby])", box
+    assert_select "##{hint}", 0
   end
 end

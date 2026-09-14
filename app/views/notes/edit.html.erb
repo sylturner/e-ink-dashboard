@@ -1,0 +1,15 @@
+<% content_for :title, @note.source.name %>
+
+<h1 class="h3 mb-3"><%= @note.source.name %></h1>
+
+<%= form_with model: @note, scope: :note, url: note_path(@note) do |f| %>
+  <%= f.error_messages %>
+
+  <%= render "notes/body_field", f:, rows: 12 %>
+
+  <%= f.submit t("notes.save"), class: "w-100" %>
+<% end %>
+
+<p class="form-text mt-3 mb-0">
+  <%= t("notes.last_edited") %> <%= relative_time_tag(@note.updated_at) %>
+</p>

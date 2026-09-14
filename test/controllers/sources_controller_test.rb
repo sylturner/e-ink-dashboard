@@ -358,4 +358,59 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
     assert_empty body["results"]
     assert_equal "timed out", body["error"]
   end
+
+  test "a note's form takes its body and offers no refresh interval" do
+    get new_source_url(type: "NoteProvider")
+
+    assert_response :success
+    assert_select "textarea[name=?][aria-describedby=?]", "source[provider][body]", "source_provider_body_hint"
+    assert_select "input[type=hidden][name=?][value=?]", "source[refresh_seconds]", 1.day.to_i.to_s
+    assert_select "input[type=number][name=?]", "source[refresh_seconds]", 0
+    assert_select "#note_phone_link", 0, "an unsaved note has no phone page yet"
+  end
+
+  test "creates a note" do
+    assert_difference [ "Source.count", "NoteProvider.count" ], 1 do
+      post sources_url(type: "NoteProvider"), params: {
+        source: { name: "Hall note", refresh_seconds: 1.day.to_i, provider: { body: "- [ ] keys" } }
+      }
+    end
+
+    assert_redirected_to sources_path
+    source = Source.order(:id).last
+    assert_equal "- [ ] keys", source.providable.body
+    assert_equal 1.day.to_i, source.refresh_seconds
+    assert_equal({ "body" => "- [ ] keys" }, source.payload, "a new note draws without waiting on a job")
+  end
+
+  test "a note's edit page links to its phone page" do
+    note = sources(:four)
+
+    get edit_source_url(note)
+
+    assert_select "input#note_phone_link[readonly][value=?]:not([name])", edit_note_url(note.providable)
+    assert_select "a[href=?]", edit_note_url(note.providable), "Open phone page"
+    assert_select "#note_phone_link_hint a[href=?]", edit_settings_path
+  end
+
+  test "with a server address, a note's phone link uses it" do
+    AppSetting.current.update!(server_url: "http://192.168.1.10:3000")
+    note = sources(:four)
+
+    get edit_source_url(note)
+
+    assert_select "input#note_phone_link[value=?]", "http://192.168.1.10:3000/notes/#{note.providable_id}/edit"
+    assert_select "#note_phone_link_hint a", 0
+  end
+
+  test "a note has nothing to test or refresh on a schedule" do
+    note = sources(:four)
+
+    get sources_url
+    assert_select "table.sources form[action=?]", test_source_path(note), 0
+    assert_select "table.sources form[action=?]", source_path(note)
+
+    get source_url(note)
+    assert_select "dt", text: "Refreshes every", count: 0
+  end
 end

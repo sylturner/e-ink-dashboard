@@ -1,2 +1,6 @@
-<div class="t-xl"><%= panel_time(now, :clock) %></div>
-<div class="t-sm"><%= now.strftime("%A, %B %-d") %></div>
+<% if item.shows?("time") %>
+  <div class="<%= item.size_of("time") %>"><%= panel_time(now, :clock) %></div>
+<% end %>
+<% if item.shows?("date") %>
+  <div class="t-sm"><%= now.strftime("%A, %B %-d") %></div>
+<% end %>

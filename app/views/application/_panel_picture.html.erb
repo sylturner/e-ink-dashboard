@@ -1,0 +1,12 @@
+<%# A picture of what a panel shows -- a device's last frame, or a
+    dashboard's thumbnail -- or, until there is a frame (src is nil), a
+    placeholder in its place. %>
+<% if src %>
+  <%= image_tag src, alt:, width:, height:,
+                loading: "lazy", decoding: "async",
+                class: class_names("w-100 h-auto panel-thumbnail", classes) %>
+<% else %>
+  <div class="<%= class_names("panel-thumbnail panel-placeholder d-flex align-items-center justify-content-center gap-2", classes) %>">
+    <%= ui_icon "cil-image", classes: "icon icon-lg" %> No frame yet
+  </div>
+<% end %>

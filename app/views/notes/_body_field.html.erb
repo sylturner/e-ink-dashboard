@@ -1,0 +1,30 @@
+<%# A note's body, with its Markdown hint and cheat sheet: on the note's
+    phone page and on its source form. %>
+<div class="mb-3">
+  <%= f.label :body, t("notes.body") %>
+  <%= f.textarea :body, rows:, aria: { describedby: f.field_id(:body, :hint) } %>
+  <%= f.invalid_feedback :body %>
+  <div id="<%= f.field_id(:body, :hint) %>" class="form-text">
+    <%= t("notes.hint", max: number_with_delimiter(NoteProvider::MAX_BODY)) %>
+  </div>
+</div>
+
+<details class="mb-3">
+  <summary><%= t("notes.formatting.summary") %></summary>
+  <table class="table table-sm small mt-2 mb-0">
+    <thead>
+      <tr>
+        <th scope="col"><%= t("notes.formatting.type") %></th>
+        <th scope="col"><%= t("notes.formatting.result") %></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% t("notes.formatting.examples").each do |example| %>
+        <tr>
+          <td><code><%= example[:type] %></code></td>
+          <td><%= example[:result] %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</details>

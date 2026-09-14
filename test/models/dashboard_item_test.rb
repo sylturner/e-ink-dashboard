@@ -68,18 +68,47 @@ class DashboardItemTest < ActiveSupport::TestCase
     assert_equal 6, @item.setting("hour_count"), "blank falls back to the default"
   end
 
-  test "a boolean setting can actually be turned off" do
-    item = dashboard_items(:two) # calendar, show_times defaults to true
-    assert_equal true, item.setting("show_times")
-
-    item.settings = { "show_times" => "0" }
-    assert_equal false, item.setting("show_times")
-  end
-
   test "an unregistered key is returned untouched" do
     @item.settings = { "whatever" => "raw" }
     assert_equal "raw", @item.setting("whatever")
     assert_nil @item.setting("missing")
+  end
+
+  test "a part falls back to its layout's default" do
+    assert @item.shows?("icon")
+    assert @item.shows?("precip"), "Right now shows the chance of rain"
+    assert_not @item.shows?("precip", view: "forecast"), "the forecast starts without it"
+    assert_not @item.shows?("humidity")
+  end
+
+  test "a part can be switched off, and each layout keeps its own" do
+    @item.settings = { "parts" => { "current" => { "icon" => "0" } } }
+
+    assert_not @item.shows?("icon")
+    assert @item.shows?("icon", view: "forecast")
+  end
+
+  test "a part's size falls back to its default" do
+    assert_equal "medium", @item.size_name("icon")
+    assert_equal 64, @item.size_of("icon")
+
+    @item.settings = { "sizes" => { "current" => { "icon" => "large" } } }
+    assert_equal 96, @item.size_of("icon")
+    assert_equal "medium", @item.size_name("icon", view: "forecast")
+
+    @item.settings = { "sizes" => { "current" => { "icon" => "enormous" } } }
+    assert_equal 64, @item.size_of("icon")
+  end
+
+  test "malformed parts and sizes read as the defaults" do
+    @item.settings = { "parts" => "nope", "sizes" => { "current" => [ 1 ] } }
+
+    assert @item.shows?("icon")
+    assert_equal 64, @item.size_of("icon")
+  end
+
+  test "asking about a part the layout doesn't draw raises" do
+    assert_raises(ArgumentError) { @item.shows?("times") }
   end
 
   test "grid_style places the tile" do

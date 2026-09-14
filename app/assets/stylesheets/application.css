@@ -193,14 +193,13 @@ html { scroll-padding-top: calc(var(--app-header-height) + 1rem); }
    The dashboard and device lists: a card per dashboard or panel, headed
    by a picture of what the panel shows. */
 
-/* Holds the picture's place while it loads -- a dashboard thumbnail can
-   take a second or two to capture. */
+/* Holds the picture's place while it loads. */
 .panel-thumbnail {
   background-color: var(--cui-secondary-bg);
   border-bottom: var(--cui-border-width) solid var(--cui-border-color);
 }
-/* Stands in for a device's frame before it has one. Panels are 800x480
-   unless they say otherwise. */
+/* Stands in for the picture of a device or dashboard that has no frame
+   yet. Panels are 800x480 unless they say otherwise. */
 .panel-placeholder { aspect-ratio: 5 / 3; }
 
 /* The name reads as a heading; hovering anywhere on the card, which is
@@ -218,3 +217,6 @@ html { scroll-padding-top: calc(var(--app-header-height) + 1rem); }
 
 /* The last fetched payload scrolls inside its own box. */
 .source-payload { max-height: 32rem; overflow: auto; }
+
+/* A note's phone page: one column, readable on a tablet or desktop too. */
+.note-page { max-width: 40rem; }

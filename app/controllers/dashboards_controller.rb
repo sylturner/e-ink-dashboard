@@ -6,6 +6,8 @@ class DashboardsController < ApplicationController
     # Each card sizes its thumbnail from the devices and describes it
     # from the tiles.
     @dashboards = Dashboard.includes(:devices, :dashboard_items)
+    # Which cards have a frame to show, without loading the bitmaps.
+    @framed_ids = Frame.rendered.where.not(dashboard_id: nil).distinct.pluck(:dashboard_id).to_set
   end
 
   # GET /dashboards/new

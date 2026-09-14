@@ -3,10 +3,19 @@
     <li>
       <span class="t-sm"><%= d["day"] %></span>
       <span class="forecast-sky">
-        <%= weather_icon(d["icon"], size: 24) %>
-        <span class="t-xs sky-label"><%= d["label"] %></span>
+        <% if item.shows?("icon") %>
+          <%= weather_icon(d["icon"], size: item.size_of("icon")) %>
+        <% end %>
+        <% if item.shows?("condition") %>
+          <span class="t-xs sky-label"><%= d["label"] %></span>
+        <% end %>
       </span>
-      <span class="t-sm"><%= d["high"] %>&deg; / <%= d["low"] %>&deg;</span>
+      <% if item.shows?("precip") && d["precip"] %>
+        <span class="t-sm"><%= d["precip"] %>%</span>
+      <% end %>
+      <% if item.shows?("high_low") %>
+        <span class="t-sm"><%= d["high"] %>&deg; / <%= d["low"] %>&deg;</span>
+      <% end %>
     </li>
   <% end %>
 </ul>

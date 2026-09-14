@@ -10,6 +10,10 @@ class Dashboard < ApplicationRecord
   # `devices` above is the assignment relationship.
   has_many :showing_devices, class_name: "Device", dependent: :nullify
 
+  # Frames rendered from it, the newest of which is its thumbnail. They
+  # belong to their panels, so they outlive the dashboard.
+  has_many :frames, dependent: :nullify
+
   validates :name, presence: true
   validates :theme, inclusion: { in: THEMES }
   validates :grid_columns, :grid_rows,
@@ -21,6 +25,13 @@ class Dashboard < ApplicationRecord
   def screen_size
     device = devices.first
     device ? [ device.width, device.height ] : Device.column_defaults.values_at("width", "height")
+  end
+
+  # Asks every panel assigned to this dashboard for a new frame. A frame
+  # is only composed when one is due, so without this a tile change would
+  # wait for the next scheduled render.
+  def request_refresh!
+    devices.update_all(refresh_requested_at: Time.current)
   end
 
   def sources

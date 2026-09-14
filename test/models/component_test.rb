@@ -37,11 +37,9 @@ class ComponentTest < ActiveSupport::TestCase
   test "settings filter down to the ones a layout uses" do
     keys = Component.settings("calendar", view: "next_days").map(&:key)
     assert_includes keys, "day_count"
-    assert_includes keys, "show_times"
     assert_not_includes keys, "event_limit"
 
-    assert_equal %w[event_limit show_times],
-                 Component.settings("calendar", view: "today").map(&:key)
+    assert_equal %w[event_limit], Component.settings("calendar", view: "today").map(&:key)
   end
 
   test "settings with no declared views apply to every layout" do
@@ -59,6 +57,7 @@ class ComponentTest < ActiveSupport::TestCase
   test "an unknown kind answers safely everywhere" do
     assert_equal({}, Component.views("nope"))
     assert_equal [], Component.settings("nope")
+    assert_equal [], Component.parts("nope", "current")
     assert_equal [], Component.source_types("nope")
     assert_not Component.multi_source?("nope")
   end
@@ -69,9 +68,56 @@ class ComponentTest < ActiveSupport::TestCase
     assert_equal 3, integer.cast(""), "blank falls back to the default"
     assert_equal 3, integer.cast(nil)
 
-    boolean = Component.setting("calendar", "show_times")
+    boolean = Component::Setting.new(key: "flag", type: :boolean, default: true)
     assert_equal true,  boolean.cast("1")
     assert_equal false, boolean.cast("0")
     assert_equal true,  boolean.cast(nil), "nil falls back to the default"
+  end
+
+  test "parts are declared only for layouts the kind offers, each once" do
+    Component::KINDS.each do |kind|
+      Component.find(kind).fetch(:parts, {}).each do |view, parts|
+        assert_includes Component.views(kind).keys, view, "#{kind} declares parts for unknown view #{view}"
+
+        keys = parts.map(&:key)
+        assert_equal keys.uniq, keys, "#{kind}/#{view} declares a part twice"
+      end
+    end
+  end
+
+  test "every part has a label, and a sized part offers every size" do
+    Component::KINDS.each do |kind|
+      Component.views(kind).each_key do |view|
+        Component.parts(kind, view).each do |part|
+          assert I18n.exists?("components.parts.#{kind}.#{part.key}", :en), "#{kind}/#{part.key} has no label"
+          next unless part.sized?
+
+          assert_equal Component::SIZE_NAMES, part.sizes.keys, "#{kind}/#{view}/#{part.key} sizes"
+          assert_includes part.sizes.keys, part.default_size
+        end
+      end
+    end
+  end
+
+  test "a part reads what the form stored, falling back to its default" do
+    humidity = Component.part("weather", "current", "humidity")
+    assert_equal false, humidity.shown?(nil)
+    assert_equal false, humidity.shown?("")
+    assert_equal true,  humidity.shown?("1")
+
+    icon = Component.part("weather", "current", "icon")
+    assert_equal true, icon.shown?(nil)
+    assert_equal false, icon.shown?("0")
+    assert_equal 96, icon.size("large")
+    assert_equal 64, icon.size("enormous"), "an unknown size falls back to the default"
+  end
+
+  test "an unsized part has no size to draw" do
+    assert_raises(ArgumentError) { Component.part("weather", "current", "humidity").size("large") }
+  end
+
+  test "part! refuses a part the layout doesn't draw" do
+    assert Component.part!("weather", "current", "humidity")
+    assert_raises(ArgumentError) { Component.part!("weather", "forecast", "humidity") }
   end
 end
