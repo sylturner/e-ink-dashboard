@@ -120,6 +120,40 @@ class EventFeedTest < ActiveSupport::TestCase
     assert_equal [], EventFeed.for(@item, zone: ZONE)
   end
 
+  # --- duplicates ---
+
+  test "the same event on two calendars is drawn once, tagged by the first source" do
+    starts = ZONE.parse("2026-09-07 17:00")
+    ends   = ZONE.parse("2026-09-07 18:00")
+    attach("Family", [ timed("fam-1", starts, ends, title: "Soccer practice") ])
+    attach("Syl",    [ timed("syl-9", starts, ends, title: "soccer  Practice ") ])
+
+    feed = EventFeed.for(@item, zone: ZONE)
+
+    assert_equal [ "Soccer practice" ], feed.map(&:title)
+    assert_equal [ "FAM" ], feed.map(&:tag)
+  end
+
+  test "a feed that lists an event twice draws it once" do
+    starts = ZONE.parse("2026-09-07 09:00")
+    ends   = ZONE.parse("2026-09-07 10:00")
+    attach("Cal", [ timed("x", starts, ends, title: "Kick-off"),
+                    timed("x", starts, ends, title: "Kick-off") ])
+
+    assert_equal 1, EventFeed.for(@item, zone: ZONE).size
+  end
+
+  test "events that differ in title or time are kept apart" do
+    nine = ZONE.parse("2026-09-07 09:00")
+    ten  = ZONE.parse("2026-09-07 10:00")
+    attach("Cal", [ timed("a", nine, ten, title: "Standup"),
+                    timed("b", nine, ten, title: "Retro"),
+                    timed("c", nine, ZONE.parse("2026-09-07 09:30"), title: "Standup"),
+                    timed("d", ten, ZONE.parse("2026-09-07 11:00"), title: "Standup") ])
+
+    assert_equal 4, EventFeed.for(@item, zone: ZONE).size
+  end
+
   # --- source tags ---
 
   test "each event carries the tag of the source it arrived on" do

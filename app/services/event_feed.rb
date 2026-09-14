@@ -27,9 +27,21 @@ class EventFeed
   end
 
   def self.for(item, zone:)
-    item.sources.flat_map { |source|
+    events = item.sources.flat_map { |source|
       Array(source.payload["events"]).filter_map { |raw| build(raw, zone, source.tag) }
-    }.sort_by { |e| [ e.starts_at, e.title.to_s ] }
+    }
+
+    merge_duplicates(events).sort_by { |e| [ e.starts_at, e.title.to_s ] }
+  end
+
+  # The same event can reach a tile twice: an invite that lands on two of
+  # its calendars, or a feed that lists one meeting twice. Their UIDs
+  # can't be trusted to match, so an event is a duplicate when it has
+  # the same title (ignoring case and spacing) and the same times. The
+  # first copy wins, so a merged event keeps the tag of the source listed
+  # first on the tile.
+  def self.merge_duplicates(events)
+    events.uniq { |e| [ e.title.downcase.squish, e.starts_at, e.ends_at, e.all_day ] }
   end
 
   def self.build(raw, zone, tag = nil)

@@ -77,8 +77,9 @@ class IcalProvider < ApplicationRecord
     to   = Time.current + WINDOW_FORWARD
 
     events = calendars.flat_map do |calendar|
-      label = calendar_name(calendar)
-      calendar.events.flat_map { |event| expand(event, label, from, to) }
+      label      = calendar_name(calendar)
+      overridden = overridden_starts(calendar.events)
+      calendar.events.flat_map { |event| expand(event, label, from, to, overridden) }
     end
 
     events = events.compact
@@ -135,11 +136,44 @@ class IcalProvider < ApplicationRecord
       calendar.x_wr_calname&.first.to_s.presence || source&.name || "Calendar"
     end
 
+    # Editing one instance of a recurring event exports it as a separate
+    # VEVENT with the series' UID and a RECURRENCE-ID naming the slot it
+    # replaces. icalendar-recurrence honors EXDATE but not RECURRENCE-ID,
+    # so without this the series still yields that slot: a duplicate when
+    # the instance kept its time, a ghost at the old time when it moved.
+    # Keyed by UID, holding the replaced slots (see slot).
+    def overridden_starts(events)
+      events.each_with_object(Hash.new { |h, k| h[k] = Set.new }) do |event, slots|
+        next if event.recurrence_id.blank?
+
+        starts = to_time(event.recurrence_id)
+        all_day = event.recurrence_id.is_a?(Icalendar::Values::Date)
+        slots[event.uid.to_s] << slot(starts, all_day) if starts
+      rescue StandardError => e
+        Rails.logger.warn("[iCal] unreadable RECURRENCE-ID on #{event.uid}: #{e.message}")
+      end
+    end
+
+    # Identifies an occurrence's place in its series. All-day slots are
+    # compared by date: icalendar-recurrence hands back all-day
+    # occurrences at the host's local midnight, which is not the app
+    # zone's midnight a DATE RECURRENCE-ID converts to.
+    def slot(starts, all_day)
+      all_day ? starts.to_date : starts.to_i
+    end
+
     # One malformed entry in a shared calendar must not blank the tile,
     # so a failed event is skipped rather than failing the whole fetch.
-    def expand(event, label, from, to)
+    def expand(event, label, from, to, overridden)
+      # A cancelled instance still replaces its slot (see
+      # overridden_starts), it just draws nothing itself.
+      return [] if event.status.to_s.casecmp?("CANCELLED")
+
+      replaced = event.recurrence_id.blank? ? overridden.fetch(event.uid.to_s, nil) : nil
+
       occurrences(event, from, to).filter_map do |starts, ends, all_day|
         next if starts.nil?
+        next if replaced&.include?(slot(starts, all_day))
         next unless ends >= from && starts <= to
 
         {
