@@ -97,6 +97,96 @@ class IcalProviderTest < ActiveSupport::TestCase
     assert_includes events.map { |e| e["uid"] }, "allday"
   end
 
+  # --- edited instances of a recurring event ---
+
+  # Three edits to the weekly Standup: one retitled in place, one moved
+  # to Thursday afternoon, one cancelled.
+  OVERRIDES = <<~ICS
+    BEGIN:VEVENT
+    UID:weekly
+    DTSTAMP:20260901T120000Z
+    RECURRENCE-ID:20260909T090000Z
+    DTSTART:20260909T090000Z
+    DTEND:20260909T093000Z
+    SUMMARY:Standup (in person)
+    END:VEVENT
+    BEGIN:VEVENT
+    UID:weekly
+    DTSTAMP:20260901T120000Z
+    RECURRENCE-ID:20260916T090000Z
+    DTSTART:20260917T130000Z
+    DTEND:20260917T133000Z
+    SUMMARY:Standup
+    END:VEVENT
+    BEGIN:VEVENT
+    UID:weekly
+    DTSTAMP:20260901T120000Z
+    RECURRENCE-ID:20260923T090000Z
+    DTSTART:20260923T090000Z
+    DTEND:20260923T093000Z
+    STATUS:CANCELLED
+    SUMMARY:Standup
+    END:VEVENT
+  ICS
+
+  def standups
+    fetch(CALENDAR.sub("END:VCALENDAR", "#{OVERRIDES}END:VCALENDAR"))["events"]
+      .select { |e| e["uid"] == "weekly" }
+  end
+
+  def starting(events, time)
+    events.select { |e| Time.parse(e["starts_at"]) == time }
+  end
+
+  test "an edited instance replaces its slot instead of doubling it" do
+    events = standups
+    edited = starting(events, Time.utc(2026, 9, 9, 9))
+
+    assert_equal [ "Standup (in person)" ], edited.map { |e| e["title"] }
+    assert_equal 1, starting(events, Time.utc(2026, 9, 30, 9)).size, "the rest of the series is untouched"
+    assert_equal 1, starting(events, Time.utc(2026, 10, 7, 9)).size
+  end
+
+  test "a moved instance leaves no ghost at its old time" do
+    events = standups
+
+    assert_empty starting(events, Time.utc(2026, 9, 16, 9))
+    assert_equal 1, starting(events, Time.utc(2026, 9, 17, 13)).size
+  end
+
+  test "a cancelled instance drops its slot" do
+    assert_empty starting(standups, Time.utc(2026, 9, 23, 9))
+  end
+
+  test "an edited day in an all-day series moves rather than doubles" do
+    body = CALENDAR.sub("END:VCALENDAR", <<~ICS)
+      BEGIN:VEVENT
+      UID:bins
+      DTSTAMP:20260901T120000Z
+      DTSTART;VALUE=DATE:20260908
+      DTEND;VALUE=DATE:20260909
+      RRULE:FREQ=WEEKLY
+      SUMMARY:Take out garbage
+      END:VEVENT
+      BEGIN:VEVENT
+      UID:bins
+      DTSTAMP:20260901T120000Z
+      RECURRENCE-ID;VALUE=DATE:20260915
+      DTSTART;VALUE=DATE:20260916
+      DTEND;VALUE=DATE:20260917
+      SUMMARY:Take out garbage
+      END:VEVENT
+      END:VCALENDAR
+    ICS
+
+    days = fetch(body)["events"].select { |e| e["uid"] == "bins" }.map { |e| e["start_on"] }
+
+    assert_includes days, "2026-09-16"
+    assert_not_includes days, "2026-09-15"
+    assert_includes days, "2026-09-22"
+    assert_equal days.uniq, days
+  end
+
   # Parsing is all-or-nothing in the icalendar gem, so a malformed date
   # cannot be skipped per-event. It has to surface as a fetch failure,
   # which leaves the last good payload on the panel.

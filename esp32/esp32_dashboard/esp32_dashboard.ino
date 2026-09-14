@@ -24,7 +24,7 @@
 #include "types.h"
 
 #define FIRMWARE_VERSION "2.0.0"
-#define TEST_MODE 1
+#define TEST_MODE 0
 
 // ---------- Wiring ----------
 constexpr int PIN_PWR    = 6;
