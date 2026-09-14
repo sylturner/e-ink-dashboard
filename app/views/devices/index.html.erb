@@ -1,5 +1,5 @@
 <%= page_header "Devices", icon: "cil-devices",
-                description: "Your e-paper panels. A new panel adds itself the first time it connects, then waits here for a dashboard." do %>
+                description: t("devices.index_description", server: request.base_url) do %>
   <%= link_to new_device_path, class: "btn btn-light" do %>
     <%= ui_icon "cil-plus", classes: "icon me-1" %> Add a device
   <% end %>

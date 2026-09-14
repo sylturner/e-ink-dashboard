@@ -28,7 +28,7 @@ two:
   width: 800
   height: 480
   bit_depth: 2
-  image_format: raw
+  image_format: png
   rotation: 90
   refresh_seconds: 600
   night_refresh_seconds: 7200

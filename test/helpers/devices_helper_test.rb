@@ -10,7 +10,7 @@ class DevicesHelperTest < ActionView::TestCase
 
   test "the spec gives the size, depth and format, and the rotation when there is one" do
     assert_equal "800×480 · 1-bit bmp", device_spec(@device)
-    assert_equal "800×480 · 2-bit raw · 90°", device_spec(devices(:two))
+    assert_equal "800×480 · 2-bit png · 90°", device_spec(devices(:two))
   end
 
   test "a panel checking in on schedule" do

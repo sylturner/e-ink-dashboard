@@ -21,10 +21,7 @@ Rails.application.routes.draw do
 
   resources :devices, except: :show do
     member { post :refresh }
-    # Self-enrollment: a panel with no token posts here to get one.
-    collection { post :enroll, to: "enrollments#create" }
-    # Read-only, for the admin pages. Not nested at /frame: that would
-    # take the panels' own devices/:token/frame route below.
+    # Read-only, for the admin pages.
     resource :last_frame, only: :show, module: :devices
   end
   # A device's edit page is its home. Old links to a show page land there.
@@ -55,6 +52,15 @@ Rails.application.routes.draw do
 
   # Defines the root path route ("/")
   root "dashboards#index"
-  get "devices/:token/frame", to: "frames#show", as: :device_frame
-  get "render/dashboard",     to: "renders#dashboard"
+  get "render/dashboard", to: "renders#dashboard"
+
+  # The panels' API: TRMNL's BYOS protocol, spoken by TRMNL's own panels
+  # and the sketch in esp32/. Deliberately unauthenticated (see
+  # Api::BaseController).
+  namespace :api do
+    get  "setup",      to: "setups#show"
+    get  "display",    to: "displays#show"
+    post "log",        to: "logs#create"
+    get  "images/:id", to: "images#show", as: :image
+  end
 end
