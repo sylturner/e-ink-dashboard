@@ -7,11 +7,13 @@
 %>
 
 <div class="month">
-  <div class="month-head">
-    <% (start...start + 7).each do |day| %>
-      <div class="t-xs"><%= l(day, format: "%a")[0] %></div>
-    <% end %>
-  </div>
+  <% if header %>
+    <div class="month-head">
+      <% (start...start + 7).each do |day| %>
+        <div class="t-xs"><%= l(day, format: "%a")[0] %></div>
+      <% end %>
+    </div>
+  <% end %>
 
   <div class="month-grid">
     <% (start..last).each do |date| %>
@@ -22,7 +24,7 @@
       %>
       <div class="month-cell<%= " month-cell--today" if today %><%= " month-cell--outside" if outside %>">
         <span class="t-xs"><%= date.day %></span>
-        <% if count.positive? && !outside %>
+        <% if dots && count.positive? && !outside %>
           <span class="month-dots">
             <%= "•" * [ count, 3 ].min %>
           </span>

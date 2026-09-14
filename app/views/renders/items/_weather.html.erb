@@ -1,10 +1,11 @@
 <div class="weather">
   <% case item.view %>
   <% when "hourly" %>
-    <%= render "renders/items/weather/hourly", hours: (data["hourly"] || []).first(item.setting("hour_count").to_i) %>
+    <%= render "renders/items/weather/hourly", item: item, hours: (data["hourly"] || []).first(item.setting("hour_count").to_i) %>
   <% when "forecast" %>
-    <%= render "renders/items/weather/forecast", days: (data["daily"] || []).first(item.setting("day_count").to_i) %>
+    <%= render "renders/items/weather/forecast", item: item, days: (data["daily"] || []).first(item.setting("day_count").to_i) %>
   <% else %>
-    <%= render "renders/items/weather/today", current: data["current"], today: (data["daily"] || []).first %>
+    <%= render "renders/items/weather/today", item: item, current: data["current"], today: (data["daily"] || []).first,
+               sun: data.values_at("sunrise", "sunset") %>
   <% end %>
 </div>

@@ -1,17 +1,43 @@
-<% c = current || {} %>
+<%
+  c = current || {}
+
+  # Today's summary line: the high and low, then the chance of rain when
+  # there is one.
+  high_low = today && item.shows?("high_low")
+  precip   = today && item.shows?("precip") && today["precip"].to_i.positive?
+%>
 <div class="today">
   <div class="now">
-    <%= weather_icon(c["icon"], size: 64) %>
+    <% if item.shows?("icon") %>
+      <%= weather_icon(c["icon"], size: item.size_of("icon")) %>
+    <% end %>
     <div>
-      <div class="t-lg"><%= c["temp"] %>&deg;</div>
-      <div class="t-sm"><%= c["label"] %></div>
-      <div class="t-sm">Feels <%= c["feels_like"] %>&deg;</div>
+      <% if item.shows?("temperature") %>
+        <div class="<%= item.size_of("temperature") %>"><%= c["temp"] %>&deg;</div>
+      <% end %>
+      <% if item.shows?("condition") %>
+        <div class="t-sm"><%= c["label"] %></div>
+      <% end %>
+      <% if item.shows?("feels_like") %>
+        <div class="t-sm">Feels <%= c["feels_like"] %>&deg;</div>
+      <% end %>
+      <% if item.shows?("humidity") && c["humidity"] %>
+        <div class="t-sm"><%= t("renders.weather.humidity", percent: c["humidity"]) %></div>
+      <% end %>
     </div>
   </div>
-  <% if today %>
+  <% if high_low || precip %>
     <div class="t-sm">
-      H <%= today["high"] %>&deg; &middot; L <%= today["low"] %>&deg;
-      <%= "· #{today["precip"]}%" if today["precip"].to_i.positive? %>
+      <% if high_low %>
+        H <%= today["high"] %>&deg; &middot; L <%= today["low"] %>&deg;
+      <% end %>
+      <%= (high_low ? "· #{today["precip"]}%" : t("renders.weather.rain", percent: today["precip"])) if precip %>
     </div>
+  <% end %>
+  <% if item.shows?("sun") && sun.all?(&:present?) %>
+    <%# Older payloads carried these preformatted ("7:17 AM") rather than as
+        instants; one refetch replaces them. %>
+    <% rise, set = sun.map { it.include?("T") ? panel_time(Time.iso8601(it), :time) : it } %>
+    <div class="t-sm"><%= t("renders.weather.sun", rise:, set:) %></div>
   <% end %>
 </div>

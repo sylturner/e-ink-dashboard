@@ -23,6 +23,13 @@ class Dashboard < ApplicationRecord
     device ? [ device.width, device.height ] : Device.column_defaults.values_at("width", "height")
   end
 
+  # Asks every panel assigned to this dashboard for a new frame. A frame
+  # is only composed when one is due, so without this a tile change would
+  # wait for the next scheduled render.
+  def request_refresh!
+    devices.update_all(refresh_requested_at: Time.current)
+  end
+
   def sources
     Source.joins(dashboard_item_sources: :dashboard_item)
           .where(dashboard_items: { dashboard_id: id })

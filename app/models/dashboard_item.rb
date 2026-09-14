@@ -27,6 +27,23 @@ class DashboardItem < ApplicationRecord
     definition.cast(settings[key.to_s])
   end
 
+  # Whether a layout draws one of its parts (Component::Part). Each layout
+  # keeps its own choices under settings["parts"][view], so switching
+  # layouts and back restores them.
+  def shows?(key, view: self.view)
+    Component.part!(kind, view, key).shown?(stored("parts", view, key))
+  end
+
+  # The size a part is drawn at, by name (small, medium, large).
+  def size_name(key, view: self.view)
+    Component.part!(kind, view, key).size_name(stored("sizes", view, key))
+  end
+
+  # What the partial draws at that size: an icon's px, a type class.
+  def size_of(key)
+    Component.part!(kind, view, key).size(size_name(key))
+  end
+
   def grid_style
     "grid-column: #{col} / span #{col_span}; " \
     "grid-row: #{row} / span #{row_span};"
@@ -36,6 +53,12 @@ class DashboardItem < ApplicationRecord
 
     def apply_defaults
       self.view = Component.default_view(kind) if view.blank? && kind.present?
+    end
+
+    # settings[group][view][key], or nil. The nested hashes arrive
+    # straight from the form, so don't trust their shape.
+    def stored(group, view, key)
+      [ group, view.to_s, key.to_s ].reduce(settings) { |node, name| node[name] if node.is_a?(Hash) }
     end
 
     def fits_within_grid

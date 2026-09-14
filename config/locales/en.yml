@@ -32,10 +32,51 @@ en:
     name: "E Ink Dashboard"
     # Shown in place of the name when the sidebar is narrowed.
     short_name: "EI"
+  components:
+    # The tile inspector's group of parts a layout can show or hide
+    # (Component::Part).
+    show: "Show"
+    # Beside a part that comes in sizes. The part's name is read out
+    # before it, visually hidden.
+    size: "Size"
+    sizes:
+      small: "Small"
+      medium: "Medium"
+      large: "Large"
+    # One label per part, shared by every layout of the component that
+    # draws it.
+    parts:
+      calendar:
+        event_dots: "Event dots"
+        tags: "Calendar markers"
+        times: "Event times"
+        weekday_header: "Weekday initials"
+      clock:
+        date: "Date"
+        time: "Time"
+      news:
+        source: "Feed name"
+      weather:
+        condition: "Condition"
+        feels_like: "Feels like"
+        high_low: "High and low"
+        humidity: "Humidity"
+        icon: "Icon"
+        precip: "Chance of rain"
+        sun: "Sunrise and sunset"
+        temperature: "Temperature"
   devices:
     # Beside links to a panel's live frame URL: the builder's device list
     # and the device page.
     live_bitmap_hint: "Opening the live bitmap renders a fresh frame if one is due, and counts as a check-in for the panel."
+  # Text drawn on a panel.
+  renders:
+    weather:
+      humidity: "Humidity %{percent}%"
+      # The chance of rain on its own, when the high and low it follows
+      # are hidden.
+      rain: "Rain %{percent}%"
+      sun: "Rise %{rise} · Set %{set}"
   weather:
     units:
       imperial: "Fahrenheit"

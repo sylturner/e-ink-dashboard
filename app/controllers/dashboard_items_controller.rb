@@ -44,6 +44,7 @@ class DashboardItemsController < ApplicationController
     @dashboard_item.position = @dashboard.dashboard_items.maximum(:position).to_i + 1
 
     if @dashboard_item.save
+      @dashboard.request_refresh!
       redirect_to edit_dashboard_path(@dashboard),
                   notice: "Added #{@dashboard_item.kind}."
     else
@@ -56,6 +57,7 @@ class DashboardItemsController < ApplicationController
   def update
     respond_to do |format|
       if @dashboard_item.update(dashboard_item_params)
+        @dashboard_item.dashboard.request_refresh!
         format.html { redirect_to edit_dashboard_path(@dashboard_item.dashboard), notice: "Dashboard item was successfully updated.", status: :see_other }
         format.json { render :show, status: :ok, location: @dashboard_item }
       else
@@ -72,6 +74,7 @@ class DashboardItemsController < ApplicationController
   # model stays the authority, so a rejected move rolls back client-side.
   def reposition
     if @dashboard_item.update(reposition_params)
+      @dashboard_item.dashboard.request_refresh!
       render json: { ok: true }
     else
       render json: { ok: false, errors: @dashboard_item.errors.full_messages },
@@ -83,6 +86,7 @@ class DashboardItemsController < ApplicationController
   def destroy
     dashboard = @dashboard_item.dashboard
     @dashboard_item.destroy!
+    dashboard.request_refresh!
 
     respond_to do |format|
       format.html { redirect_to edit_dashboard_path(dashboard), notice: "Dashboard item was successfully destroyed.", status: :see_other }
@@ -103,9 +107,10 @@ class DashboardItemsController < ApplicationController
     # Only allow a list of trusted parameters through. Position and
     # placement are owned by the builder, not by these forms.
     #
-    # settings is an arbitrary hash: the keys are whatever the registry
-    # rendered and the values only ever reach ERB. Do not extend that to
-    # anything that reaches SQL or send.
+    # settings is an arbitrary hash, nested for a layout's parts and
+    # sizes: the keys are whatever the registry rendered and the values
+    # only ever reach ERB. Do not extend that to anything that reaches SQL
+    # or send.
     def dashboard_item_params
       params.expect(dashboard_item: [ :dashboard_id, :kind, :view, :title,
                                       :col_span, :row_span, :visible,

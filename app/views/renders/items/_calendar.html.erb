@@ -2,11 +2,15 @@
   events = EventFeed.for(item, zone: now.time_zone)
   limit  = item.setting("event_limit").to_i
   days   = item.setting("day_count").to_i
-  times  = item.setting("show_times")
+
+  # Only the layouts that list events draw times and markers; the month
+  # grid has parts of its own.
+  lists  = item.view != "month"
+  times  = lists && item.shows?("times")
 
   # A source marker only tells you anything when several calendars are
   # merged into one tile; on a single-source tile it is just noise.
-  tags   = item.sources.size > 1
+  tags   = lists && item.shows?("tags") && item.sources.size > 1
 %>
 
 <% case item.view %>
@@ -34,7 +38,8 @@
              times: times, tags: tags %>
 
 <% when "month" %>
-  <%= render "renders/items/calendar/month", events: events, now: now %>
+  <%= render "renders/items/calendar/month", events: events, now: now,
+             header: item.shows?("weekday_header"), dots: item.shows?("event_dots") %>
 
 <% else %>
   <%= render "renders/items/calendar/list",
