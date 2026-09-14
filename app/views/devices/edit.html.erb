@@ -52,11 +52,11 @@
       </div>
 
       <div class="card-footer bg-transparent">
-        <%= link_to device_frame_path(token: device.token), target: "_blank", rel: "noopener",
-                    class: "btn btn-sm btn-app-outline", aria: { describedby: "live-bitmap-hint" } do %>
-          <%= ui_icon "cil-external-link", classes: "icon me-1" %> Open the live bitmap<span class="visually-hidden"> (opens in a new tab)</span>
+        <%= link_to device_last_frame_path(device), target: "_blank", rel: "noopener",
+                    class: "btn btn-sm btn-app-outline", aria: { describedby: "bitmap-hint" } do %>
+          <%= ui_icon "cil-external-link", classes: "icon me-1" %> Open the bitmap<span class="visually-hidden"> (opens in a new tab)</span>
         <% end %>
-        <p id="live-bitmap-hint" class="small text-body-secondary mt-2 mb-0"><%= t("devices.live_bitmap_hint") %></p>
+        <p id="bitmap-hint" class="small text-body-secondary mt-2 mb-0"><%= t("devices.bitmap_hint") %></p>
       </div>
     </section>
 

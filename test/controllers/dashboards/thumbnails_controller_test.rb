@@ -30,16 +30,15 @@ class Dashboards::ThumbnailsControllerTest < ActionDispatch::IntegrationTest
     assert_equal newest.data.b, response.body.b
   end
 
-  test "a raw frame is drawn to a PNG" do
-    device = devices(:two) # 800x480 raw
-    device.frames.create!(dashboard: dashboards(:two), data: bitmap("\xFF").to_raw, format: "raw")
+  test "a png frame is served as a png" do
+    device = devices(:two) # 800x480 png
+    frame = device.frames.create!(dashboard: dashboards(:two), data: bitmap("\xFF").to_png, format: "png")
 
     get_thumbnail dashboards(:two)
 
     assert_response :success
     assert_equal "image/png", response.media_type
-    image = Vips::Image.new_from_buffer(response.body, "")
-    assert_equal [ 800, 480 ], [ image.width, image.height ]
+    assert_equal frame.data.b, response.body.b
   end
 
   test "a frame belongs to the dashboard it was rendered from, not the one its panel shows now" do

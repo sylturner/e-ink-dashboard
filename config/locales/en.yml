@@ -32,12 +32,23 @@ en:
     attributes:
       app_setting:
         server_url: "Server address"
+      device:
+        image_format: "Format"
     errors:
       models:
         app_setting:
           attributes:
             server_url:
               not_an_address: "must be a scheme, host and port, like http://192.168.1.10:3000"
+        device:
+          attributes:
+            image_format:
+              bmp_size: "can only be BMP at %{size}; use PNG for other sizes"
+  # The panels' API (app/controllers/api).
+  api:
+    setup:
+      # Shown on a TRMNL's own setup screen before its first frame arrives.
+      message: "Claim code %{code}: find it in Devices and choose a dashboard."
   app:
     name: "E Ink Dashboard"
     # Shown in place of the name when the sidebar is narrowed.
@@ -83,9 +94,13 @@ en:
       note:
         qr_code_html: "Needs the server address, set in %{settings}."
   devices:
-    # Beside links to a panel's live frame URL: the builder's device list
-    # and the device page.
-    live_bitmap_hint: "Opening the live bitmap renders a fresh frame if one is due, and counts as a check-in for the panel."
+    # Beside the device page's link to the panel's last frame.
+    bitmap_hint: "Opening the bitmap shows the last frame the panel was sent. It doesn't render a new one or count as a check-in."
+    # Under the display fields of a device's settings.
+    display_hint: "The panel reports its size when it sets up. BMP only works at %{size}; other sizes need PNG. Only 1-bit frames can be rendered so far."
+    # The Devices page banner. The server is the address a panel is
+    # pointed at.
+    index_description: "Your e-paper panels. A new panel adds itself the first time it connects, then waits here for a dashboard. To add a TRMNL, set its API Server to %{server} in its Wi-Fi setup."
   # A note's phone page (NotesController) and its source form.
   notes:
     body: "Note"

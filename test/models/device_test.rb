@@ -247,4 +247,29 @@ class DeviceTest < ActiveSupport::TestCase
 
     assert_equal "Kitchen wall", Device.enroll!(mac: "aa:bb:cc:dd:ee:ff").name
   end
+
+  # --- what the firmware can decode ---
+
+  test "a BMP only works at the one size TRMNL's firmware decodes" do
+    @device.width = 1024
+    assert_not @device.valid?
+    assert @device.errors.of_kind?(:image_format, :bmp_size)
+
+    @device.image_format = "png"
+    assert @device.valid?
+  end
+
+  test "a panel is sent a BMP at 800x480 and a PNG otherwise" do
+    assert_equal "bmp", Device.image_format_for(800, 480)
+    assert_equal "png", Device.image_format_for(960, 540)
+    assert_equal "png", Device.image_format_for(nil, nil)
+  end
+
+  test "the charge is estimated from the battery voltage" do
+    assert_equal 50, Device.battery_percent_for(3.75)
+    assert_equal 100, Device.battery_percent_for(4.4)
+    assert_equal 0, Device.battery_percent_for(3.0)
+    assert_nil Device.battery_percent_for(nil)
+    assert_nil Device.battery_percent_for(0.0)
+  end
 end

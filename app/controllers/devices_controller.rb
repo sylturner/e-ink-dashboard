@@ -15,7 +15,7 @@ class DevicesController < ApplicationController
 
   # GET /devices/new
   #
-  # Panels normally add themselves (EnrollmentsController); this is for
+  # Panels normally add themselves (Api::SetupsController); this is for
   # adding one by hand. It starts on the app's schedule, as they do.
   def new
     @device = Device.new(AppSetting.current.panel_defaults)

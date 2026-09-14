@@ -23,14 +23,15 @@ enum PressKind
 {
   PRESS_NONE,   // spurious wake, released before the settle window
   PRESS_SHORT,  // force a re-render of the current dashboard
-  PRESS_LONG    // advance to the next dashboard
+  PRESS_LONG    // advance to the next dashboard (a TRMNL special function)
 };
 
 // Outcome of one fetch cycle.
 //
-// `ok` covers both a fresh image and a 304 — either way the server was
-// reached and the sleep interval it returned is trustworthy.
-// `unchanged` distinguishes the 304 case, where the panel was left alone.
+// `ok` covers a fresh image, an unchanged one and a server with nothing
+// to show yet -- either way the server was reached and the sleep interval
+// it returned is trustworthy. `unchanged` marks the last two, where the
+// panel was left alone.
 struct FetchResult
 {
   bool     ok           = false;
