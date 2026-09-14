@@ -12,11 +12,13 @@
 
     <% parts.each do |part| %>
       <% name = t("components.parts.#{item.kind}.#{part.key}") %>
+      <% hint = part_hint(item, part) %>
       <div class="mb-2">
         <div class="form-check mb-0">
           <%# The checkbox's hidden "0" partner is what turns a part off:
               a missing value falls back to the layout's default. %>
-          <%= toggles.checkbox part.key, checked: item.shows?(part.key, view:) %>
+          <%= toggles.checkbox part.key, checked: item.shows?(part.key, view:),
+                               aria: { describedby: (toggles.field_id(part.key, :hint) if hint) } %>
           <%= toggles.label part.key, name, class: "form-check-label" %>
         </div>
 
@@ -29,6 +31,10 @@
                              { selected: item.size_name(part.key, view:) },
                              { class: "form-select-sm w-auto" } %>
           </div>
+        <% end %>
+
+        <% if hint %>
+          <div id="<%= toggles.field_id(part.key, :hint) %>" class="form-text mt-1 ps-4"><%= hint %></div>
         <% end %>
       </div>
     <% end %>

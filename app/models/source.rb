@@ -54,6 +54,19 @@ class Source < ApplicationRecord
     dashboard_items.any?
   end
 
+  # Panels currently showing a dashboard that draws this source.
+  def showing_devices
+    Device.joins(dashboard: { dashboard_items: :dashboard_item_sources })
+          .where(dashboard_item_sources: { source_id: id })
+          .distinct
+  end
+
+  # Asks those panels for a new frame at their next check-in, as
+  # Dashboard#request_refresh! does for a tile change. Needs no job worker.
+  def request_refresh!
+    Device.where(id: showing_devices.select(:id)).update_all(refresh_requested_at: Time.current)
+  end
+
   def record_success(data)
     update!(payload: data, fetched_at: Time.current,
             attempted_at: Time.current, last_error: nil, failure_count: 0)

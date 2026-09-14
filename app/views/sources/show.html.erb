@@ -15,8 +15,10 @@
           <dt class="col-sm-4">Detail</dt>
           <dd class="col-sm-8 font-monospace small text-break"><%= @source.providable.detail || "—" %></dd>
 
-          <dt class="col-sm-4">Refreshes every</dt>
-          <dd class="col-sm-8"><%= distance_of_time_in_words(@source.refresh_seconds) %></dd>
+          <% if @source.providable_class.polls? %>
+            <dt class="col-sm-4">Refreshes every</dt>
+            <dd class="col-sm-8"><%= distance_of_time_in_words(@source.refresh_seconds) %></dd>
+          <% end %>
 
           <dt class="col-sm-4">Last fetch</dt>
           <dd class="col-sm-8"><%= relative_time_tag(@source.fetched_at) %></dd>

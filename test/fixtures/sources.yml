@@ -30,3 +30,15 @@ three:
   attempted_at:
   last_error:
   failure_count: 0
+
+# A note, on no dashboard.
+four:
+  name: Fridge note
+  providable: one (NoteProvider)
+  refresh_seconds: 86400
+  payload:
+    body: "**Groceries**\n- [ ] milk\n- [x] eggs"
+  fetched_at: 2026-09-05 20:01:01
+  attempted_at: 2026-09-05 20:01:01
+  last_error:
+  failure_count: 0

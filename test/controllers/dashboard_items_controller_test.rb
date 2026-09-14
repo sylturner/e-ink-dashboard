@@ -290,4 +290,20 @@ class DashboardItemsControllerTest < ActionDispatch::IntegrationTest
       }
     end
   end
+
+  test "a note's QR code part says what it needs until the server address is set" do
+    box  = "dashboard_item[settings][parts][formatted][qr_code]"
+    hint = "dashboard_item_settings_parts_formatted_qr_code_hint"
+
+    get edit_dashboard_item_url(@dashboard_item, kind: "note")
+
+    assert_select "input[type=checkbox][name=?][aria-describedby=?]", box, hint
+    assert_select ".form-text##{hint} a[href=?][data-turbo-frame=_top]", edit_settings_path, "Settings"
+
+    AppSetting.current.update!(server_url: "http://nas.local")
+    get edit_dashboard_item_url(@dashboard_item, kind: "note")
+
+    assert_select "input[type=checkbox][name=?]:not([aria-describedby])", box
+    assert_select "##{hint}", 0
+  end
 end

@@ -69,5 +69,37 @@ class AppSettingTest < ActiveSupport::TestCase
 
     @setting.update!(clock: "24h")
     assert @setting.frame_settings_changed?
+
+    @setting.update!(server_url: "http://nas.local")
+    assert @setting.frame_settings_changed?, "a note tile's QR code links to the server address"
+  end
+
+  test "the server address is stored bare, and a cleared one as nil" do
+    @setting.update!(server_url: " http://192.168.1.10:3000/ ")
+    assert_equal "http://192.168.1.10:3000", @setting.server_url
+
+    @setting.update!(server_url: "")
+    assert_nil @setting.server_url
+  end
+
+  test "the server address is a scheme, a host and a port, and nothing more" do
+    [ "192.168.1.10:3000", "nas.local", "ftp://nas.local", "http://", "http://nas.local/notes",
+      "http://nas.local?x=1", "http://me@nas.local", "http://nas local" ].each do |url|
+      @setting.server_url = url
+      assert_not @setting.valid?, "#{url.inspect} should be rejected"
+      assert_equal [ "must be a scheme, host and port, like http://192.168.1.10:3000" ], @setting.errors[:server_url]
+    end
+
+    [ "http://nas.local", "https://dashboard.example.com", "http://192.168.1.10:3000" ].each do |url|
+      @setting.server_url = url
+      assert @setting.valid?, "#{url.inspect} should be accepted"
+    end
+  end
+
+  test "url_options point routes at the server address" do
+    assert_nil @setting.url_options
+
+    @setting.server_url = "https://dashboard.example.com"
+    assert_equal({ protocol: "https", host: "dashboard.example.com", port: 443 }, @setting.url_options)
   end
 end

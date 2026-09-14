@@ -74,3 +74,6 @@ gem "icalendar", "~> 2.12"
 gem "icalendar-recurrence", "~> 1.2"
 
 gem "nokogiri", "~> 1.19"
+# Markdown for notes, and the QR code a note tile can draw.
+gem "commonmarker", "~> 2.10"
+gem "rqrcode", "~> 3.2"

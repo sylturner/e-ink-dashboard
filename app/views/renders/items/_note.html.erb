@@ -1,0 +1,9 @@
+<%# A note's Markdown, and optionally a QR code of its phone page. The QR
+    code needs the server address from Settings to link anywhere. %>
+<% note = item.sources.first&.providable %>
+<div class="note-tile">
+  <div class="note"><%= markdown(data["body"]) %></div>
+  <% if note && item.shows?("qr_code") && AppSetting.current.server_url? %>
+    <div class="note-qr"><%= note_qr_code(note, module_px: item.size_of("qr_code")) %></div>
+  <% end %>
+</div>

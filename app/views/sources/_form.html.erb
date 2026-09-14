@@ -15,13 +15,20 @@
             <%= f.invalid_feedback :name %>
           </div>
 
-          <div class="mb-3">
-            <%= f.label :refresh_seconds, "Refresh every (seconds)" %>
-            <%= f.number_field :refresh_seconds, min: 60, step: 60,
-                               aria: { describedby: f.field_id(:refresh_seconds, :hint) } %>
-            <%= f.invalid_feedback :refresh_seconds %>
-            <div id="<%= f.field_id(:refresh_seconds, :hint) %>" class="form-text">At least 60.</div>
-          </div>
+          <% if Source.provider_class(type).polls? %>
+            <div class="mb-3">
+              <%= f.label :refresh_seconds, "Refresh every (seconds)" %>
+              <%= f.number_field :refresh_seconds, min: 60, step: 60,
+                                 aria: { describedby: f.field_id(:refresh_seconds, :hint) } %>
+              <%= f.invalid_feedback :refresh_seconds %>
+              <div id="<%= f.field_id(:refresh_seconds, :hint) %>" class="form-text">At least 60.</div>
+            </div>
+          <% else %>
+            <%# Refreshed when it's edited, so there's no interval to offer.
+                The provider's default still goes with the form, rather than
+                the column's. %>
+            <%= f.hidden_field :refresh_seconds %>
+          <% end %>
 
           <fieldset class="border-top pt-3 mb-3">
             <legend class="fs-6 fw-semibold"><%= Source.provider_label(type) %></legend>

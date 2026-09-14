@@ -8,6 +8,11 @@ Rails.application.routes.draw do
     end
   end
 
+  # A note's phone page, opened from a panel's QR code or an NFC tag. A
+  # shorter link lands on it too.
+  resources :notes, only: %i[edit update]
+  get "notes/:id", to: redirect("/notes/%{id}/edit"), constraints: { id: /\d+/ }
+
   resources :dashboard_items do
     member do
       patch :reposition

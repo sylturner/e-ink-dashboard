@@ -166,4 +166,14 @@ class SourceTest < ActiveSupport::TestCase
     assert_match(/47\.6062, -122\.3321/, @weather.providable.detail)
     assert_equal "https://example.com/calendar.ics", ical_providers(:one).detail
   end
+
+  test "request_refresh! asks only the panels showing a dashboard that draws it" do
+    at = Time.utc(2026, 9, 13, 12)
+
+    travel_to(at) { @weather.request_refresh! } # on dashboard one, which devices(:one) shows
+
+    assert_equal [ devices(:one) ], @weather.showing_devices.to_a
+    assert_equal at, devices(:one).reload.refresh_requested_at
+    assert_not_equal at, devices(:two).reload.refresh_requested_at
+  end
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_13_200000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_13_220100) do
   create_table "app_settings", force: :cascade do |t|
     t.integer "active_from_hour", default: 6, null: false
     t.integer "active_until_hour", default: 23, null: false
@@ -18,6 +18,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_13_200000) do
     t.datetime "created_at", null: false
     t.integer "night_refresh_seconds", default: 3600, null: false
     t.integer "refresh_seconds", default: 900, null: false
+    t.string "server_url"
     t.string "time_zone", default: "Etc/UTC", null: false
     t.string "units", default: "imperial", null: false
     t.datetime "updated_at", null: false
@@ -127,6 +128,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_13_200000) do
     t.text "ics_data"
     t.string "ics_filename"
     t.boolean "include_all_day", default: true
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "note_providers", force: :cascade do |t|
+    t.text "body"
+    t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
 

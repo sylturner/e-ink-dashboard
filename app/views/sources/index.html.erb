@@ -37,9 +37,11 @@
               <td><%= source_health(source) %></td>
               <td class="text-nowrap"><%= pluralize(source.dashboard_items.size, "tile") %></td>
               <td class="text-nowrap text-end">
-                <%= button_to test_source_path(source), method: :post,
-                              class: "btn btn-sm btn-app-outline", form: { class: "d-inline-block" } do %>
-                  Test<span class="visually-hidden"> <%= source.name %></span>
+                <% if source.providable_class.polls? %>
+                  <%= button_to test_source_path(source), method: :post,
+                                class: "btn btn-sm btn-app-outline", form: { class: "d-inline-block" } do %>
+                    Test<span class="visually-hidden"> <%= source.name %></span>
+                  <% end %>
                 <% end %>
                 <%= button_to source, method: :delete,
                               class: "btn btn-sm btn-app-outline",

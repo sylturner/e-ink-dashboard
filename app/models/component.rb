@@ -165,6 +165,22 @@ class Component
       }
     },
 
+    "note" => {
+      label: "Note",
+      views: { "formatted" => "Formatted" },
+      source_types: %w[NoteProvider],
+      multi_source: false,
+      settings: [],
+      parts: {
+        # A QR code of the note's phone page. Its sizes are px per module
+        # rather than a glyph's edge: any whole number keeps every module on
+        # the pixel grid.
+        "formatted" => [
+          Part.new(key: "qr_code", default: false, sizes: { "small" => 2, "medium" => 3, "large" => 4 })
+        ]
+      }
+    },
+
     "text" => {
       label: "Text",
       views: { "plain" => "Plain text" },

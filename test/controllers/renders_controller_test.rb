@@ -334,4 +334,39 @@ class RendersControllerTest < ActionDispatch::IntegrationTest
     assert_select ".hour .t-sm", text: "69°", count: 0
     assert_select ".hour .t-xs", "20%"
   end
+
+  # A note beside the calendar on the office dashboard.
+  def render_note(settings = {})
+    @dashboard.dashboard_items.create!(kind: "note", col: 7, row: 1, col_span: 6, row_span: 4,
+                                       sources: [ sources(:four) ], settings:)
+    render_view("today")
+  end
+
+  QR_CODE_ON = { "parts" => { "formatted" => { "qr_code" => "1" } } }.freeze
+
+  test "a note tile draws its Markdown, and no QR code to start with" do
+    render_note
+
+    assert_select ".note p strong", "Groceries"
+    assert_select ".note li input[type=checkbox]", 2
+    assert_select ".note li input[type=checkbox][checked]", 1
+    assert_select ".note-qr", 0
+  end
+
+  test "a note tile's QR code is drawn at the server address, at its size" do
+    AppSetting.current.update!(server_url: "http://192.168.1.10:3000")
+
+    render_note(QR_CODE_ON.merge("sizes" => { "formatted" => { "qr_code" => "small" } }))
+
+    url  = "http://192.168.1.10:3000/notes/#{sources(:four).providable_id}/edit"
+    edge = (RQRCode::QRCode.new(url, level: :m).modules.size + 8) * 2
+    assert_select ".note-tile > .note-qr svg[width=?]", edge.to_s
+  end
+
+  test "a note tile draws no QR code until there's a server address" do
+    render_note(QR_CODE_ON)
+
+    assert_select ".note p strong", "Groceries"
+    assert_select ".note-qr", 0
+  end
 end

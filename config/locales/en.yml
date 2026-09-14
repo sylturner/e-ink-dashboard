@@ -28,6 +28,16 @@
 #       enabled: "ON"
 
 en:
+  activerecord:
+    attributes:
+      app_setting:
+        server_url: "Server address"
+    errors:
+      models:
+        app_setting:
+          attributes:
+            server_url:
+              not_an_address: "must be a scheme, host and port, like http://192.168.1.10:3000"
   app:
     name: "E Ink Dashboard"
     # Shown in place of the name when the sidebar is narrowed.
@@ -56,6 +66,8 @@ en:
         time: "Time"
       news:
         source: "Feed name"
+      note:
+        qr_code: "QR code to edit"
       weather:
         condition: "Condition"
         feels_like: "Feels like"
@@ -65,10 +77,55 @@ en:
         precip: "Chance of rain"
         sun: "Sunrise and sunset"
         temperature: "Temperature"
+    # Under a part in the inspector, while it can't draw
+    # (DashboardItemsHelper#part_hint).
+    part_hints:
+      note:
+        qr_code_html: "Needs the server address, set in %{settings}."
   devices:
     # Beside links to a panel's live frame URL: the builder's device list
     # and the device page.
     live_bitmap_hint: "Opening the live bitmap renders a fresh frame if one is due, and counts as a check-in for the panel."
+  # A note's phone page (NotesController) and its source form.
+  notes:
+    body: "Note"
+    hint: "Markdown works. Up to %{max} characters."
+    save: "Save note"
+    saved: "Note saved. Panels showing it pick it up at their next check-in."
+    last_edited: "Last edited"
+    phone_link: "Phone link"
+    phone_link_hint: "Open it on a phone, or write it to an NFC tag. A note tile can also draw it as a QR code."
+    needs_server_address_html: "Set the server address in %{settings} so it works from a phone."
+    open_phone_page: "Open phone page"
+    qr_code_label: "QR code to edit this note"
+    settings: "Settings"
+    formatting:
+      summary: "Formatting help"
+      type: "Type"
+      result: "To get"
+      examples:
+        - type: "# Heading"
+          result: "a large heading"
+        - type: "## Heading"
+          result: "a smaller heading"
+        - type: "**bold**"
+          result: "bold"
+        - type: "*emphasis*"
+          result: "underlined on the panel"
+        - type: "~~done~~"
+          result: "struck through"
+        - type: "- item"
+          result: "a bulleted list"
+        - type: "1. item"
+          result: "a numbered list"
+        - type: "- [ ] to do"
+          result: "an empty checkbox"
+        - type: "- [x] done"
+          result: "a checked box"
+        - type: "> quote"
+          result: "an indented quote"
+        - type: "---"
+          result: "a line across"
   # Text drawn on a panel.
   renders:
     weather:

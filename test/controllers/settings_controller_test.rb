@@ -69,4 +69,31 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
 
     assert_equal 0, Device.where.not(refresh_requested_at: nil).count
   end
+
+  test "the server address is labeled and explained" do
+    get edit_settings_url
+
+    assert_select "label[for=app_setting_server_url]", "Server address"
+    assert_select "input[type=url][name=?][aria-describedby=app_setting_server_url_hint]", "app_setting[server_url]"
+    assert_select ".form-text#app_setting_server_url_hint", /QR code/
+  end
+
+  test "a new server address asks claimed panels for a new frame" do
+    Device.update_all(refresh_requested_at: nil)
+
+    patch settings_url, params: { app_setting: { server_url: "http://192.168.1.10:3000/" } }
+
+    assert_redirected_to edit_settings_url
+    assert_equal "http://192.168.1.10:3000", @setting.reload.server_url
+    assert Device.claimed.all? { it.refresh_requested_at.present? }
+  end
+
+  test "a server address with a path is refused" do
+    patch settings_url, params: { app_setting: { server_url: "http://nas.local/notes" } }
+
+    assert_response :unprocessable_content
+    assert_select ".app-settings ul.errors li", "Server address must be a scheme, host and port, like http://192.168.1.10:3000"
+    assert_select "input.is-invalid[name=?]", "app_setting[server_url]"
+    assert_nil @setting.reload.server_url
+  end
 end
