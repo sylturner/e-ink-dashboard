@@ -369,4 +369,28 @@ class RendersControllerTest < ActionDispatch::IntegrationTest
     assert_select ".note p strong", "Groceries"
     assert_select ".note-qr", 0
   end
+
+  def news_source(name, items)
+    Source.create!(name: name, refresh_seconds: 1800, fetched_at: NOW,
+                   providable: RssProvider.new(feed_url: "https://example.com/#{name.parameterize}.xml"),
+                   payload: { "items" => items })
+  end
+
+  test "a news tile merges its feeds, newest first" do
+    item = dashboards(:one).dashboard_items.create!(kind: "news", view: "headlines", col: 5, row: 1,
+                                                    col_span: 4, row_span: 4,
+                                                    settings: { "event_limit" => "3" })
+    item.sources << news_source("World", [
+      { "title" => "World newest", "published_at" => "2026-09-06T12:00:00Z", "source" => "World" },
+      { "title" => "World oldest", "published_at" => "2026-09-04T12:00:00Z", "source" => "World" }
+    ])
+    item.sources << news_source("Local", [
+      { "title" => "Local middle", "published_at" => "2026-09-05T12:00:00Z", "source" => "Local" }
+    ])
+
+    render_dashboard(item.dashboard)
+
+    assert_equal [ "World newest", "Local middle", "World oldest" ],
+                 css_select(".feed li .t-clip").map { it.text.strip }
+  end
 end

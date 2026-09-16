@@ -1,6 +1,10 @@
 <%
   limit = item.setting("event_limit").to_i
-  entries = (data["items"] || []).first(limit)
+  entries = NewsFeed.for(item)
+  # A feed can mix items with and without pictures; the images layout
+  # skips the ones it has nothing to draw for.
+  entries = entries.select { it["image"].present? } if item.view == "images"
+  entries = entries.first(limit)
 %>
 <div class="feed">
   <% case item.view %>

@@ -3,10 +3,11 @@ class RssProvider < ApplicationRecord
 
   provides label:           "RSS feed",
            icon:            "cil-rss",
-           description:     "Headlines and images from an RSS or Atom feed.",
+           description:     "Headlines and images from an RSS, Atom, JSON or podcast feed.",
            attributes:      %i[feed_url max_items],
            refresh_seconds: 1800
 
+  before_validation :normalize_feed_url
   validates :feed_url, presence: true, format: { with: %r{\Ahttps?://\S+\z} }
 
   def self.defaults
@@ -17,59 +18,19 @@ class RssProvider < ApplicationRecord
     feed_url.to_s.truncate(50)
   end
 
+  # Any feed format works (see Feed), and so does the address of a page
+  # that links to its feed.
   def fetch!
-    feed = Feedjira.parse(Http.get(feed_url), parser: Feedjira::Parser::RSS)
-    raise Http::Error, "could not parse feed" if feed.nil?
+    feed = Feed.fetch(feed_url)
 
-    items = feed.entries.first(max_items || 10).map do |entry|
-      {
-        "title"        => clean(entry.title),
-        "url"          => entry.url,
-        "published_at" => entry.published&.iso8601,
-        "image"        => extract_image_from_entry(entry),
-        "source"       => feed.title
-      }
-    end
-
-    { "items" => items }
+    { "title" => feed.title, "image" => feed.image, "items" => feed.items(limit: max_items || 10) }
   end
 
   private
 
-  # Feed titles carry entities and stray markup often enough to matter,
-  # and a stray tag renders as literal text on the panel.
-  def clean(text)
-    return "" if text.blank?
-
-    ActionView::Base.full_sanitizer.sanitize(text)
-                    .then { |s| CGI.unescapeHTML(s.to_s) }
-                    .gsub(/\s+/, " ")
-                    .strip
-  end
-
-  def extract_image_from_entry(entry)
-    # 1. Feedjira native media attributes (<media:content>, <media:thumbnail>)
-    return entry.image if entry.respond_to?(:image) && entry.image
-    return entry.media_url if entry.respond_to?(:media_url) && entry.media_url
-    return entry.thumbnail_url if entry.respond_to?(:thumbnail_url) && entry.thumbnail_url
-
-    # 2. RSS <enclosure>
-    if entry.respond_to?(:enclosure_url) && entry.enclosure_type&.start_with?('image')
-      return entry.enclosure_url
+    # feed:// and feed:https:// are how browsers hand a feed to a reader,
+    # and what a copied subscribe link often carries.
+    def normalize_feed_url
+      self.feed_url = feed_url.to_s.strip.sub(%r{\Afeed:(//)?(?=https?://)}i, "").sub(%r{\Afeed://}i, "https://")
     end
-
-    # 3. Fallback: Parse <img> tags embedded inside HTML content/summary
-    html_body = entry.content || entry.summary
-    return nil unless html_body
-
-    doc = Nokogiri::HTML::DocumentFragment.parse(html_body)
-    img_sources = doc.css('img').map { |img| img['src'] }.compact
-
-    # Filter out tracking pixels / transparent GIFs
-    img_sources.find do |src|
-      !src.include?('tracking') &&
-	!src.include?('pixel') &&
-	!src.match?(/\.gif$/i)
-    end
-  end
 end
