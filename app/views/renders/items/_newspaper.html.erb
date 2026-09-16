@@ -1,12 +1,13 @@
 <%
+  style   = NewspaperStyle.for(item)
   weather = item.sources.find { it.providable_type == "WeatherProvider" }&.payload || {}
   current = weather["current"]
   today   = Array(weather["daily"]).first
   photos  = item.shows?("photos")
 
-  # The lead is the newest story with a photo. The left column opens with
-  # the next story that has one, the right with a big headline from
-  # another source, and briefs follow in both, the sources taking turns.
+  # The lead is the newest story with a photo. The next story with one
+  # opens a column, a big headline from another source follows or opens
+  # the other, and briefs fill the rest, the sources taking turns.
   stories = NewsFeed.for(item)
   lead    = stories.find { it["image"].present? } || stories.first
   rest    = stories - [ lead ]
@@ -14,96 +15,100 @@
   rest   -= [ second ]
   third   = rest.find { it["source_name"] != lead&.dig("source_name") } || rest.first
   briefs  = NewsFeed.by_turns(rest - [ third ]).first(item.setting("story_count").to_i)
-  left, right = briefs.partition.with_index { |_, index| index.even? }
 
   # Everything on the tile's calendars under way or starting within its
   # hours ahead.
   events = if item.shows?("events")
     EventFeed.between(EventFeed.for(item, zone: now.time_zone), now, now + item.setting("event_hours").to_i.hours)
-             .first(NewspaperLayout::EVENT_LIMIT)
+             .first(NewspaperStyle::EVENT_LIMIT)
+  end
+
+  story = ->(entry, slot, photo:, summary:, kicker: false) do
+    render "renders/items/newspaper/story", item:, now:, story: entry, sizes: style.ladder(slot),
+           photo:, summary:, kicker: (t("renders.newspaper.styles.#{style.key}.kicker", default: "") if kicker && style.kicker?),
+           letters: (style.letters unless slot == :lead)
+  end
+  id    = "paper-#{item.id}"
+  motto = item.setting("motto").presence || t("renders.newspaper.styles.#{style.key}.motto")
+
+  # A strip running up the side of the page: the motto, or its bits.
+  strip = capture do
+    case style.strip
+    when "motto"  then tag.div(Array.new(4, motto).join(" * "), class: "paper-strip")
+    when "binary" then tag.div(Array.new(4, motto.unpack1("B*").scan(/.{8}/).join(" ")).join(" * "),
+                               class: "paper-strip paper-strip--binary")
+    end
   end
 %>
-<div class="paper">
-  <header class="paper-masthead">
-    <div class="paper-ear">
-      <% if item.shows?("weather") && current %>
-        <div class="paper-weather">
-          <%= weather_icon(current["icon"], size: 32) %>
-          <div class="paper-temp"><%= current["temp"] %>&deg;</div>
-        </div>
-        <div class="paper-small"><%= current["label"] %></div>
-        <% if today %>
-          <div class="paper-small"><%= t("renders.newspaper.high_low", high: today["high"], low: today["low"]) %></div>
-        <% end %>
-      <% end %>
-    </div>
+<%= tag.div id:, class: [ "paper", "paper--#{style.key}", ("paper--caps" if style.caps?) ] do %>
+  <%# Only the fonts this paper uses, and the sizes it can set them at. %>
+  <style><%= raw style.css(id) %></style>
 
-    <%= tag.div item.setting("name"), class: "paper-name hl-#{NewspaperLayout::NAME_SIZES.first}", data: { sizes: NewspaperLayout::NAME_SIZES.join(" ") } %>
+  <%= render "renders/items/newspaper/masthead", item:, now:, style:, current:, today: %>
 
-    <div class="paper-ear paper-ear--right">
-      <div class="paper-small"><%= t("renders.newspaper.edition", time: panel_time(now, :time)) %></div>
-      <div class="paper-small"><%= t("renders.newspaper.number", day: now.yday) %></div>
+  <% if style.flag? %>
+    <div class="paper-flag">
+      <div class="paper-canton"><% 4.times do %><%= pixel_art(:star) %><% end %></div>
+      <div class="paper-stripes"></div>
     </div>
-  </header>
+  <% end %>
+
+  <% if style.flourish? %>
+    <div class="paper-flourish"><%= pixel_art(:sparkle) %><%= pixel_art(:sparkle) %><%= pixel_art(:sparkle) %></div>
+  <% end %>
 
   <% if item.shows?("dateline") %>
     <div class="paper-dateline">
       <span><%= panel_date(now, :long) %></span>
-      <span><%= item.setting("motto") %></span>
+      <span><%= motto %></span>
     </div>
   <% end %>
 
-  <div class="paper-page">
-    <div class="paper-column" data-fit>
-      <% if second %>
-        <%= render "renders/items/newspaper/story", item:, now:, story: second, sizes: NewspaperLayout::FEATURE_SIZES,
-                   photo: (:top if photos), summary: 4 %>
-      <% end %>
-      <% left.each_with_index do |story, index| %>
-        <%= render "renders/items/newspaper/story", item:, now:, story:, sizes: NewspaperLayout::BRIEF_SIZES,
-                   photo: (:thumb if photos && index.odd?), summary: 2 %>
-      <% end %>
-    </div>
+  <% if style.layout == "tabloid" %>
+    <div class="paper-page paper-page--tabloid">
+      <%= strip %>
+      <div class="paper-lead" data-fit>
+        <%= story.(lead, :lead, photo: :fill, summary: 3, kicker: true) if lead %>
+      </div>
 
-    <div class="paper-lead" data-fit>
-      <% if lead %>
-        <%= render "renders/items/newspaper/story", item:, now:, story: lead, sizes: NewspaperLayout::LEAD_SIZES,
-                   photo: :fill, summary: 3 %>
-      <% end %>
+      <div class="paper-column" data-fit>
+        <%= render "renders/items/newspaper/events", item:, now:, style:, events: %>
+        <%= story.(second, :big, photo: (:top if photos), summary: 3) if second %>
+        <%= story.(third, :feature, photo: nil, summary: 2) if third %>
+        <% briefs.each_with_index do |entry, index| %>
+          <%= story.(entry, :brief, photo: (:thumb if photos && index.odd?), summary: 0) %>
+        <% end %>
+      </div>
     </div>
+  <% else %>
+    <% left, right = briefs.partition.with_index { |_, index| index.even? } %>
+    <div class="paper-page">
+      <%= strip %>
+      <div class="paper-column" data-fit>
+        <%= story.(second, :feature, photo: (:top if photos), summary: 4) if second %>
+        <% left.each_with_index do |entry, index| %>
+          <%= story.(entry, :brief, photo: (:thumb if photos && index.odd?), summary: 2) %>
+        <% end %>
+      </div>
 
-    <div class="paper-column" data-fit>
-      <% if events.present? %>
-        <section class="paper-events">
-          <div class="paper-events-title"><%= t("renders.newspaper.upcoming") %></div>
-          <% events.each do |event| %>
-            <div class="paper-event">
-              <div class="paper-byline"><%= newspaper_event_when(event, now) %></div>
-              <div class="paper-event-title">
-                <% if item.sources.count { it.providable_type == "IcalProvider" } > 1 && event.tag.present? %>
-                  <span class="tag"><%= event.tag %></span>
-                <% end %>
-                <%= event.title %>
-              </div>
-            </div>
-          <% end %>
-        </section>
-      <% end %>
-      <% if third %>
-        <%= render "renders/items/newspaper/story", item:, now:, story: third, sizes: NewspaperLayout::BIG_SIZES,
-                   photo: nil, summary: 6 %>
-      <% end %>
-      <% right.each_with_index do |story, index| %>
-        <%= render "renders/items/newspaper/story", item:, now:, story:, sizes: NewspaperLayout::BRIEF_SIZES,
-                   photo: (:thumb if photos && index.even?), summary: 0 %>
-      <% end %>
+      <div class="paper-lead" data-fit>
+        <%= story.(lead, :lead, photo: :fill, summary: 3, kicker: true) if lead %>
+      </div>
+
+      <div class="paper-column" data-fit>
+        <%= render "renders/items/newspaper/events", item:, now:, style:, events: %>
+        <%= story.(third, :big, photo: nil, summary: 6) if third %>
+        <% right.each_with_index do |entry, index| %>
+          <%= story.(entry, :brief, photo: (:thumb if photos && index.even?), summary: 0) %>
+        <% end %>
+      </div>
     </div>
-  </div>
+  <% end %>
 
   <%# Sets the page once its fonts have loaded (BrowserPool waits for them
       too, and photos have fixed sizes, so the capture sees the result).
       Headlines are never cut off: a box's first story steps its headline
-      down its sizes until it fits, giving up its summary and photo only
+      down its sizes until it fits, in height and with no word too wide, giving up its summary and photo only
       at the smallest; an events box then gives up its latest events; and
       the stories after them are kept while they fit.
       The gaps left at the foot of the columns then take the stories that
@@ -156,7 +161,8 @@
           others.forEach((story) => story.remove())
 
           if (first) {
-            while (tall(box) && shrink(first.querySelector(".paper-headline"))) {}
+            const headline = first.querySelector(".paper-headline")
+            while ((tall(box) || wide(headline)) && shrink(headline)) {}
             for (const part of [".paper-summary", ".paper-photo"]) {
               if (tall(box)) first.querySelector(part)?.remove()
             }
@@ -180,4 +186,4 @@
       document.fonts.ready.then(fit)
     })()
   <% end %>
-</div>
+<% end %>

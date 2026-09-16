@@ -1,0 +1,29 @@
+<%# locals: (item:, now:, style:, current:, today:) %>
+<header class="paper-masthead">
+  <div class="paper-ear">
+    <% if item.shows?("weather") && current %>
+      <div class="paper-weather">
+        <%= weather_icon(current["icon"], size: 32) %>
+        <div class="paper-temp"><%= current["temp"] %>&deg;</div>
+      </div>
+      <div class="paper-small"><%= current["label"] %></div>
+      <% if today %>
+        <div class="paper-small"><%= t("renders.newspaper.high_low", high: today["high"], low: today["low"]) %></div>
+      <% end %>
+    <% end %>
+  </div>
+
+  <% sizes = style.ladder(:name) %>
+  <%= tag.div class: [ "paper-name", "hl-#{sizes.first}" ], data: { sizes: sizes.join(" ") } do %>
+    <% if style.ransom? %>
+      <%= ransom_letters(item.setting("name")) %>
+    <% else %>
+      <%= item.setting("name") %>
+    <% end %>
+  <% end %>
+
+  <div class="paper-ear paper-ear--right">
+    <div class="paper-small"><%= t("renders.newspaper.edition", time: panel_time(now, :time)) %></div>
+    <div class="paper-small"><%= t("renders.newspaper.number", day: now.yday) %></div>
+  </div>
+</header>

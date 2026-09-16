@@ -421,7 +421,7 @@ class RendersControllerTest < ActionDispatch::IntegrationTest
     render_newspaper
 
     assert_select ".card--newspaper .paper-masthead" do
-      assert_select ".paper-name.hl-63[data-sizes=?]", "63 43 21", "The Daily Test"
+      assert_select ".paper-name.hl-jacquard12-63[data-sizes=?]", "jacquard12-63 jacquard24-43 jacquard12-42 jacquard12-21", "The Daily Test"
       assert_select ".paper-weather .paper-temp", "72°"
       assert_select ".paper-ear .paper-small", "H 75° · L 60°"
       assert_select ".paper-ear--right .paper-small", "6:00 AM edition" # the panel is in Los Angeles
@@ -434,7 +434,7 @@ class RendersControllerTest < ActionDispatch::IntegrationTest
     render_newspaper
 
     assert_select ".paper-lead .paper-story--fill" do
-      assert_select ".paper-headline.hl-54[data-sizes=?]", "54 41 34 27", "World lead"
+      assert_select ".paper-headline.hl-jersey15-54[data-sizes=?]", "jersey15-54 jersey25-41 jersey20-34 jersey15-27", "World lead"
       assert_select "img.paper-photo[src=?]", "https://img.example.com/lead.jpg"
       assert_select ".paper-byline", "World · 1h"
       assert_select ".paper-summary.t-clip-3", "What the lead is about"
@@ -445,7 +445,7 @@ class RendersControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ "World second", "World brief", "World brief 2" ], column_headlines(0)
     assert_equal [ "Local big", "Local brief" ], column_headlines(1)
     assert_select ".paper-column .paper-story--top img.paper-photo[src=?]", "https://img.example.com/second.jpg"
-    assert_select ".paper-column .paper-headline.hl-41", "Local big"
+    assert_select ".paper-column .paper-headline.hl-jersey25-41", "Local big"
     assert_select ".paper-column img.paper-thumb", 2 # some briefs, not all
     assert_select ".paper-column .paper-summary.t-clip-6", "A long story"
     assert_select ".paper-headline.t-clip", 0, "a headline is never clipped"
@@ -471,8 +471,87 @@ class RendersControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "a newspaper embeds only the fonts its style uses, and draws in its own" do
+    render_newspaper
+
+    assert_select ".paper--broadsheet style", /np-jacquard12/
+    assert_select ".paper--broadsheet style", text: /np-home_video/, count: 0
+    assert_select ".paper--caps, .paper-kicker, .paper-flag", 0
+  end
+
+  test "a tabloid runs its lead across two columns, under a kicker, in capitals" do
+    render_newspaper { |paper| paper.update!(view: "tabloid") }
+
+    assert_select ".paper--tabloid.paper--caps .paper-page--tabloid" do
+      assert_select "> .paper-lead .paper-kicker", "Exclusive!"
+      assert_select "> .paper-lead .paper-headline.hl-jersey25-82", "World lead"
+      assert_select "> .paper-column", 1
+    end
+    assert_select ".paper-dateline", /Shocking but true!/
+    assert_select ".paper--tabloid style", text: /np-jacquard/, count: 0
+  end
+
+  test "a zine cuts its name out of mixed letters, in fonts the page already has" do
+    render_newspaper("name" => "Zine") { |paper| paper.update!(view: "zine") }
+
+    assert_select ".paper--zine .paper-name.hl-ransom-lg" do
+      assert_equal "Zine", css_select(".ransom").map(&:text).join
+      assert_select ".ransom--inverted, .ransom--boxed, .ransom--plain", 4
+    end
+    assert_select ".paper--zine style", text: /np-press_start/, count: 0
+    assert_select ".paper--zine style", /\.hl-ransom-lg \.ransom-2 \{ font: 400 40px\/42px "PressStart2P"/
+  end
+
+  test "a patriotic paper flies a flag of pixel stars" do
+    render_newspaper { |paper| paper.update!(view: "patriot") }
+
+    assert_select ".paper--patriot .paper-flag .paper-canton svg.pixel-art--star", 4
+    assert_select ".paper-kicker", "Breaking news"
+    assert_select ".paper-events-title", 0 # no calendar
+  end
+
+  test "a wizarding gazette stretches its name and lead, and sets them at half size to fit" do
+    render_newspaper { |paper| paper.update!(view: "wizard") }
+
+    assert_select ".paper--wizard" do
+      assert_select ".paper-name.hl-jacquarda_bastarda-26[data-sizes=?]", "jacquarda_bastarda-26 jacquarda_bastarda-13"
+      assert_select ".paper-flourish svg.pixel-art--sparkle", 3
+      assert_select ".paper-lead .paper-kicker", "Special edition"
+      assert_select ".paper-lead .paper-headline[data-sizes=?]", "jacquard24-43 jacquard12-42 jacquard12-21"
+    end
+    assert_select ".paper-dateline", /Mischief, marvels and the morning news/
+    assert_select ".paper-page > .paper-strip", /\AMischief, marvels and the morning news \* /
+    assert_select ".paper-column .paper-headline .shift-word .shift.shift-wave-0", minimum: 1
+    assert_select ".paper-lead .paper-headline .shift", 0, "the lead is stretched, not waved"
+  end
+
+  test "a 90s hacker paper glitches its headlines and spells its motto in binary" do
+    render_newspaper("motto" => "Hi") { |paper| paper.update!(view: "hacker") }
+
+    assert_select ".paper--hacker" do
+      assert_select ".paper-page > .paper-strip.paper-strip--binary", /\A01001000 01101001 \* /
+      assert_select ".paper-column .paper-headline .shift.shift-glitch-3", minimum: 1
+      assert_select ".paper-lead .paper-kicker", "Access granted"
+      assert_select "style", /\.shift-glitch-3 \{ transform: translate\(3px, 0px\); \}/
+      css_select(".paper-column .paper-headline").each do |headline|
+        assert_equal [ headline.css(".shift").first ], headline.css(".shift--inverted").to_a, "only the first letter is inverted"
+      end
+    end
+  end
+
+  test "a custom paper takes its fonts and arrangement from its settings" do
+    render_newspaper("layout" => "tabloid", "caps" => "1", "headline_font" => "press_start",
+                     "masthead_font" => "ransom", "text_font" => "Kernel") { |paper| paper.update!(view: "custom") }
+
+    assert_select ".paper--custom.paper--caps .paper-page--tabloid"
+    assert_select ".paper-name.hl-ransom-lg .ransom", 12
+    assert_select ".paper-lead .paper-headline.hl-press_start-56"
+    assert_select ".paper--custom style", /#paper-\d+ \{ font: 400 12px\/14px "np-pixantiqua"/ # an unknown font falls back
+    assert_select ".paper-kicker", 0
+  end
+
   test "a newspaper's parts can each be hidden" do
-    render_newspaper("parts" => { "front_page" => { "weather" => "0", "dateline" => "0", "photos" => "0", "events" => "0",
+    render_newspaper("parts" => { "broadsheet" => { "weather" => "0", "dateline" => "0", "photos" => "0", "events" => "0",
                                                     "bylines" => "0", "summaries" => "0" } }) do |paper|
       paper.sources << sources(:two)
     end

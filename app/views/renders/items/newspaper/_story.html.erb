@@ -1,15 +1,22 @@
-<%# locals: (item:, now:, story:, sizes:, photo:, summary:) %>
-<%# A newspaper story. `sizes` are the headline's px sizes, largest first,
-    for the page's fitting script to step down; `photo` is :fill (the
-    lead's, taking the height left), :top, :thumb or nil; `summary` is
-    how many lines of it to print. %>
+<%# locals: (item:, now:, story:, sizes:, photo:, summary:, kicker: nil, letters: nil) %>
+<%# A newspaper story. `sizes` are the headline's steps (NewspaperStyle
+    #ladder), largest first, for the page's fitting script to step down;
+    `photo` is :fill (the lead's, taking the height left), :top, :thumb or
+    nil; `summary` is how many lines of it to print; `kicker` is a label
+    over the headline ("Exclusive"); `letters` shifts the headline's
+    letters in a pattern (NewsHelper#shifted_letters). %>
 <% photo = nil if story["image"].blank? %>
 <%= tag.article class: [ "paper-story", ("paper-story--#{photo}" if photo) ] do %>
   <% if photo == :thumb %>
     <%= image_tag story["image"], class: "paper-thumb", alt: "" %>
   <% end %>
 
-  <%= tag.div story["title"], class: [ "paper-headline", "hl-#{sizes.first}" ], data: { sizes: sizes.join(" ") } %>
+  <% if kicker.present? %>
+    <div class="paper-kicker"><%= kicker %></div>
+  <% end %>
+
+  <%= tag.div (letters ? shifted_letters(story["title"], letters) : story["title"]),
+              class: [ "paper-headline", "hl-#{sizes.first}" ], data: { sizes: sizes.join(" ") } %>
 
   <% if photo.in?([ :top, :fill ]) %>
     <%= image_tag story["image"], class: "paper-photo", alt: "" %>

@@ -23,4 +23,35 @@ class NewsHelperTest < ActionView::TestCase
     assert_equal "Friday · 9:00 AM", newspaper_event_when(event(NOW + 45.hours), NOW)
     assert_equal "Today · All day", newspaper_event_when(event((NOW - 1.day).beginning_of_day, all_day: true), NOW), "a two-day event under way"
   end
+
+  test "cut-out letters keep the name, each in a treatment" do
+    letters = Nokogiri::HTML.fragment(ransom_letters("Zine Z"))
+
+    assert_equal "Zine Z", letters.text
+    assert_equal 5, letters.css(".ransom").size
+    assert_equal 1, letters.css(".ransom-space").size
+    assert_equal ransom_letters("Zine Z"), ransom_letters("Zine Z"), "the same name always cuts out the same"
+  end
+
+  test "pixel art is drawn in whole-pixel rects" do
+    star = Nokogiri::HTML.fragment(pixel_art(:star)).at_css("svg")
+
+    assert_equal "crispEdges", star["shape-rendering"]
+    assert star.css("rect").all? { |rect| %w[x y width height].all? { rect[it].match?(/\A\d+\z/) } }
+  end
+
+  test "shifted letters keep a headline's words whole, and count on across them" do
+    letters = Nokogiri::HTML.fragment(shifted_letters("Big news", "wave"))
+
+    assert_equal "Big news", letters.text
+    assert_equal %w[Big news], letters.css(".shift-word").map(&:text)
+    assert_equal "shift shift-wave-3", letters.css(".shift")[3]["class"], "the wave carries on into the second word"
+    assert_empty letters.css(".shift--inverted"), "a wave inverts nothing"
+  end
+
+  test "a pattern that inverts letters inverts only the headline's first" do
+    letters = Nokogiri::HTML.fragment(shifted_letters("Glitch in the matrix, glitch again", "glitch"))
+
+    assert_equal [ "G" ], letters.css(".shift--inverted").map(&:text)
+  end
 end

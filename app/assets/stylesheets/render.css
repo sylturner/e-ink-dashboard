@@ -38,96 +38,6 @@
   font-display: block;
 }
 
-/* The newspaper's pixel faces (licenses in app/assets/fonts/licenses).
-   Each is crisp only at a whole multiple of its grid, noted beside it. */
-@font-face {
-  font-family: "Jacquard 12"; /* 21px */
-  src: url("Jacquard12-Regular.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: block;
-}
-
-@font-face {
-  font-family: "Jacquard 24"; /* 43px */
-  src: url("Jacquard24-Regular.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: block;
-}
-
-@font-face {
-  font-family: "Jersey 15"; /* 27px */
-  src: url("Jersey15-Regular.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: block;
-}
-
-@font-face {
-  font-family: "Jersey 20"; /* 34px */
-  src: url("Jersey20-Regular.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: block;
-}
-
-@font-face {
-  font-family: "Jersey 25"; /* 41px */
-  src: url("Jersey25-Regular.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: block;
-}
-
-@font-face {
-  font-family: "Pixel Operator"; /* 16px */
-  src: url("PixelOperator.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: block;
-}
-
-@font-face {
-  font-family: "Pixel Operator"; /* 16px */
-  src: url("PixelOperator-Bold.woff2") format("woff2");
-  font-weight: 700;
-  font-style: normal;
-  font-display: block;
-}
-
-@font-face {
-  font-family: "Bitrimus"; /* 16px */
-  src: url("Bitrimus.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: block;
-}
-
-@font-face {
-  font-family: "PixAntiqua"; /* 12px */
-  src: url("PixAntiqua.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: block;
-}
-
-@font-face {
-  font-family: "Pixeloid Sans"; /* 9px */
-  src: url("PixeloidSans.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: block;
-}
-
-@font-face {
-  font-family: "Pixeloid Sans"; /* 9px */
-  src: url("PixeloidSans-Bold.woff2") format("woff2");
-  font-weight: 700;
-  font-style: normal;
-  font-display: block;
-}
-
 @font-face {
   font-family: "VHS VCR OSD";
   src: url("vhs-vcr-osd.ttf") format("truetype");
@@ -731,9 +641,10 @@ body {
    Newspaper: a front page filling the panel
    ============================================================
 
-   Every face here is a pixel font, set only at a whole multiple of its
-   grid (see its @font-face) with whole-pixel line heights and letter
-   spacing, so each glyph lands on the panel's pixels. */
+   Its fonts and headline sizes come from the paper's style
+   (NewspaperStyle#css, in a <style> in the tile): pixel faces set only at
+   whole multiples of their grids, so every glyph lands on the panel's
+   pixels. Keep sizes, spacing and borders here in whole pixels too. */
 
 .card--newspaper { border: none; }
 .card--newspaper .card-body { padding: 0 var(--pad-tight); }
@@ -742,24 +653,21 @@ body {
   display: flex;
   flex-direction: column;
   height: 100%;
-  font-family: "PixAntiqua", serif;
-  font-size: 12px;
-  line-height: 14px;
 }
 
-/* Labels, datelines and bylines: small capitals */
+/* Labels, datelines and bylines */
 .paper-small,
 .paper-dateline,
 .paper-byline,
-.paper-events-title {
-  font-family: "Pixeloid Sans", sans-serif;
-  font-size: 9px;
-  line-height: 11px;
+.paper-events-title,
+.paper-kicker {
   text-transform: uppercase;
   letter-spacing: 1px;
   white-space: nowrap;
   overflow: hidden;
 }
+
+.paper--caps .paper-headline { text-transform: uppercase; }
 
 /* The name centered between two boxed ears of equal width */
 .paper-masthead {
@@ -787,14 +695,11 @@ body {
   align-items: center;
   gap: var(--pad-tight);
 }
-.paper-temp {
-  font-family: "Jersey 20", sans-serif;
-  font-size: 34px;
-  line-height: 34px;
-}
 
-/* Sized by the page's fitting script, from .hl-63 down */
+/* Stepped down by the page's fitting script until it fits */
 .paper-name {
+  justify-self: center;
+  max-width: 100%;
   text-align: center;
   white-space: nowrap;
   overflow: hidden;
@@ -836,6 +741,13 @@ body {
   border-right: var(--rule) solid var(--ink);
 }
 
+/* A tabloid: the lead across two thirds, everything else beside it */
+.paper-page--tabloid { grid-template-columns: 2fr 1fr; }
+.paper-page--tabloid .paper-lead {
+  padding-left: 0;
+  border-left: none;
+}
+
 .paper-lead > .paper-story {
   flex: 1 1 auto;
   display: flex;
@@ -849,6 +761,15 @@ body {
   border-bottom: var(--rule) solid var(--ink);
 }
 
+/* A label over the lead's headline */
+.paper-kicker {
+  align-self: flex-start;
+  margin-bottom: var(--pad-tight);
+  padding: 1px var(--pad-tight);
+  background: var(--ink);
+  color: var(--paper);
+}
+
 /* Upcoming events: a boxed index under an inverted label */
 .paper-events {
   margin-bottom: var(--pad);
@@ -858,42 +779,19 @@ body {
   padding: 2px var(--pad-tight);
   background: var(--ink);
   color: var(--paper);
-  font-weight: 700;
 }
 .paper-event {
   padding: 2px var(--pad-tight);
 }
 .paper-event + .paper-event { border-top: var(--rule) solid var(--ink); }
-.paper-event-title {
-  font-family: "Pixel Operator", sans-serif;
-  font-weight: 700;
-  font-size: 16px;
-  line-height: 16px;
-}
-/* The calendar's marker, in the label face at its own grid */
 .paper-event-title .tag {
-  font-family: "Pixeloid Sans", sans-serif;
-  font-weight: 400;
-  font-size: 9px;
-  line-height: 11px;
-  letter-spacing: 1px;
+  margin-right: var(--pad-tight);
+  padding: 0 2px;
   vertical-align: 2px;
 }
 
 .paper-headline { margin-bottom: 2px; }
 .paper-lead .paper-headline { margin-bottom: var(--pad-tight); }
-
-/* The sizes the fitting script steps through (NewspaperLayout), each a
-   face at its own grid: the masthead's blackletter, then headlines. */
-.hl-63 { font: 63px/63px "Jacquard 12", serif; }
-.hl-43 { font: 43px/43px "Jacquard 24", serif; }
-.hl-21 { font: 21px/21px "Jacquard 12", serif; }
-.hl-54 { font: 54px/54px "Jersey 15", sans-serif; }
-.hl-41 { font: 41px/41px "Jersey 25", sans-serif; }
-.hl-34 { font: 34px/34px "Jersey 20", sans-serif; }
-.hl-27 { font: 27px/28px "Jersey 15", sans-serif; }
-.hl-16 { font: 700 16px/16px "Pixel Operator", sans-serif; }
-.hl-16n { font: 16px/15px "Bitrimus", sans-serif; }
 
 .paper-photo {
   display: block;
@@ -924,8 +822,312 @@ body {
   text-overflow: ellipsis;
 }
 
-.paper-lead .paper-summary {
-  font-family: "Pixel Operator", sans-serif;
-  font-size: 16px;
-  line-height: 16px;
+/* Shifted letters (NewsHelper#shifted_letters); their shifts are in the
+   paper's own stylesheet */
+.shift-word { white-space: nowrap; }
+.shift { display: inline-block; }
+.shift--inverted {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* The motto running up the side of the page, turned a whole quarter so
+   it stays on the pixel grid */
+.paper-page:has(> .paper-strip) { grid-template-columns: 14px 1fr 2fr 1fr; }
+.paper-page--tabloid:has(> .paper-strip) { grid-template-columns: 14px 2fr 1fr; }
+.paper-strip {
+  overflow: hidden;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  white-space: nowrap;
+  line-height: 14px;
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* ---------- Tabloid: a masthead in a black box, a shouting lead ---------- */
+
+.paper--tabloid .paper-name {
+  padding: 0 var(--pad);
+  background: var(--ink);
+  color: var(--paper);
+}
+.paper--tabloid .paper-dateline { border-top-width: 5px; }
+.paper--tabloid .paper-ear { border-width: 2px; }
+
+/* ---------- Zine: cut-out letters, dashed rules, photocopied photos ---------- */
+
+.paper--zine .paper-masthead { border-bottom: 2px dashed var(--ink); }
+.paper--zine .paper-dateline {
+  border-top: var(--rule) dashed var(--ink);
+  border-bottom: var(--rule) dashed var(--ink);
+}
+.paper--zine .paper-ear,
+.paper--zine .paper-events { border-style: dashed; }
+.paper--zine .paper-lead {
+  border-left-style: dashed;
+  border-right-style: dashed;
+}
+.paper--zine .paper-column > .paper-story { border-bottom-style: dashed; }
+
+/* The lead's headline printed over its photo, inverting whatever it
+   lands on */
+.paper--zine .paper-lead .paper-headline {
+  position: relative;
+  z-index: 1;
+  margin-bottom: -40px;
+  color: #fff;
+  mix-blend-mode: difference;
+}
+
+/* A second pass through the copier, a few pixels off */
+.paper--zine .paper-photo { box-shadow: 4px 4px 0 var(--ink); }
+.paper--zine .paper-story--top .paper-photo { width: calc(100% - 4px); }
+
+/* Blown-out contrast, like a photocopy of a photocopy */
+.paper--zine .paper-photo,
+.paper--zine .paper-thumb { filter: grayscale(1) contrast(1.8); }
+
+.ransom { display: inline-block; }
+.ransom + .ransom { margin-left: 2px; }
+.ransom-space { display: inline-block; width: var(--pad); }
+.ransom--inverted {
+  padding: 0 2px;
+  background: var(--ink);
+  color: var(--paper);
+}
+.ransom--boxed {
+  padding: 0 2px;
+  border: var(--rule) solid var(--ink);
+}
+
+/* ---------- Patriot: a flag under the masthead, double-ruled ears ---------- */
+
+.paper--patriot .paper-ear { border: 3px double var(--ink); }
+.paper--patriot .paper-dateline { border-top-width: var(--rule); }
+
+.paper-flag {
+  flex: none;
+  display: flex;
+  height: 24px;
+  margin-bottom: 2px;
+}
+
+.paper-canton {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  width: 128px;
+  padding: 0 var(--pad-tight);
+  background: var(--ink);
+  color: var(--paper);
+}
+.pixel-art { display: block; fill: currentColor; }
+
+/* Seven stripes of 3px, ink and paper */
+.paper-stripes {
+  flex: 1 1 auto;
+  background-image: repeating-linear-gradient(
+    180deg, var(--ink) 0 3px, var(--paper) 3px 6px
+  );
+  background-size: 100% 6px;
+}
+
+/* ---------- Wizarding gazette: stretched, outlined, rolling type ----------
+
+   Stretches are whole-number scales and letters shift by whole pixels, so
+   the pixel faces stay crisp. The name and the lead's headline are set at
+   half size (NewspaperStyle) and scaled up, so the fitting script still
+   measures their real space. Only boxes and photos tilt. */
+
+.paper--wizard .paper-masthead { padding: var(--pad) 0 12px; }
+
+/* The name twice as tall, hollow, with a hard shadow */
+.paper--wizard .paper-name {
+  overflow: visible;
+  color: var(--paper);
+  text-shadow:
+    1px 0 var(--ink), -1px 0 var(--ink), 0 1px var(--ink), 0 -1px var(--ink),
+    1px 1px var(--ink), -1px -1px var(--ink), 1px -1px var(--ink), -1px 1px var(--ink),
+    3px 2px var(--ink);
+  transform: scaleY(2);
+}
+
+.paper--wizard .paper-ear {
+  border: 3px double var(--ink);
+  transform: rotate(-3deg);
+}
+.paper--wizard .paper-ear--right { transform: rotate(4deg); }
+
+/* A rule with sparkles, under the masthead */
+.paper-flourish {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--pad-loose);
+  height: 13px;
+  background-image: linear-gradient(var(--ink), var(--ink));
+  background-size: 100% 1px;
+  background-position: 0 6px;
+  background-repeat: no-repeat;
+}
+.paper-flourish .pixel-art {
+  padding: 0 var(--pad);
+  background: var(--paper);
+  box-sizing: content-box;
+}
+
+.paper--wizard .paper-dateline {
+  justify-content: center;
+  gap: var(--pad-loose);
+  border-top: 3px double var(--ink);
+  border-bottom: 3px double var(--ink);
+}
+
+.paper--wizard .paper-strip {
+  background: var(--paper);
+  color: var(--ink);
+  border-left: 3px double var(--ink);
+  border-right: 3px double var(--ink);
+}
+
+/* The lead's headline set in half its width, then stretched across it */
+.paper--wizard .paper-lead > .paper-story { position: relative; }
+.paper--wizard .paper-lead .paper-headline {
+  width: 50%;
+  transform: scaleX(2);
+  transform-origin: 0 0;
+}
+
+/* The lead's photo in an oval frame, a round stamp slapped on it */
+.paper--wizard .paper-story--fill .paper-photo {
+  margin: 2px var(--pad) var(--pad);
+  width: auto;
+  padding: 3px;
+  border: 3px double var(--ink);
+  border-radius: 50%;
+}
+.paper--wizard .paper-kicker {
+  position: absolute;
+  right: 0;
+  bottom: 40px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 76px;
+  height: 76px;
+  padding: var(--pad);
+  border: 3px double var(--ink);
+  border-radius: 50%;
+  background: var(--paper);
+  color: var(--ink);
+  white-space: normal;
+  text-align: center;
+  transform: rotate(-14deg);
+}
+
+/* A drop cap in the headline's blackletter */
+.paper--wizard .paper-lead .paper-summary { display: block; }
+.paper--wizard .paper-lead .paper-summary::first-letter {
+  float: left;
+  margin: 2px var(--pad-tight) 0 0;
+  font-family: "np-jacquard12", serif;
+  font-size: 42px;
+  line-height: 36px;
+}
+
+/* Column photos pinned up askew; thumbnails in circles the text wraps */
+.paper--wizard .paper-column { padding: var(--pad-tight) 6px; }
+.paper--wizard .paper-story--top .paper-photo {
+  padding: 2px;
+  border: 3px double var(--ink);
+  transform: rotate(2deg);
+}
+.paper--wizard .paper-thumb {
+  border-radius: 50%;
+  border: 2px solid var(--ink);
+  shape-outside: circle(50%);
+  shape-margin: 2px;
+}
+
+.paper--wizard .paper-column > .paper-story { border-bottom: 3px double var(--ink); }
+
+/* The events box's heading turned up its side */
+.paper--wizard .paper-events {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  border: 3px double var(--ink);
+}
+.paper--wizard .paper-events-title {
+  grid-row: 1 / span 99;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  text-align: center;
+}
+
+/* ---------- 90s hacker: a terminal, white on black ----------
+
+   Ink and paper swap for the whole card, so every rule, box and inverted
+   label turns over with it. */
+
+.card--newspaper:has(.paper--hacker) {
+  --ink: #fff;
+  --paper: #000;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+/* The name with a block cursor after it */
+.paper--hacker .paper-name::after {
+  content: "";
+  display: inline-block;
+  width: 0.5em;
+  height: 0.75em;
+  margin-left: 0.25em;
+  background: currentColor;
+}
+
+.paper--hacker .paper-ear { border-style: dashed; }
+
+/* The date line as a status bar */
+.paper--hacker .paper-dateline {
+  border: none;
+  background: var(--ink);
+  color: var(--paper);
+}
+.paper--hacker .paper-dateline span:first-child::before { content: "[ONLINE] "; }
+
+.paper--hacker .paper-lead,
+.paper--hacker .paper-column > .paper-story,
+.paper--hacker .paper-events { border-style: dashed; }
+
+/* A prompt. In shifted headlines it goes inside the first word, whose
+   letters are inline blocks a line could otherwise break before. */
+.paper--hacker .paper-headline:not(:has(.shift-word))::before,
+.paper--hacker .paper-headline .shift-word:first-child::before { content: "> "; }
+.paper--hacker .paper-summary::before { content: "// "; }
+.paper--hacker .paper-byline::before { content: "["; }
+.paper--hacker .paper-byline::after { content: "]"; }
+.paper--hacker .paper-events-title::before { content: "$ "; }
+.paper--hacker .paper-kicker::before,
+.paper--hacker .paper-kicker::after { content: " *** "; }
+
+/* Photos through a CRT: every third row of pixels blanked */
+.paper--hacker .paper-photo,
+.paper--hacker .paper-thumb {
+  filter: grayscale(1) contrast(1.3);
+  -webkit-mask-image: repeating-linear-gradient(180deg, #000 0 2px, transparent 2px 3px);
+  mask-image: repeating-linear-gradient(180deg, #000 0 2px, transparent 2px 3px);
+}
+
+.paper--hacker .paper-strip {
+  border-right: var(--rule) dashed var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  letter-spacing: 0;
 }

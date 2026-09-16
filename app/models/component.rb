@@ -166,30 +166,46 @@ class Component
     },
 
     # A whole front page in one tile, meant to fill the grid: a masthead
-    # with a weather ear, a lead story with its photo, headlines in the
-    # columns either side, and a box of upcoming events. Reads its first
-    # weather source and merges every feed and every calendar.
+    # with a weather ear, a lead story with its photo, headlines around
+    # it, and a box of upcoming events. Reads its first weather source and
+    # merges every feed and every calendar. Each layout is a type of paper
+    # (NewspaperStyle).
     "newspaper" => {
       label: "Newspaper",
-      views: { "front_page" => "Front page" },
+      views: {
+        "broadsheet" => "Serious broadsheet",
+        "tabloid"    => "Tabloid",
+        "zine"       => "Punk zine",
+        "patriot"    => "Patriot",
+        "hacker"     => "90s hacker",
+        "wizard"     => "Wizarding gazette",
+        "custom"     => "Custom"
+      },
       source_types: %w[RssProvider WeatherProvider IcalProvider],
       multi_source: true,
       settings: [
         Setting.new(key: "name", type: :string, label: "Paper name", default: "The Daily Dashboard"),
-        Setting.new(key: "motto", type: :string, label: "Motto", default: "All the news that fits"),
+        Setting.new(key: "motto", type: :string, label: "Motto (blank for the paper's own)", default: ""),
         Setting.new(key: "story_count", type: :integer, label: "Most briefs", default: 12),
-        Setting.new(key: "event_hours", type: :integer, label: "Hours of upcoming events", default: 36)
+        Setting.new(key: "event_hours", type: :integer, label: "Hours of upcoming events", default: 36),
+        Setting.new(key: "layout", type: :select, label: "Arrangement", default: "broadsheet", views: %w[custom],
+                    options: -> { NewspaperStyle::LAYOUTS.map { [ it.titleize, it ] } }),
+        Setting.new(key: "caps", type: :boolean, label: "Headlines in capitals", default: false, views: %w[custom]),
+        Setting.new(key: "masthead_font", type: :select, label: "Name font", default: "jacquard", views: %w[custom],
+                    options: -> { NewspaperStyle.masthead_options }),
+        Setting.new(key: "headline_font", type: :select, label: "Headline font", default: "jersey", views: %w[custom],
+                    options: -> { NewspaperFont.options }),
+        Setting.new(key: "subhead_font", type: :select, label: "Small headline font", default: "pixel_operator_bold",
+                    views: %w[custom], options: -> { NewspaperFont.options }),
+        Setting.new(key: "text_font", type: :select, label: "Text font", default: "pixantiqua", views: %w[custom],
+                    options: -> { NewspaperFont.options }),
+        Setting.new(key: "label_font", type: :select, label: "Label font", default: "pixeloid_sans", views: %w[custom],
+                    options: -> { NewspaperFont.options })
       ],
-      parts: {
-        "front_page" => [
-          Part.new(key: "weather"),
-          Part.new(key: "dateline"),
-          Part.new(key: "photos"),
-          Part.new(key: "events"),
-          Part.new(key: "bylines"),
-          Part.new(key: "summaries")
-        ]
-      }
+      parts: NewspaperStyle::KEYS.index_with do
+        [ Part.new(key: "weather"), Part.new(key: "dateline"), Part.new(key: "photos"), Part.new(key: "events"),
+          Part.new(key: "bylines"), Part.new(key: "summaries") ]
+      end
     },
 
     "note" => {

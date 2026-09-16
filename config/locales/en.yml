@@ -183,7 +183,35 @@ en:
       days: "%{count}d"
     # The newspaper tile's front page.
     newspaper:
-      upcoming: "Upcoming events"
+      # Each type of paper's own words (NewspaperStyle): the motto when the
+      # tile has none, the events box's heading, and the label over the
+      # lead for a style with a kicker.
+      styles:
+        broadsheet:
+          motto: "All the news that fits"
+          events: "Upcoming events"
+        tabloid:
+          motto: "Shocking but true!"
+          events: "What's on"
+          kicker: "Exclusive!"
+        zine:
+          motto: "Photocopied with love"
+          events: "Be there or be square"
+        patriot:
+          motto: "Land of the free, home of the headlines"
+          events: "Mark your calendar"
+          kicker: "Breaking news"
+        hacker:
+          motto: "All your news are belong to us"
+          events: "crontab -l"
+          kicker: "Access granted"
+        wizard:
+          motto: "Mischief, marvels and the morning news"
+          events: "Coming to a cauldron near you"
+          kicker: "Special edition"
+        custom:
+          motto: "All the news that fits"
+          events: "Upcoming events"
       # NewsHelper#newspaper_event_when: "Today · 1:00 PM".
       event_when: "%{day} · %{time}"
       today: "Today"

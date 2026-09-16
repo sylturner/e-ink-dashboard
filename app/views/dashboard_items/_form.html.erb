@@ -83,6 +83,10 @@
             <% when :integer %>
               <%= s.label setting.key, setting.label %>
               <%= s.number_field setting.key, value:, min: 1 %>
+            <% when :select %>
+              <% options = setting.options.respond_to?(:call) ? setting.options.call : setting.options %>
+              <%= s.label setting.key, setting.label %>
+              <%= s.select setting.key, options, selected: value %>
             <% when :text %>
               <%= s.label setting.key, setting.label %>
               <%= s.textarea setting.key, value:, rows: 3 %>
