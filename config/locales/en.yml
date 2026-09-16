@@ -68,6 +68,7 @@ en:
       newspaper:
         bylines: "Feed and time"
         dateline: "Date line"
+        events: "Upcoming events"
         photos: "Photos beside the lead"
         summaries: "Summaries"
         weather: "Weather"
@@ -182,6 +183,13 @@ en:
       days: "%{count}d"
     # The newspaper tile's front page.
     newspaper:
+      upcoming: "Upcoming events"
+      # NewsHelper#newspaper_event_when: "Today · 1:00 PM".
+      event_when: "%{day} · %{time}"
+      today: "Today"
+      tomorrow: "Tomorrow"
+      all_day: "All day"
+      now: "Now"
       edition: "%{time} edition"
       number: "No. %{day}"
       high_low: "H %{high}° · L %{low}°"
@@ -195,6 +203,10 @@ en:
     units:
       imperial: "Fahrenheit"
       metric: "Celsius"
+  date:
+    formats:
+      # A day further off than tomorrow, on a newspaper's events box.
+      panel_weekday: "%A"
   time:
     formats:
       # Times drawn on a panel, one for each of AppSetting's clocks. Read

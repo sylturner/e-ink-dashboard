@@ -1,13 +1,14 @@
 require "test_helper"
 
 class NewspaperLayoutTest < ActiveSupport::TestCase
-  test "every headline size has its render.css class, and each ladder steps down" do
+  test "every size has its render.css class, and each ladder steps down in order" do
     css = Rails.root.join("app/assets/stylesheets/render.css").read
 
-    NewspaperLayout::ALL.each { |px| assert_includes css, ".hl-#{px} {", "no .hl-#{px}" }
+    NewspaperLayout::ORDER.each { |size| assert_includes css, ".hl-#{size} {", "no .hl-#{size}" }
     %i[NAME_SIZES LEAD_SIZES BIG_SIZES FEATURE_SIZES BRIEF_SIZES].each do |ladder|
       sizes = NewspaperLayout.const_get(ladder)
-      assert_equal sizes.sort.reverse, sizes, "#{ladder} isn't largest first"
+      assert_equal sizes.sort_by { NewspaperLayout::ORDER.index(it) || flunk("#{ladder} has unknown #{it}") }, sizes,
+                   "#{ladder} isn't largest first"
     end
   end
 

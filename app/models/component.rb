@@ -166,24 +166,26 @@ class Component
     },
 
     # A whole front page in one tile, meant to fill the grid: a masthead
-    # with a weather ear, a lead story with its photo, and headlines in
-    # the columns either side. Reads its first weather source and merges
-    # every feed.
+    # with a weather ear, a lead story with its photo, headlines in the
+    # columns either side, and a box of upcoming events. Reads its first
+    # weather source and merges every feed and every calendar.
     "newspaper" => {
       label: "Newspaper",
       views: { "front_page" => "Front page" },
-      source_types: %w[RssProvider WeatherProvider],
+      source_types: %w[RssProvider WeatherProvider IcalProvider],
       multi_source: true,
       settings: [
         Setting.new(key: "name", type: :string, label: "Paper name", default: "The Daily Dashboard"),
         Setting.new(key: "motto", type: :string, label: "Motto", default: "All the news that fits"),
-        Setting.new(key: "story_count", type: :integer, label: "Most briefs", default: 12)
+        Setting.new(key: "story_count", type: :integer, label: "Most briefs", default: 12),
+        Setting.new(key: "event_hours", type: :integer, label: "Hours of upcoming events", default: 36)
       ],
       parts: {
         "front_page" => [
           Part.new(key: "weather"),
           Part.new(key: "dateline"),
           Part.new(key: "photos"),
+          Part.new(key: "events"),
           Part.new(key: "bylines"),
           Part.new(key: "summaries")
         ]

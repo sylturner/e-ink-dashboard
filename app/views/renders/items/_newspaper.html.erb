@@ -15,6 +15,13 @@
   third   = rest.find { it["source_name"] != lead&.dig("source_name") } || rest.first
   briefs  = NewsFeed.by_turns(rest - [ third ]).first(item.setting("story_count").to_i)
   left, right = briefs.partition.with_index { |_, index| index.even? }
+
+  # Everything on the tile's calendars under way or starting within its
+  # hours ahead.
+  events = if item.shows?("events")
+    EventFeed.between(EventFeed.for(item, zone: now.time_zone), now, now + item.setting("event_hours").to_i.hours)
+             .first(NewspaperLayout::EVENT_LIMIT)
+  end
 %>
 <div class="paper">
   <header class="paper-masthead">
@@ -31,7 +38,7 @@
       <% end %>
     </div>
 
-    <%= tag.div item.setting("name"), class: "paper-name hl-72", data: { sizes: NewspaperLayout::NAME_SIZES.join(" ") } %>
+    <%= tag.div item.setting("name"), class: "paper-name hl-#{NewspaperLayout::NAME_SIZES.first}", data: { sizes: NewspaperLayout::NAME_SIZES.join(" ") } %>
 
     <div class="paper-ear paper-ear--right">
       <div class="paper-small"><%= t("renders.newspaper.edition", time: panel_time(now, :time)) %></div>
@@ -66,6 +73,22 @@
     </div>
 
     <div class="paper-column" data-fit>
+      <% if events.present? %>
+        <section class="paper-events">
+          <div class="paper-events-title"><%= t("renders.newspaper.upcoming") %></div>
+          <% events.each do |event| %>
+            <div class="paper-event">
+              <div class="paper-byline"><%= newspaper_event_when(event, now) %></div>
+              <div class="paper-event-title">
+                <% if item.sources.count { it.providable_type == "IcalProvider" } > 1 && event.tag.present? %>
+                  <span class="tag"><%= event.tag %></span>
+                <% end %>
+                <%= event.title %>
+              </div>
+            </div>
+          <% end %>
+        </section>
+      <% end %>
       <% if third %>
         <%= render "renders/items/newspaper/story", item:, now:, story: third, sizes: NewspaperLayout::BIG_SIZES,
                    photo: nil, summary: 6 %>
@@ -81,8 +104,11 @@
       too, and photos have fixed sizes, so the capture sees the result).
       Headlines are never cut off: a box's first story steps its headline
       down its sizes until it fits, giving up its summary and photo only
-      at the smallest, and the stories after it are kept while they fit.
-      The masthead's name steps down until it fits between the ears. %>
+      at the smallest; an events box then gives up its latest events; and
+      the stories after them are kept while they fit.
+      The gaps left at the foot of the columns then take the stories that
+      didn't fit anywhere, cut down to a small headline. The masthead's
+      name steps down until it fits between the ears. %>
   <%= javascript_tag nonce: true do %>
     (() => {
       const paper = document.currentScript.closest(".paper")
@@ -98,24 +124,56 @@
         return true
       }
 
+      // Adds a story at the foot of a box, and takes it back out if it
+      // doesn't fit there.
+      const place = (box, story) => {
+        box.append(story)
+        if (!tall(box)) return true
+
+        story.remove()
+        return false
+      }
+
+      // What a story gives up to fit a gap, in order: everything but its
+      // headline (at its smallest) and byline, then the byline.
+      const cuts = [
+        (story) => {
+          story.querySelectorAll(".paper-summary, .paper-thumb, .paper-photo").forEach((part) => part.remove())
+          const headline = story.querySelector(".paper-headline")
+          while (shrink(headline)) {}
+        },
+        (story) => story.querySelector(".paper-byline")?.remove()
+      ]
+
       const fit = () => {
         const name = paper.querySelector(".paper-name")
         while (wide(name) && shrink(name)) {}
 
+        const waiting = []
+
         paper.querySelectorAll("[data-fit]").forEach((box) => {
           const [first, ...others] = box.querySelectorAll(".paper-story")
-          if (!first) return
-
           others.forEach((story) => story.remove())
-          while (tall(box) && shrink(first.querySelector(".paper-headline"))) {}
-          for (const part of [".paper-summary", ".paper-photo"]) {
-            if (tall(box)) first.querySelector(part)?.remove()
+
+          if (first) {
+            while (tall(box) && shrink(first.querySelector(".paper-headline"))) {}
+            for (const part of [".paper-summary", ".paper-photo"]) {
+              if (tall(box)) first.querySelector(part)?.remove()
+            }
           }
 
-          others.forEach((story) => {
-            box.append(story)
-            if (tall(box)) story.remove()
-          })
+          const events = [ ...box.querySelectorAll(".paper-event") ]
+          while (tall(box) && events.length > 0) events.pop().remove()
+          if (events.length === 0) box.querySelector(".paper-events")?.remove()
+
+          others.forEach((story) => place(box, story) || waiting.push(story))
+        })
+
+        paper.querySelectorAll(".paper-column").forEach((column) => {
+          for (const story of [ ...waiting ]) {
+            const fits = place(column, story) || cuts.some((cut) => (cut(story), place(column, story)))
+            if (fits) waiting.splice(waiting.indexOf(story), 1)
+          }
         })
       }
 

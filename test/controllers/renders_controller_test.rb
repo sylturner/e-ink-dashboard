@@ -409,6 +409,7 @@ class RendersControllerTest < ActionDispatch::IntegrationTest
       { "title" => "Local big", "published_at" => "2026-09-06T10:00:00Z", "summary" => "A long story" },
       { "title" => "Local brief", "published_at" => "2026-09-06T06:00:00Z", "image" => photo.("local") }
     ])
+    yield paper if block_given?
     render_dashboard(paper.dashboard)
   end
 
@@ -420,7 +421,7 @@ class RendersControllerTest < ActionDispatch::IntegrationTest
     render_newspaper
 
     assert_select ".card--newspaper .paper-masthead" do
-      assert_select ".paper-name.hl-72[data-sizes=?]", "72 64 56 48 40 32 24", "The Daily Test"
+      assert_select ".paper-name.hl-63[data-sizes=?]", "63 43 21", "The Daily Test"
       assert_select ".paper-weather .paper-temp", "72°"
       assert_select ".paper-ear .paper-small", "H 75° · L 60°"
       assert_select ".paper-ear--right .paper-small", "6:00 AM edition" # the panel is in Los Angeles
@@ -433,7 +434,7 @@ class RendersControllerTest < ActionDispatch::IntegrationTest
     render_newspaper
 
     assert_select ".paper-lead .paper-story--fill" do
-      assert_select ".paper-headline.hl-40[data-sizes=?]", "40 36 32 28 24 20", "World lead"
+      assert_select ".paper-headline.hl-54[data-sizes=?]", "54 41 34 27", "World lead"
       assert_select "img.paper-photo[src=?]", "https://img.example.com/lead.jpg"
       assert_select ".paper-byline", "World · 1h"
       assert_select ".paper-summary.t-clip-3", "What the lead is about"
@@ -444,18 +445,40 @@ class RendersControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ "World second", "World brief", "World brief 2" ], column_headlines(0)
     assert_equal [ "Local big", "Local brief" ], column_headlines(1)
     assert_select ".paper-column .paper-story--top img.paper-photo[src=?]", "https://img.example.com/second.jpg"
-    assert_select ".paper-column .paper-headline.hl-28", "Local big"
+    assert_select ".paper-column .paper-headline.hl-41", "Local big"
     assert_select ".paper-column img.paper-thumb", 2 # some briefs, not all
     assert_select ".paper-column .paper-summary.t-clip-6", "A long story"
     assert_select ".paper-headline.t-clip", 0, "a headline is never clipped"
   end
 
+  test "a newspaper lists its calendars' events under way or starting in the next hours" do
+    # Dashboard one's panel is in Los Angeles, where it's 6:00 AM Sunday.
+    render_newspaper("event_hours" => "36") do |paper|
+      paper.sources << sources(:two)
+      paper.sources << Source.create!(name: "Family", refresh_seconds: 1800, providable: IcalProvider.new(ical_url: "https://example.com/family.ics"),
+                                      payload: { "events" => [
+                                        { "title" => "Brunch", "starts_at" => "2026-09-06T15:00:00Z", "ends_at" => "2026-09-06T16:00:00Z" },
+                                        { "title" => "Too far off", "starts_at" => "2026-09-08T12:00:00Z", "ends_at" => "2026-09-08T13:00:00Z" }
+                                      ] })
+    end
+
+    assert_select ".paper-column .paper-events" do
+      assert_select ".paper-events-title", "Upcoming events"
+      whens  = css_select(".paper-event .paper-byline").map { it.text.strip }
+      titles = css_select(".paper-event-title").map { it.text.squish }
+      assert_equal [ "Today · Now", "Today · 8:00 AM", "Tomorrow · All day" ], whens
+      assert_equal [ "WOR Standup", "FAM Brunch", "WOR Labor Day" ], titles
+    end
+  end
+
   test "a newspaper's parts can each be hidden" do
-    render_newspaper("parts" => { "front_page" => { "weather" => "0", "dateline" => "0", "photos" => "0",
-                                                    "bylines" => "0", "summaries" => "0" } })
+    render_newspaper("parts" => { "front_page" => { "weather" => "0", "dateline" => "0", "photos" => "0", "events" => "0",
+                                                    "bylines" => "0", "summaries" => "0" } }) do |paper|
+      paper.sources << sources(:two)
+    end
 
     assert_select ".paper-name", "The Daily Test"
-    assert_select ".paper-weather, .paper-dateline, .paper-byline, .paper-summary, .paper-thumb, .paper-story--top", 0
+    assert_select ".paper-weather, .paper-dateline, .paper-byline, .paper-summary, .paper-thumb, .paper-story--top, .paper-events", 0
     assert_select ".paper-lead img.paper-photo", 1, "the lead keeps its photo"
   end
 

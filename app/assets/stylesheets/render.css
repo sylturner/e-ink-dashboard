@@ -38,43 +38,92 @@
   font-display: block;
 }
 
-/* The newspaper's faces (licenses in app/assets/fonts/licenses) */
+/* The newspaper's pixel faces (licenses in app/assets/fonts/licenses).
+   Each is crisp only at a whole multiple of its grid, noted beside it. */
 @font-face {
-  font-family: "Newsreader";
-  src: url("Newsreader-Medium.woff2") format("woff2");
-  font-weight: 500;
+  font-family: "Jacquard 12"; /* 21px */
+  src: url("Jacquard12-Regular.woff2") format("woff2");
+  font-weight: 400;
   font-style: normal;
   font-display: block;
 }
 
 @font-face {
-  font-family: "Newsreader";
-  src: url("Newsreader-Bold.woff2") format("woff2");
+  font-family: "Jacquard 24"; /* 43px */
+  src: url("Jacquard24-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "Jersey 15"; /* 27px */
+  src: url("Jersey15-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "Jersey 20"; /* 34px */
+  src: url("Jersey20-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "Jersey 25"; /* 41px */
+  src: url("Jersey25-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "Pixel Operator"; /* 16px */
+  src: url("PixelOperator.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "Pixel Operator"; /* 16px */
+  src: url("PixelOperator-Bold.woff2") format("woff2");
   font-weight: 700;
   font-style: normal;
   font-display: block;
 }
 
 @font-face {
-  font-family: "Newsreader";
-  src: url("Newsreader-ExtraBold.woff2") format("woff2");
-  font-weight: 800;
-  font-style: normal;
-  font-display: block;
-}
-
-@font-face {
-  font-family: "Oswald";
-  src: url("Oswald-Medium.woff2") format("woff2");
-  font-weight: 500;
-  font-style: normal;
-  font-display: block;
-}
-
-@font-face {
-  font-family: "UnifrakturMaguntia";
-  src: url("UnifrakturMaguntia-Regular.woff2") format("woff2");
+  font-family: "Bitrimus"; /* 16px */
+  src: url("Bitrimus.woff2") format("woff2");
   font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "PixAntiqua"; /* 12px */
+  src: url("PixAntiqua.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "Pixeloid Sans"; /* 9px */
+  src: url("PixeloidSans.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "Pixeloid Sans"; /* 9px */
+  src: url("PixeloidSans-Bold.woff2") format("woff2");
+  font-weight: 700;
   font-style: normal;
   font-display: block;
 }
@@ -680,7 +729,11 @@ body {
 
 /* ============================================================
    Newspaper: a front page filling the panel
-   ============================================================ */
+   ============================================================
+
+   Every face here is a pixel font, set only at a whole multiple of its
+   grid (see its @font-face) with whole-pixel line heights and letter
+   spacing, so each glyph lands on the panel's pixels. */
 
 .card--newspaper { border: none; }
 .card--newspaper .card-body { padding: 0 var(--pad-tight); }
@@ -689,22 +742,24 @@ body {
   display: flex;
   flex-direction: column;
   height: 100%;
-  font-family: "Newsreader", serif;
-  font-weight: 500;
+  font-family: "PixAntiqua", serif;
+  font-size: 12px;
+  line-height: 14px;
 }
 
-/* Labels, datelines and bylines: a condensed sans in capitals */
+/* Labels, datelines and bylines: small capitals */
 .paper-small,
 .paper-dateline,
-.paper-byline {
-  font-family: "Oswald", sans-serif;
-  font-weight: 500;
+.paper-byline,
+.paper-events-title {
+  font-family: "Pixeloid Sans", sans-serif;
+  font-size: 9px;
+  line-height: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 1px;
   white-space: nowrap;
   overflow: hidden;
 }
-.paper-small { font-size: 12px; line-height: 15px; }
 
 /* The name centered between two boxed ears of equal width */
 .paper-masthead {
@@ -713,7 +768,7 @@ body {
   grid-template-columns: 128px minmax(0, 1fr) 128px;
   align-items: center;
   gap: var(--pad);
-  padding: var(--pad-tight) 0 2px;
+  padding: var(--pad-tight) 0;
 }
 
 .paper-ear {
@@ -733,15 +788,13 @@ body {
   gap: var(--pad-tight);
 }
 .paper-temp {
-  font-weight: 800;
-  font-size: 28px;
-  line-height: 30px;
+  font-family: "Jersey 20", sans-serif;
+  font-size: 34px;
+  line-height: 34px;
 }
 
-/* Sized by the page's fitting script, from .hl-72 down */
+/* Sized by the page's fitting script, from .hl-63 down */
 .paper-name {
-  font-family: "UnifrakturMaguntia", serif;
-  font-weight: 400;
   text-align: center;
   white-space: nowrap;
   overflow: hidden;
@@ -753,11 +806,9 @@ body {
   display: flex;
   justify-content: space-between;
   gap: var(--pad);
-  padding: 1px 2px;
+  padding: 2px;
   border-top: 3px solid var(--ink);
   border-bottom: var(--rule) solid var(--ink);
-  font-size: 12px;
-  line-height: 15px;
 }
 
 /* Three columns split by hairlines, the lead twice as wide */
@@ -798,32 +849,51 @@ body {
   border-bottom: var(--rule) solid var(--ink);
 }
 
-.paper-headline {
-  font-weight: 700;
-  margin-bottom: 2px;
+/* Upcoming events: a boxed index under an inverted label */
+.paper-events {
+  margin-bottom: var(--pad);
+  border: var(--rule) solid var(--ink);
 }
-.paper-lead .paper-headline {
-  font-weight: 800;
-  margin-bottom: var(--pad-tight);
+.paper-events-title {
+  padding: 2px var(--pad-tight);
+  background: var(--ink);
+  color: var(--paper);
+  font-weight: 700;
+}
+.paper-event {
+  padding: 2px var(--pad-tight);
+}
+.paper-event + .paper-event { border-top: var(--rule) solid var(--ink); }
+.paper-event-title {
+  font-family: "Pixel Operator", sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 16px;
+}
+/* The calendar's marker, in the label face at its own grid */
+.paper-event-title .tag {
+  font-family: "Pixeloid Sans", sans-serif;
+  font-weight: 400;
+  font-size: 9px;
+  line-height: 11px;
+  letter-spacing: 1px;
+  vertical-align: 2px;
 }
 
-/* Headline sizes the fitting script steps through (NewspaperLayout) */
-.hl-14 { font-size: 14px; line-height: 15px; }
-.hl-15 { font-size: 15px; line-height: 16px; }
-.hl-16 { font-size: 16px; line-height: 18px; }
-.hl-18 { font-size: 18px; line-height: 20px; }
-.hl-20 { font-size: 20px; line-height: 22px; }
-.hl-22 { font-size: 22px; line-height: 24px; }
-.hl-24 { font-size: 24px; line-height: 26px; }
-.hl-26 { font-size: 26px; line-height: 29px; }
-.hl-28 { font-size: 28px; line-height: 31px; }
-.hl-32 { font-size: 32px; line-height: 35px; }
-.hl-36 { font-size: 36px; line-height: 40px; }
-.hl-40 { font-size: 40px; line-height: 44px; }
-.hl-48 { font-size: 48px; line-height: 53px; }
-.hl-56 { font-size: 56px; line-height: 62px; }
-.hl-64 { font-size: 64px; line-height: 70px; }
-.hl-72 { font-size: 72px; line-height: 79px; }
+.paper-headline { margin-bottom: 2px; }
+.paper-lead .paper-headline { margin-bottom: var(--pad-tight); }
+
+/* The sizes the fitting script steps through (NewspaperLayout), each a
+   face at its own grid: the masthead's blackletter, then headlines. */
+.hl-63 { font: 63px/63px "Jacquard 12", serif; }
+.hl-43 { font: 43px/43px "Jacquard 24", serif; }
+.hl-21 { font: 21px/21px "Jacquard 12", serif; }
+.hl-54 { font: 54px/54px "Jersey 15", sans-serif; }
+.hl-41 { font: 41px/41px "Jersey 25", sans-serif; }
+.hl-34 { font: 34px/34px "Jersey 20", sans-serif; }
+.hl-27 { font: 27px/28px "Jersey 15", sans-serif; }
+.hl-16 { font: 700 16px/16px "Pixel Operator", sans-serif; }
+.hl-16n { font: 16px/15px "Bitrimus", sans-serif; }
 
 .paper-photo {
   display: block;
@@ -850,16 +920,12 @@ body {
 }
 
 .paper-byline {
-  font-size: 11px;
-  line-height: 14px;
+  margin-top: 1px;
   text-overflow: ellipsis;
 }
 
-.paper-summary {
-  font-size: 14px;
-  line-height: 17px;
-}
 .paper-lead .paper-summary {
-  font-size: 15px;
-  line-height: 18px;
+  font-family: "Pixel Operator", sans-serif;
+  font-size: 16px;
+  line-height: 16px;
 }
