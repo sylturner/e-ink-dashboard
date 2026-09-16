@@ -44,6 +44,12 @@ class DashboardItem < ApplicationRecord
     Component.part!(kind, view, key).size(size_name(key))
   end
 
+  # How a news tile draws its headlines. A tile saved before it had one
+  # draws the app's.
+  def news_template
+    NewsTemplate.from(settings["template"].presence || AppSetting.current.news_template.to_h)
+  end
+
   def grid_style
     "grid-column: #{col} / span #{col_span}; " \
     "grid-row: #{row} / span #{row_span};"
@@ -53,6 +59,13 @@ class DashboardItem < ApplicationRecord
 
     def apply_defaults
       self.view = Component.default_view(kind) if view.blank? && kind.present?
+      self.settings = settings.merge("template" => news_template.to_h) if templated?
+    end
+
+    # A new tile starts with the app's template, and a saved one is kept in
+    # the shape NewsTemplate reads, whatever the form sent.
+    def templated?
+      Component.templates(kind).any?
     end
 
     # settings[group][view][key], or nil. The nested hashes arrive

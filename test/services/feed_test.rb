@@ -84,6 +84,49 @@ class FeedTest < ActiveSupport::TestCase
     assert_equal "https://json.example.com/icon.png", json.image
   end
 
+  test "keeps an item's summary, author and every element, for headline templates" do
+    entry = item(feed("rss2.xml"), "Media content, widest wins")
+
+    assert_equal "A short summary.", entry["summary"]
+    assert_equal "Ada Lovelace", entry["author"]
+    assert_equal "World, Science", entry.dig("fields", "category")
+    assert_equal "Ada Lovelace", entry.dig("fields", "dc:creator")
+    assert_equal "460", entry.dig("fields", "media:content@width").split(", ").last
+    assert_nil item(feed("rss2.xml"), "No image of its own")["summary"]
+  end
+
+  test "keeps a JSON Feed item's fields, looking through its lists" do
+    entry = feed("feed.json").items.first
+
+    assert_equal "Grace Hopper", entry["author"]
+    assert_equal "The summary.", entry["summary"]
+    assert_equal "code, navy", entry.dig("fields", "tags")
+  end
+
+  test "reads Atom's default namespace without a prefix" do
+    entry = feed("atom.xml").items.last
+
+    assert_equal "urn:1", entry.dig("fields", "id")
+    assert_equal "/2026/09/older", entry.dig("fields", "link@href")
+  end
+
+  test "decodes every entity, and drops a summary that only repeats the headline" do
+    body = <<~XML
+      <rss version="2.0"><channel><title>News</title>
+        <item><title>Fed hikes rates &#8212; again - Reuters</title><link>https://example.com/fed</link>
+          <source url="https://reuters.com">Reuters</source>
+          <description>&lt;a href="https://example.com/fed"&gt;Fed hikes rates &amp;mdash; again&lt;/a&gt;&amp;nbsp;&amp;nbsp;&lt;font&gt;Reuters&lt;/font&gt;</description></item>
+        <item><title>Caf&#233; opens</title><link>https://example.com/cafe</link>
+          <description>&lt;p&gt;Coffee&amp;nbsp;&amp;amp; cake&lt;/p&gt;&lt;script&gt;track()&lt;/script&gt;</description></item>
+      </channel></rss>
+    XML
+    fed, cafe = Feed.new(body, url: "https://example.com/rss").items
+
+    assert_equal "Fed hikes rates — again", fed["title"], "the outlet its <source> names moves to the byline"
+    assert_nil fed["summary"]
+    assert_equal "Coffee & cake", cafe["summary"]
+  end
+
   test "rejects what isn't a feed" do
     assert_raises(Http::Error) { Feed.new("<html><body>hi</body></html>", url: "https://example.com") }
     assert_raises(Http::Error) { Feed.new("{ not json", url: "https://example.com") }

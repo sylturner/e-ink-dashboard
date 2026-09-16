@@ -1,0 +1,125 @@
+<%
+  weather = item.sources.find { it.providable_type == "WeatherProvider" }&.payload || {}
+  current = weather["current"]
+  today   = Array(weather["daily"]).first
+  photos  = item.shows?("photos")
+
+  # The lead is the newest story with a photo. The left column opens with
+  # the next story that has one, the right with a big headline from
+  # another source, and briefs follow in both, the sources taking turns.
+  stories = NewsFeed.for(item)
+  lead    = stories.find { it["image"].present? } || stories.first
+  rest    = stories - [ lead ]
+  second  = (rest.find { it["image"].present? } if photos) || rest.first
+  rest   -= [ second ]
+  third   = rest.find { it["source_name"] != lead&.dig("source_name") } || rest.first
+  briefs  = NewsFeed.by_turns(rest - [ third ]).first(item.setting("story_count").to_i)
+  left, right = briefs.partition.with_index { |_, index| index.even? }
+%>
+<div class="paper">
+  <header class="paper-masthead">
+    <div class="paper-ear">
+      <% if item.shows?("weather") && current %>
+        <div class="paper-weather">
+          <%= weather_icon(current["icon"], size: 32) %>
+          <div class="paper-temp"><%= current["temp"] %>&deg;</div>
+        </div>
+        <div class="paper-small"><%= current["label"] %></div>
+        <% if today %>
+          <div class="paper-small"><%= t("renders.newspaper.high_low", high: today["high"], low: today["low"]) %></div>
+        <% end %>
+      <% end %>
+    </div>
+
+    <%= tag.div item.setting("name"), class: "paper-name hl-72", data: { sizes: NewspaperLayout::NAME_SIZES.join(" ") } %>
+
+    <div class="paper-ear paper-ear--right">
+      <div class="paper-small"><%= t("renders.newspaper.edition", time: panel_time(now, :time)) %></div>
+      <div class="paper-small"><%= t("renders.newspaper.number", day: now.yday) %></div>
+    </div>
+  </header>
+
+  <% if item.shows?("dateline") %>
+    <div class="paper-dateline">
+      <span><%= panel_date(now, :long) %></span>
+      <span><%= item.setting("motto") %></span>
+    </div>
+  <% end %>
+
+  <div class="paper-page">
+    <div class="paper-column" data-fit>
+      <% if second %>
+        <%= render "renders/items/newspaper/story", item:, now:, story: second, sizes: NewspaperLayout::FEATURE_SIZES,
+                   photo: (:top if photos), summary: 4 %>
+      <% end %>
+      <% left.each_with_index do |story, index| %>
+        <%= render "renders/items/newspaper/story", item:, now:, story:, sizes: NewspaperLayout::BRIEF_SIZES,
+                   photo: (:thumb if photos && index.odd?), summary: 2 %>
+      <% end %>
+    </div>
+
+    <div class="paper-lead" data-fit>
+      <% if lead %>
+        <%= render "renders/items/newspaper/story", item:, now:, story: lead, sizes: NewspaperLayout::LEAD_SIZES,
+                   photo: :fill, summary: 3 %>
+      <% end %>
+    </div>
+
+    <div class="paper-column" data-fit>
+      <% if third %>
+        <%= render "renders/items/newspaper/story", item:, now:, story: third, sizes: NewspaperLayout::BIG_SIZES,
+                   photo: nil, summary: 6 %>
+      <% end %>
+      <% right.each_with_index do |story, index| %>
+        <%= render "renders/items/newspaper/story", item:, now:, story:, sizes: NewspaperLayout::BRIEF_SIZES,
+                   photo: (:thumb if photos && index.even?), summary: 0 %>
+      <% end %>
+    </div>
+  </div>
+
+  <%# Sets the page once its fonts have loaded (BrowserPool waits for them
+      too, and photos have fixed sizes, so the capture sees the result).
+      Headlines are never cut off: a box's first story steps its headline
+      down its sizes until it fits, giving up its summary and photo only
+      at the smallest, and the stories after it are kept while they fit.
+      The masthead's name steps down until it fits between the ears. %>
+  <%= javascript_tag nonce: true do %>
+    (() => {
+      const paper = document.currentScript.closest(".paper")
+      const tall = (box) => box.scrollHeight > box.clientHeight
+      const wide = (box) => box.scrollWidth > box.clientWidth
+
+      // Moves an element to its next smaller size, or says it can't.
+      const shrink = (element) => {
+        const sizes = (element?.dataset.sizes || "").split(" ")
+        const at = sizes.findIndex((size) => element.classList.contains(`hl-${size}`))
+        if (at < 0 || at === sizes.length - 1) return false
+        element.classList.replace(`hl-${sizes[at]}`, `hl-${sizes[at + 1]}`)
+        return true
+      }
+
+      const fit = () => {
+        const name = paper.querySelector(".paper-name")
+        while (wide(name) && shrink(name)) {}
+
+        paper.querySelectorAll("[data-fit]").forEach((box) => {
+          const [first, ...others] = box.querySelectorAll(".paper-story")
+          if (!first) return
+
+          others.forEach((story) => story.remove())
+          while (tall(box) && shrink(first.querySelector(".paper-headline"))) {}
+          for (const part of [".paper-summary", ".paper-photo"]) {
+            if (tall(box)) first.querySelector(part)?.remove()
+          }
+
+          others.forEach((story) => {
+            box.append(story)
+            if (tall(box)) story.remove()
+          })
+        })
+      }
+
+      document.fonts.ready.then(fit)
+    })()
+  <% end %>
+</div>

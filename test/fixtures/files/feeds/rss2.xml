@@ -16,6 +16,10 @@
       <media:content url="https://img.example.com/a-140.jpg" width="140"/>
       <media:content url="https://img.example.com/a-460.jpg" width="460"/>
       <media:thumbnail url="https://img.example.com/a-thumb.jpg"/>
+      <description><![CDATA[A <b>short</b> summary.]]></description>
+      <dc:creator>Ada Lovelace</dc:creator>
+      <category>World</category>
+      <category>Science</category>
     </item>
     <item>
       <title><![CDATA[<b>Enclosure</b> image &amp; entities]]></title>

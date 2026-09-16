@@ -160,8 +160,33 @@ class Component
         Setting.new(key: "event_limit", type: :integer, label: "Headlines",
                     default: 4)
       ],
+      # Headlines are drawn from the tile's NewsTemplate, which the
+      # inspector edits in place of parts.
+      templates: %w[headlines]
+    },
+
+    # A whole front page in one tile, meant to fill the grid: a masthead
+    # with a weather ear, a lead story with its photo, and headlines in
+    # the columns either side. Reads its first weather source and merges
+    # every feed.
+    "newspaper" => {
+      label: "Newspaper",
+      views: { "front_page" => "Front page" },
+      source_types: %w[RssProvider WeatherProvider],
+      multi_source: true,
+      settings: [
+        Setting.new(key: "name", type: :string, label: "Paper name", default: "The Daily Dashboard"),
+        Setting.new(key: "motto", type: :string, label: "Motto", default: "All the news that fits"),
+        Setting.new(key: "story_count", type: :integer, label: "Most briefs", default: 12)
+      ],
       parts: {
-        "headlines" => [ Part.new(key: "source", default: false) ]
+        "front_page" => [
+          Part.new(key: "weather"),
+          Part.new(key: "dateline"),
+          Part.new(key: "photos"),
+          Part.new(key: "bylines"),
+          Part.new(key: "summaries")
+        ]
       }
     },
 
@@ -235,6 +260,11 @@ class Component
     def part!(kind, view, key)
       part(kind, view, key) or
         raise ArgumentError, "#{label(kind)} #{view} declares no #{key} part"
+    end
+
+    # The layouts drawn from a NewsTemplate.
+    def templates(kind)
+      find(kind)&.fetch(:templates, []) || []
     end
 
     def source_types(kind)

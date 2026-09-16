@@ -49,6 +49,17 @@
 
   <%= render "dashboard_items/parts", f:, item: %>
 
+  <% templates = Component.templates(item.kind) %>
+  <% if templates.any? %>
+    <%= tag.fieldset class: "mb-3", hidden: !templates.include?(item.view),
+                     data: { item_form_target: "setting", views: templates.join(" ") } do %>
+      <legend class="fs-6 fw-semibold mb-2"><%= t("news_templates.legend") %></legend>
+      <%= render "news_templates/fields", fields: nested_fields(f, :settings, :template),
+                                          template: item.news_template,
+                                          paths: feed_field_paths(item.sources) %>
+    <% end %>
+  <% end %>
+
   <% settings = Component.settings(item.kind) %>
   <% if settings.any? %>
     <fieldset class="mb-3" data-item-form-target="group">

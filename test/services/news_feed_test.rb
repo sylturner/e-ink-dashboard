@@ -49,4 +49,19 @@ class NewsFeedTest < ActiveSupport::TestCase
 
     assert_equal [], NewsFeed.for(@item.reload)
   end
+
+  test "each entry carries the name its source was given" do
+    attach("World desk", [ story("Big story", "2026-09-16T10:00:00Z").merge("source" => "Example News - World") ])
+
+    assert_equal [ "World desk" ], NewsFeed.for(@item.reload).map { it["source_name"] }
+  end
+
+  test "by_turns lets each source take a turn, newest first" do
+    attach("Busy", (1..3).map { story("Busy #{it}", "2026-09-16T1#{4 - it}:00:00Z") })
+    attach("Quiet", [ story("Quiet 1", "2026-09-15T10:00:00Z") ])
+
+    assert_equal [ "Busy 1", "Quiet 1", "Busy 2", "Busy 3" ],
+                 NewsFeed.by_turns(NewsFeed.for(@item.reload)).map { it["title"] }
+    assert_equal [], NewsFeed.by_turns([])
+  end
 end

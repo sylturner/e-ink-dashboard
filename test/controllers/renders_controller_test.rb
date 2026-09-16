@@ -250,20 +250,6 @@ class RendersControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes body, "Sunday, September 6"
   end
 
-  test "a headline's feed name is a part, off to start with" do
-    sources(:three).update!(payload: { "items" => [ { "title" => "Big news", "source" => "The Paper" } ] })
-    news = @dashboard.dashboard_items.create!(kind: "news", view: "headlines", col: 7, row: 3,
-                                              col_span: 4, row_span: 3, sources: [ sources(:three) ])
-
-    body = render_view("today")
-    assert_includes body, "Big news"
-    assert_not_includes body, "The Paper"
-
-    news.update!(settings: { "parts" => { "headlines" => { "source" => "1" } } })
-
-    assert_includes render_view("today"), "The Paper"
-  end
-
   test "weather's default parts draw Right now as before" do
     body = render_weather("current")
 
@@ -392,5 +378,111 @@ class RendersControllerTest < ActionDispatch::IntegrationTest
 
     assert_equal [ "World newest", "Local middle", "World oldest" ],
                  css_select(".feed li .t-clip").map { it.text.strip }
+  end
+
+  def render_headlines(template, items)
+    item = dashboards(:one).dashboard_items.create!(kind: "news", view: "headlines", col: 5, row: 1,
+                                                    col_span: 4, row_span: 4,
+                                                    settings: { "template" => template })
+    item.sources << news_source("World", items)
+    render_dashboard(item.dashboard)
+  end
+
+  STORY = {
+    "title" => "Big news", "source" => "The Paper", "published_at" => "2026-09-06T11:00:00Z",
+    "image" => "https://img.example.com/big.jpg", "fields" => { "dc:creator" => "Ada" }
+  }.freeze
+
+  def render_newspaper(settings = {})
+    sources(:one).update!(payload: WEATHER)
+    paper = dashboards(:one).dashboard_items.create!(kind: "newspaper", col: 5, row: 1, col_span: 4, row_span: 4,
+                                                     settings: { "name" => "The Daily Test" }.merge(settings))
+    photo = ->(name) { "https://img.example.com/#{name}.jpg" }
+    paper.sources << sources(:one)
+    paper.sources << news_source("World", [
+      { "title" => "World lead", "published_at" => "2026-09-06T12:00:00Z", "image" => photo.("lead"), "summary" => "What the lead is about" },
+      { "title" => "World second", "published_at" => "2026-09-06T11:00:00Z", "image" => photo.("second") },
+      { "title" => "World brief", "published_at" => "2026-09-06T08:00:00Z", "image" => photo.("brief") },
+      { "title" => "World brief 2", "published_at" => "2026-09-06T07:00:00Z", "image" => photo.("brief-2") }
+    ])
+    paper.sources << news_source("Local", [
+      { "title" => "Local big", "published_at" => "2026-09-06T10:00:00Z", "summary" => "A long story" },
+      { "title" => "Local brief", "published_at" => "2026-09-06T06:00:00Z", "image" => photo.("local") }
+    ])
+    render_dashboard(paper.dashboard)
+  end
+
+  def column_headlines(index)
+    css_select(".paper-column")[index].css(".paper-headline").map { it.text.strip }
+  end
+
+  test "a newspaper's masthead carries the weather, the edition and the date" do
+    render_newspaper
+
+    assert_select ".card--newspaper .paper-masthead" do
+      assert_select ".paper-name.hl-72[data-sizes=?]", "72 64 56 48 40 32 24", "The Daily Test"
+      assert_select ".paper-weather .paper-temp", "72°"
+      assert_select ".paper-ear .paper-small", "H 75° · L 60°"
+      assert_select ".paper-ear--right .paper-small", "6:00 AM edition" # the panel is in Los Angeles
+    end
+    assert_select ".paper-dateline", /Sunday, September 6, 2026\s+All the news that fits/
+    assert_select ".paper script", /document\.fonts\.ready/
+  end
+
+  test "a newspaper leads with its newest photo, and varies the stories around it" do
+    render_newspaper
+
+    assert_select ".paper-lead .paper-story--fill" do
+      assert_select ".paper-headline.hl-40[data-sizes=?]", "40 36 32 28 24 20", "World lead"
+      assert_select "img.paper-photo[src=?]", "https://img.example.com/lead.jpg"
+      assert_select ".paper-byline", "World · 1h"
+      assert_select ".paper-summary.t-clip-3", "What the lead is about"
+    end
+
+    # The left column opens with the next photo, the right with a big
+    # headline from another source; briefs follow, the sources taking turns.
+    assert_equal [ "World second", "World brief", "World brief 2" ], column_headlines(0)
+    assert_equal [ "Local big", "Local brief" ], column_headlines(1)
+    assert_select ".paper-column .paper-story--top img.paper-photo[src=?]", "https://img.example.com/second.jpg"
+    assert_select ".paper-column .paper-headline.hl-28", "Local big"
+    assert_select ".paper-column img.paper-thumb", 2 # some briefs, not all
+    assert_select ".paper-column .paper-summary.t-clip-6", "A long story"
+    assert_select ".paper-headline.t-clip", 0, "a headline is never clipped"
+  end
+
+  test "a newspaper's parts can each be hidden" do
+    render_newspaper("parts" => { "front_page" => { "weather" => "0", "dateline" => "0", "photos" => "0",
+                                                    "bylines" => "0", "summaries" => "0" } })
+
+    assert_select ".paper-name", "The Daily Test"
+    assert_select ".paper-weather, .paper-dateline, .paper-byline, .paper-summary, .paper-thumb, .paper-story--top", 0
+    assert_select ".paper-lead img.paper-photo", 1, "the lead keeps its photo"
+  end
+
+  test "a news tile draws the title alone, with no picture, to start with" do
+    body = render_headlines(nil, [ STORY ])
+
+    assert_select ".headlines--none li > .headline-text > div", 1
+    assert_select ".headline-text .t-clip.t-clip-2", "Big news"
+    assert_select ".headline-image", 0
+    assert_not_includes body, "The Paper"
+  end
+
+  test "a headline template maps an item's fields to its picture and lines" do
+    render_headlines({
+      "image" => { "placement" => "left", "size" => "medium" },
+      "lines" => [
+        { "field" => "title", "size" => "large", "clamp" => "3" },
+        { "field" => "custom", "format" => "{dc:creator} · {source} · {age} · {date}", "size" => "small", "clamp" => "1" },
+        { "field" => "author", "size" => "small", "clamp" => "1" }
+      ]
+    }, [ STORY ])
+
+    assert_select ".headlines--left li" do
+      assert_select "img.headline-image[src=?][width='80'][height='80']", "https://img.example.com/big.jpg"
+      assert_select ".headline-text > div", 2 # the author is empty
+      assert_select ".headline-text > .t-md.t-clip-3", "Big news"
+      assert_select ".headline-text > .t-xs.t-clip-1", "Ada · The Paper · 2h · Sep 6"
+    end
   end
 end

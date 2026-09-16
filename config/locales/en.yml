@@ -53,6 +53,7 @@ en:
       small: "Small"
       medium: "Medium"
       large: "Large"
+      extra_large: "Extra large"
     # One label per part, shared by every layout of the component that
     # draws it.
     parts:
@@ -64,8 +65,12 @@ en:
       clock:
         date: "Date"
         time: "Time"
-      news:
-        source: "Feed name"
+      newspaper:
+        bylines: "Feed and time"
+        dateline: "Date line"
+        photos: "Photos beside the lead"
+        summaries: "Summaries"
+        weather: "Weather"
       note:
         qr_code: "QR code to edit"
       weather:
@@ -86,6 +91,47 @@ en:
     # Beside links to a panel's live frame URL: the builder's device list
     # and the device page.
     live_bitmap_hint: "Opening the live bitmap renders a fresh frame if one is due, and counts as a check-in for the panel."
+  # A headline template's fields (news_templates/_fields): in a news tile's
+  # inspector, and for new tiles on the Settings page.
+  news_templates:
+    legend: "Each headline"
+    settings_legend: "New news tiles"
+    settings_hint: "How a new news tile draws each headline. Existing tiles keep their own."
+    image: "Picture"
+    placement: "Placement"
+    placements:
+      none: "None"
+      left: "Left of the text"
+      right: "Right of the text"
+      above: "Above the text"
+    line: "Line %{number}"
+    shows: "Shows"
+    fields:
+      none: "Nothing"
+      title: "Title"
+      summary: "Summary"
+      author: "Author"
+      source: "Feed name"
+      date: "Date"
+      age: "Time since"
+      custom: "Custom format"
+    format: "Format"
+    format_placeholder: "{source} · {age}"
+    format_hint: "Text and tokens, like {author} · {date}. See the tokens below."
+    clamp: "Max lines"
+    tokens:
+      summary: "Tokens"
+      token: "Token"
+      draws: "Draws"
+      named:
+        title: "The headline"
+        summary: "The summary or description, as plain text"
+        author: "The author"
+        source: "The feed's name"
+        date: "When it was published: Sep 16"
+        age: "How long ago: 5m, 3h, 2d"
+      paths_html: "Any other part of a feed item works too, by its path in the feed: <code>{dc:creator}</code>, <code>{category}</code>, <code>{enclosure@length}</code>. A line whose tokens are all empty isn't drawn."
+      in_feeds: "Found in these feeds:"
   # A note's phone page (NotesController) and its source form.
   notes:
     body: "Note"
@@ -128,6 +174,17 @@ en:
           result: "a line across"
   # Text drawn on a panel.
   renders:
+    # PanelTimeHelper#panel_age: how long ago a headline was published.
+    age:
+      now: "now"
+      minutes: "%{count}m"
+      hours: "%{count}h"
+      days: "%{count}d"
+    # The newspaper tile's front page.
+    newspaper:
+      edition: "%{time} edition"
+      number: "No. %{day}"
+      high_low: "H %{high}° · L %{low}°"
     weather:
       humidity: "Humidity %{percent}%"
       # The chance of rain on its own, when the high and low it follows
@@ -151,3 +208,7 @@ en:
       # event_time_label cuts the 12-hour meridiem to one letter: "12:00p".
       panel_event_12h: "%-l:%M%P"
       panel_event_24h: "%H:%M"
+      # PanelTimeHelper#panel_date, on either clock.
+      panel_short_date: "%b %-d"
+      # A newspaper's date line, on either clock.
+      panel_long_date: "%A, %B %-d, %Y"

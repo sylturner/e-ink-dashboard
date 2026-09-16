@@ -38,6 +38,47 @@
   font-display: block;
 }
 
+/* The newspaper's faces (licenses in app/assets/fonts/licenses) */
+@font-face {
+  font-family: "Newsreader";
+  src: url("Newsreader-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "Newsreader";
+  src: url("Newsreader-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "Newsreader";
+  src: url("Newsreader-ExtraBold.woff2") format("woff2");
+  font-weight: 800;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "Oswald";
+  src: url("Oswald-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "UnifrakturMaguntia";
+  src: url("UnifrakturMaguntia-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+
 @font-face {
   font-family: "VHS VCR OSD";
   src: url("vhs-vcr-osd.ttf") format("truetype");
@@ -291,6 +332,8 @@ body {
 .t-clip-2 { -webkit-line-clamp: 2; }
 .t-clip-3 { -webkit-line-clamp: 3; }
 .t-clip-4 { -webkit-line-clamp: 4; }
+.t-clip-5 { -webkit-line-clamp: 5; }
+.t-clip-6 { -webkit-line-clamp: 6; }
 
 /* ---------- Lists ---------- */
 
@@ -418,24 +461,46 @@ body {
   height: calc(var(--lh-xs) * 2);
 }
 
-/* Headlines wrap, so rows need to stack rather than sit on one line */
-.rows--stacked > li {
-  display: block;
-  white-space: normal;
-}
-
 /* Icon cells in a row shouldn't stretch */
 .rows > li > span {
   display: flex;
   align-items: center;
 }
 
-.feed img {
+/* The images layout's pictures, one after another */
+.feed > img {
   max-width: 100%;
   height: auto;
   display: block;
   margin-left: auto;
   margin-right: auto;
+}
+
+/* Headlines drawn from a NewsTemplate: lines of text, with a picture
+   beside or above them */
+.headlines > li {
+  align-items: flex-start;
+  white-space: normal;
+}
+.headlines--none > li { display: block; }
+.headlines--right > li { flex-direction: row-reverse; }
+.headlines--above > li {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--pad-tight);
+}
+
+/* Cropped to the template's size rather than squashed into it */
+.headline-image {
+  flex: none;
+  display: block;
+  object-fit: cover;
+}
+.headlines--above .headline-image { width: 100%; }
+
+.headline-text {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 /* ============================================================
@@ -612,3 +677,189 @@ body {
 
 .setup-steps ol { margin: 8px 0 8px 24px; }
 .setup-steps li { margin-bottom: 4px; }
+
+/* ============================================================
+   Newspaper: a front page filling the panel
+   ============================================================ */
+
+.card--newspaper { border: none; }
+.card--newspaper .card-body { padding: 0 var(--pad-tight); }
+
+.paper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  font-family: "Newsreader", serif;
+  font-weight: 500;
+}
+
+/* Labels, datelines and bylines: a condensed sans in capitals */
+.paper-small,
+.paper-dateline,
+.paper-byline {
+  font-family: "Oswald", sans-serif;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.paper-small { font-size: 12px; line-height: 15px; }
+
+/* The name centered between two boxed ears of equal width */
+.paper-masthead {
+  flex: none;
+  display: grid;
+  grid-template-columns: 128px minmax(0, 1fr) 128px;
+  align-items: center;
+  gap: var(--pad);
+  padding: var(--pad-tight) 0 2px;
+}
+
+.paper-ear {
+  justify-self: start;
+  padding: 2px var(--pad);
+  border: var(--rule) solid var(--ink);
+}
+.paper-ear:empty { visibility: hidden; }
+.paper-ear--right {
+  justify-self: end;
+  text-align: right;
+}
+
+.paper-weather {
+  display: flex;
+  align-items: center;
+  gap: var(--pad-tight);
+}
+.paper-temp {
+  font-weight: 800;
+  font-size: 28px;
+  line-height: 30px;
+}
+
+/* Sized by the page's fitting script, from .hl-72 down */
+.paper-name {
+  font-family: "UnifrakturMaguntia", serif;
+  font-weight: 400;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* The rules under a masthead: thick, then thin */
+.paper-dateline {
+  flex: none;
+  display: flex;
+  justify-content: space-between;
+  gap: var(--pad);
+  padding: 1px 2px;
+  border-top: 3px solid var(--ink);
+  border-bottom: var(--rule) solid var(--ink);
+  font-size: 12px;
+  line-height: 15px;
+}
+
+/* Three columns split by hairlines, the lead twice as wide */
+.paper-page {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: var(--pad);
+  padding: var(--pad) 0 var(--pad-tight);
+}
+
+.paper-column,
+.paper-lead {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.paper-lead {
+  display: flex;
+  flex-direction: column;
+  padding: 0 var(--pad);
+  border-left: var(--rule) solid var(--ink);
+  border-right: var(--rule) solid var(--ink);
+}
+
+.paper-lead > .paper-story {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.paper-column > .paper-story {
+  display: flow-root;
+  padding-bottom: var(--pad-tight);
+  margin-bottom: var(--pad-tight);
+  border-bottom: var(--rule) solid var(--ink);
+}
+
+.paper-headline {
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+.paper-lead .paper-headline {
+  font-weight: 800;
+  margin-bottom: var(--pad-tight);
+}
+
+/* Headline sizes the fitting script steps through (NewspaperLayout) */
+.hl-14 { font-size: 14px; line-height: 15px; }
+.hl-15 { font-size: 15px; line-height: 16px; }
+.hl-16 { font-size: 16px; line-height: 18px; }
+.hl-18 { font-size: 18px; line-height: 20px; }
+.hl-20 { font-size: 20px; line-height: 22px; }
+.hl-22 { font-size: 22px; line-height: 24px; }
+.hl-24 { font-size: 24px; line-height: 26px; }
+.hl-26 { font-size: 26px; line-height: 29px; }
+.hl-28 { font-size: 28px; line-height: 31px; }
+.hl-32 { font-size: 32px; line-height: 35px; }
+.hl-36 { font-size: 36px; line-height: 40px; }
+.hl-40 { font-size: 40px; line-height: 44px; }
+.hl-48 { font-size: 48px; line-height: 53px; }
+.hl-56 { font-size: 56px; line-height: 62px; }
+.hl-64 { font-size: 64px; line-height: 70px; }
+.hl-72 { font-size: 72px; line-height: 79px; }
+
+.paper-photo {
+  display: block;
+  width: 100%;
+  object-fit: cover;
+}
+/* The lead's photo takes the height its headline and summary leave */
+.paper-story--fill .paper-photo {
+  flex: 1 1 0;
+  min-height: 160px;
+  margin-bottom: 2px;
+}
+.paper-story--top .paper-photo {
+  height: 96px;
+  margin: 2px 0;
+}
+
+.paper-thumb {
+  float: right;
+  width: 56px;
+  height: 56px;
+  margin: 2px 0 2px 6px;
+  object-fit: cover;
+}
+
+.paper-byline {
+  font-size: 11px;
+  line-height: 14px;
+  text-overflow: ellipsis;
+}
+
+.paper-summary {
+  font-size: 14px;
+  line-height: 17px;
+}
+.paper-lead .paper-summary {
+  font-size: 15px;
+  line-height: 18px;
+}

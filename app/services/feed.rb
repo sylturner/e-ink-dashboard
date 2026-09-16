@@ -29,7 +29,13 @@ class Feed
     gravatar\.com/avatar | doubleclick\.net | /tracking/ | [/.]pixel\.(gif|png)
   }xi
 
-  TITLE_LENGTH = 140
+  TITLE_LENGTH   = 140
+  SUMMARY_LENGTH = 500
+
+  # An item's every element, kept for headline templates (see #fields).
+  # Capped, because a payload holds them for every item it keeps.
+  FIELD_LENGTH = 500
+  FIELD_LIMIT  = 60
 
   # A page URL is fine too: if the response is HTML, the feed it
   # advertises with <link rel="alternate"> is fetched instead.
@@ -143,28 +149,104 @@ class Feed
 
     def item(entry, node)
       link     = self.class.absolute(entry.url, url)
-      headline = clean(entry.title).presence ||
-                 clean(entry.summary.presence || entry.content).truncate(TITLE_LENGTH, separator: " ").presence
+      fields   = fields(entry, node)
+      text     = clean(entry.summary.presence || entry.content)
+      title    = without_outlet(clean(entry.title), fields["source"]).presence
+      headline = title || text.truncate(TITLE_LENGTH, separator: " ").presence
       return unless headline || link
+
+      text = "" if title && echoes?(text, title)
 
       {
         "title"        => headline.to_s,
         "url"          => link,
         "published_at" => entry.published&.utc&.iso8601,
         "image"        => entry_image(entry, node, link || url) || artwork,
-        "source"       => title
+        "source"       => self.title,
+        "summary"      => text.truncate(SUMMARY_LENGTH, separator: " ").presence,
+        "author"       => author(entry, fields),
+        "fields"       => fields
       }
     end
 
+    # Aggregators (Google News) end a headline with the outlet their
+    # <source> names ("Fed hikes rates - Reuters"). A byline says that.
+    def without_outlet(title, outlet)
+      return title if outlet.blank?
+
+      title.delete_suffix(" - #{outlet}").delete_suffix(" | #{outlet}")
+    end
+
+    # Aggregators (Google News) describe an item with nothing but its own
+    # headline and outlet, which isn't a summary worth drawing under it.
+    # Punctuation differs between the two ("Title - Reuters", "Title
+    # Reuters"), so only letters and digits are compared.
+    def echoes?(text, title)
+      letters = ->(s) { s.downcase.gsub(/[^[:alnum:]]/, "") }
+      letters.(text).start_with?(letters.(title))
+    end
+
+    # Feedjira reads <author>, <dc:creator> and Atom's <author><name>. JSON
+    # Feed 1.1 moved to an authors list it doesn't read, and a podcast
+    # names its host with <itunes:author>.
+    def author(entry, fields)
+      clean(entry.author).presence ||
+        fields.values_at("authors/name", "itunes:author").compact.first
+    end
+
+    # --- Fields ------------------------------------------------------------
+
+    # Every element and attribute of an item by its path, so a headline
+    # template can draw what a feed carries beyond the fields above:
+    # {dc:creator}, {category}, {enclosure@length},
+    # {media:group/media:title}. Paths use the feed's own prefixes, and a
+    # repeated element's values join into one.
+    def fields(entry, node)
+      pairs = if node then xml_fields(node) elsif json? then json_fields(entry.json) else [] end
+
+      values = pairs.each_with_object({}) do |(path, value), found|
+        value = clean(value).truncate(FIELD_LENGTH, separator: " ")
+        (found[path] ||= []) << value if value.present? && !found[path]&.include?(value)
+      end
+      values.first(FIELD_LIMIT).to_h { |path, list| [ path, list.join(", ") ] }
+    end
+
+    def xml_fields(node, parent = nil)
+      node.element_children.flat_map do |child|
+        path       = [ parent, qualified_name(child) ].compact.join("/")
+        attributes = child.attribute_nodes.map { [ "#{path}@#{qualified_name(it)}", it.value ] }
+        contents   = child.element_children.any? ? xml_fields(child, path) : [ [ path, child.text ] ]
+
+        attributes + contents
+      end
+    end
+
+    def qualified_name(node)
+      prefix = node.namespace&.prefix
+      prefix ? "#{prefix}:#{node.name}" : node.name
+    end
+
+    # A list is looked through rather than numbered, as a repeated XML
+    # element is: {tags}, {authors/name}.
+    def json_fields(value, parent = nil)
+      case value
+      when Hash  then value.flat_map { |key, inner| json_fields(inner, [ parent, key ].compact.join("/")) }
+      when Array then value.flat_map { json_fields(it, parent) }
+      when nil   then []
+      else [ [ parent, value.to_s ] ]
+      end
+    end
+
     # Feed titles carry entities and stray markup often enough to matter,
-    # and a stray tag renders as literal text on the panel.
+    # and a stray tag renders as literal text on the panel. Parsing as HTML
+    # decodes every named entity (&nbsp;, &mdash;), not just the few
+    # CGI.unescapeHTML knows.
     def clean(text)
       return "" if text.blank?
 
-      ActionView::Base.full_sanitizer.sanitize(text.to_s)
-                      .then { |s| CGI.unescapeHTML(s.to_s) }
-                      .gsub(/[[:space:]]+/, " ")
-                      .strip
+      fragment = Nokogiri::HTML::DocumentFragment.parse(text.to_s)
+      fragment.css("script, style").remove
+      fragment.text.gsub(/[[:space:]]+/, " ").strip
     end
 
     # --- Images ------------------------------------------------------------

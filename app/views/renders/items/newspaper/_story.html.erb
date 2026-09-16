@@ -1,0 +1,25 @@
+<%# locals: (item:, now:, story:, sizes:, photo:, summary:) %>
+<%# A newspaper story. `sizes` are the headline's px sizes, largest first,
+    for the page's fitting script to step down; `photo` is :fill (the
+    lead's, taking the height left), :top, :thumb or nil; `summary` is
+    how many lines of it to print. %>
+<% photo = nil if story["image"].blank? %>
+<%= tag.article class: [ "paper-story", ("paper-story--#{photo}" if photo) ] do %>
+  <% if photo == :thumb %>
+    <%= image_tag story["image"], class: "paper-thumb", alt: "" %>
+  <% end %>
+
+  <%= tag.div story["title"], class: [ "paper-headline", "hl-#{sizes.first}" ], data: { sizes: sizes.join(" ") } %>
+
+  <% if photo.in?([ :top, :fill ]) %>
+    <%= image_tag story["image"], class: "paper-photo", alt: "" %>
+  <% end %>
+
+  <% if item.shows?("bylines") && (byline = news_byline(story, now)) %>
+    <div class="paper-byline"><%= byline %></div>
+  <% end %>
+
+  <% if item.shows?("summaries") && summary.positive? && story["summary"].present? %>
+    <%= tag.div story["summary"], class: [ "paper-summary", "t-clip", "t-clip-#{summary}" ] %>
+  <% end %>
+<% end %>

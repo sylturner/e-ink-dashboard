@@ -102,4 +102,12 @@ class AppSettingTest < ActiveSupport::TestCase
     @setting.server_url = "https://dashboard.example.com"
     assert_equal({ protocol: "https", host: "dashboard.example.com", port: 443 }, @setting.url_options)
   end
+
+  test "new news tiles start with the default headline template until one is saved" do
+    assert_equal NewsTemplate.default, @setting.news_template
+
+    @setting.update!(news_template: { "image" => { "placement" => "above", "size" => "nope" } })
+
+    assert_equal({ "placement" => "above", "size" => "small" }, @setting.reload[:news_template]["image"])
+  end
 end

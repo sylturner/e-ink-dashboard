@@ -306,4 +306,44 @@ class DashboardItemsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type=checkbox][name=?]:not([aria-describedby])", box
     assert_select "##{hint}", 0
   end
+
+  test "a news tile's inspector edits its headline template, and lists its feeds' fields" do
+    sources(:three).update!(payload: { "items" => [ { "title" => "A", "fields" => { "title" => "A", "dc:creator" => "Ada" } } ] })
+    get edit_dashboard_item_url(@dashboard_item, kind: "news")
+
+    assert_response :success
+    assert_select "fieldset[data-views=?]", "headlines" do
+      assert_select "legend", "Each headline"
+      assert_select "select[name=?] option[selected][value=?]", "dashboard_item[settings][template][image][placement]", "none"
+      assert_select "select[name=?] option[selected][value=?]", "dashboard_item[settings][template][lines][0][field]", "title"
+      assert_select "label[for=?]", "dashboard_item_settings_template_lines_2_format", "Format"
+      assert_select "[data-news-template-target=format][hidden] input[name=?]", "dashboard_item[settings][template][lines][0][format]"
+      assert_select "[data-news-template-target=style][hidden] select[name=?]", "dashboard_item[settings][template][lines][1][size]"
+    end
+    # The kind was only switched in the form, so the tile has none of the feed's sources yet.
+    assert_select "details ul code", 0
+
+    news = dashboards(:one).dashboard_items.create!(kind: "news", col: 1, row: 7, col_span: 2, row_span: 2,
+                                                    sources: [ sources(:three) ])
+    get edit_dashboard_item_url(news)
+
+    assert_select "details ul code", "{dc:creator}"
+    assert_select "details ul code", 1
+  end
+
+  test "a news tile's template round-trips through the form" do
+    news = dashboards(:one).dashboard_items.create!(kind: "news", col: 1, row: 7, col_span: 2, row_span: 2)
+
+    patch dashboard_item_url(news), params: { dashboard_item: { kind: "news", view: "headlines", settings: {
+      "event_limit" => "4",
+      "template" => { "image" => { "placement" => "left", "size" => "large" },
+                      "lines" => { "0" => { "field" => "title", "size" => "large", "clamp" => "1" },
+                                   "1" => { "field" => "custom", "format" => "{source} · {age}", "size" => "small", "clamp" => "1" },
+                                   "2" => { "field" => "none", "size" => "small", "clamp" => "1" } } }
+    } } }
+
+    template = news.reload.news_template
+    assert_equal [ "left", "large" ], [ template.image.placement, template.image.size ]
+    assert_equal [ "{title}", "{source} · {age}" ], template.lines.select(&:shown?).map(&:tokens)
+  end
 end
