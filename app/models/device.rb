@@ -23,10 +23,22 @@ class Device < ApplicationRecord
 
   # The settings a frame is rendered from: changing one leaves the frame
   # on the panel out of date. Rotation isn't used when rendering.
-  FRAME_SETTINGS = %w[dashboard_id width height bit_depth image_format dither time_zone].freeze
+  FRAME_SETTINGS = %w[dashboard_id width height bit_depth image_format dither time_zone show_navigation].freeze
 
-  # Every dashboard this panel is allowed to show.
-  has_many :device_dashboards, -> { order(:position) }, dependent: :destroy
+  # Where a dashboard sits among a panel's, for the navigation strip
+  # (renders/_navigation): the panel's dashboards in order, and the index
+  # of the one drawn. Stepping past either end wraps around.
+  Navigation = Data.define(:dashboards, :index) do
+    def current = dashboards[index]
+    def previous_dashboard = dashboards[index - 1]
+    def next_dashboard = dashboards[(index + 1) % count]
+    def position = index + 1
+    def count = dashboards.size
+  end
+
+  # Every dashboard this panel is allowed to show, in the order a dial or
+  # the special function steps through them.
+  has_many :device_dashboards, -> { order(:position, :id) }, dependent: :destroy
   has_many :dashboards, through: :device_dashboards
 
   # The one currently on the panel. Kept in sync below so it is always
@@ -128,7 +140,7 @@ class Device < ApplicationRecord
   # Public because assignments are usually created and destroyed through
   # DeviceDashboard, which never saves the device itself.
   def sync_active_dashboard
-    assigned = DeviceDashboard.where(device_id: id).order(:position).pluck(:dashboard_id)
+    assigned = DeviceDashboard.where(device_id: id).order(:position, :id).pluck(:dashboard_id)
 
     wanted = if assigned.empty?
       nil
@@ -141,14 +153,26 @@ class Device < ApplicationRecord
     update_column(:dashboard_id, wanted) unless wanted == dashboard_id
   end
 
-  # Cycles through every dashboard, ordered by name. If you later want a
-  # per-device subset, this is the method to change.
-  def advance_dashboard!
-    ids = Dashboard.order(:name).pluck(:id)
-    return if ids.empty?
+  # Moves the panel `steps` through its dashboards: forward for a positive
+  # number, back for a negative one, wrapping around at either end.
+  def step_dashboard!(steps)
+    ids = device_dashboards.pluck(:dashboard_id)
+    return if ids.empty? || steps.zero?
 
-    index = ids.index(dashboard_id) || -1
-    update_columns(dashboard_id: ids[(index + 1) % ids.size])
+    index = ids.index(dashboard_id) || (steps.positive? ? -1 : 0)
+    update_columns(dashboard_id: ids[(index + steps) % ids.size])
+  end
+
+  # The strip drawn under `dashboard` on this panel, or nil when the panel
+  # doesn't draw one or the dashboard isn't one of its own. The dashboard
+  # passed stands in for its saved copy, so the builder's preview names
+  # it as it is being edited.
+  def navigation(dashboard = self.dashboard)
+    return unless show_navigation? && dashboard
+
+    dashboards = self.dashboards.map { it.id == dashboard.id ? dashboard : it }
+    index = dashboards.index(dashboard)
+    Navigation.new(dashboards:, index:) if index
   end
 
   def request_refresh!

@@ -80,13 +80,36 @@ class Api::DisplaysControllerTest < ActionDispatch::IntegrationTest
   # as HTTP_SPECIAL_FUNCTION. Naming it "special_function" here would
   # pass even when a real panel's press was ignored.
   test "the special function moves the panel to its next dashboard" do
-    before = @device.dashboard_id
+    @device.device_dashboards.create!(dashboard: dashboards(:two), position: 1)
 
     body = check_in(headers: { "HTTP_SPECIAL_FUNCTION" => "true" })
 
-    assert_not_equal before, @device.reload.dashboard_id
+    assert_equal dashboards(:two), @device.reload.dashboard
     assert_equal "restart_playlist", body["action"]
     assert_equal @composed.filename, body["filename"]
+  end
+
+  test "a turn of the dial steps through the panel's dashboards and renders" do
+    hallway = Dashboard.create!(name: "Hallway")
+    @device.device_dashboards.create!(dashboard: dashboards(:two), position: 1)
+    @device.device_dashboards.create!(dashboard: hallway, position: 2)
+
+    body = check_in(headers: { "Navigate" => "-1" })
+    assert_equal hallway, @device.reload.dashboard
+    assert_equal @composed.filename, body["filename"]
+    assert_nil body["action"]
+
+    check_in(headers: { "Navigate" => "+2" })
+    assert_equal dashboards(:two), @device.reload.dashboard
+  end
+
+  test "a Navigate header that isn't a number is ignored" do
+    @device.device_dashboards.create!(dashboard: dashboards(:two), position: 1)
+
+    body = check_in(headers: { "Navigate" => "back" })
+
+    assert_equal dashboards(:one), @device.reload.dashboard
+    assert_equal @current.filename, body["filename"]
   end
 
   test "a render that fails falls back to the last frame" do

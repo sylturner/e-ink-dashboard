@@ -5,3 +5,8 @@
     <%= render "renders/item", item: item, now: @now %>
   <% end %>
 </div>
+
+<%# A panel's navigation strip, which takes the foot of the screen. %>
+<% if (navigation = @device&.navigation(@dashboard)) %>
+  <%= render "renders/navigation", navigation: %>
+<% end %>

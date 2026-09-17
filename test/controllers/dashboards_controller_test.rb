@@ -99,11 +99,14 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".dashboard-settings form[data-grid-target=draft]"
   end
 
-  test "saving the settings returns to the builder" do
+  test "saving the settings returns to the builder and asks its panels for a new frame" do
+    @dashboard.devices.update_all(refresh_requested_at: nil)
+
     patch dashboard_url(@dashboard), params: { dashboard: { name: @dashboard.name, theme: "night", grid_columns: 8, grid_rows: 8 } }
 
     assert_redirected_to edit_dashboard_url(@dashboard)
     assert_equal "night", @dashboard.reload.theme
+    assert @dashboard.devices.all?(&:refresh_requested_at)
   end
 
   # The canvas has to match the tiles on it, so it keeps the saved grid.

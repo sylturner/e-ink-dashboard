@@ -39,6 +39,8 @@ class DashboardsController < ApplicationController
   # PATCH/PUT /dashboards/1
   def update
     if @dashboard.update(dashboard_params)
+      # Its panels draw its theme and grid, and navigation strips name it.
+      @dashboard.request_refresh! if @dashboard.saved_changes.any?
       redirect_to edit_dashboard_path(@dashboard), notice: "Dashboard settings saved.", status: :see_other
     else
       load_builder

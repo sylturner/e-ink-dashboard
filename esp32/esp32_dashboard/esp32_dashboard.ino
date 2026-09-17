@@ -9,6 +9,10 @@
 // MAC to /api/setup and stores the key it gets back in flash. One
 // firmware image therefore covers every panel.
 //
+// An optional dial (a rotary encoder) steps through the panel's
+// dashboards: a turn wakes the chip, and the check-in says how many
+// clicks it was turned and which way.
+//
 // Libraries: GxEPD2, ArduinoJson (v7).
 //
 // secrets.h must define:
@@ -28,7 +32,7 @@
 #include "secrets.h"
 #include "types.h"
 
-#define FIRMWARE_VERSION "3.0.0"
+#define FIRMWARE_VERSION "3.1.0"
 #define DEVICE_MODEL "esp32_dashboard"
 #define TEST_MODE 0
 
@@ -40,7 +44,15 @@ constexpr int PIN_DC     = 9;
 constexpr int PIN_CS     = 10;
 constexpr int PIN_DIN    = 11;  // SPI MOSI
 constexpr int PIN_CLK    = 12;  // SPI SCK
-constexpr int PIN_BUTTON = 4;   // must be an RTC-capable GPIO for ext0 wake
+constexpr int PIN_BUTTON = 4;   // must be an RTC-capable GPIO (0-21) to wake the chip
+
+// A rotary encoder's two pins, or -1 for a panel without a dial. Both
+// must be RTC-capable GPIOs. Its push switch, if it has one, can share
+// PIN_BUTTON. It expects an encoder that rests with both pins open (HIGH)
+// and runs a full cycle per click, as the common EC11 and KY-040 do.
+// Turning clockwise is forward.
+constexpr int PIN_DIAL_A = 1;
+constexpr int PIN_DIAL_B = 2;
 
 // Set to an ADC pin wired to a 2:1 divider on the battery, or -1 to skip.
 constexpr int PIN_BATTERY = -1;
@@ -57,6 +69,11 @@ constexpr uint32_t WIFI_TIMEOUT_MS   = 20000;
 constexpr uint32_t HTTP_TIMEOUT_MS   = 20000;
 constexpr uint32_t LONG_PRESS_MS     = 900;
 constexpr uint32_t BUTTON_SETTLE_MS  = 40;
+// A turn counts as finished once the dial has been still this long.
+constexpr uint32_t DIAL_SETTLE_MS    = 300;
+// Clicks made while a turn's image draws are sent after it, this many
+// times at most before the panel sleeps.
+constexpr int      MAX_DIAL_ROUNDS   = 3;
 
 constexpr uint32_t DEFAULT_SLEEP_S = 900;
 constexpr uint32_t MIN_SLEEP_S     = 60;
@@ -94,6 +111,21 @@ GxEPD2_BW<GxEPD2_750_GDEY075T7,
 
 WakeReason wakeReason = WAKE_BOOT;
 PressKind  pressKind  = PRESS_NONE;
+
+// The dial's clicks since they were last sent, counted by onDialChange.
+portMUX_TYPE     dialLock        = portMUX_INITIALIZER_UNLOCKED;
+volatile int32_t dialClicks      = 0;
+volatile int8_t  dialQuarters    = 0;     // quadrature steps into this click
+volatile uint8_t dialState       = 0b11;  // (A << 1) | B
+volatile bool    dialAtRest      = true;  // counting only from a rest position
+volatile uint32_t dialMovedAt    = 0;
+
+// Both pins read HIGH between clicks.
+constexpr uint8_t DIAL_REST = 0b11;
+
+// The quarter step each change of the pins makes, indexed by
+// (old state << 2) | new state. In DRAM, since the interrupt reads it.
+DRAM_ATTR const int8_t DIAL_QUARTERS[16] = { 0, -1, 1, 0, 1, 0, 0, -1, -1, 0, 0, 1, 0, 1, -1, 0 };
 
 // =====================================================================
 // Helpers
@@ -393,7 +425,8 @@ bool downloadAndDraw(const String& url, String& message)
   return drawn;
 }
 
-FetchResult fetchAndDraw()
+// `clicks` is how far the dial was turned since the last check-in.
+FetchResult fetchAndDraw(int32_t clicks)
 {
   FetchResult result;
   result.sleepSeconds = DEFAULT_SLEEP_S;
@@ -418,6 +451,7 @@ FetchResult fetchAndDraw()
   switch (wakeReason)
   {
     case WAKE_BUTTON: http.addHeader("Update-Source", "button");     break;
+    case WAKE_DIAL:   http.addHeader("Update-Source", "dial");       break;
     case WAKE_TIMER:  http.addHeader("Update-Source", "timer");      break;
     default:          http.addHeader("Update-Source", "powercycle"); break;
   }
@@ -425,6 +459,10 @@ FetchResult fetchAndDraw()
   // TRMNL's double-click; here, a long press. The server answers by
   // switching to the next dashboard.
   if (pressKind == PRESS_LONG) http.addHeader("special_function", "true");
+
+  // Not part of TRMNL's protocol: the server steps this many dashboards,
+  // back for a negative number, and renders the one it lands on.
+  if (clicks != 0) http.addHeader("Navigate", String(clicks));
 
   const int status = http.GET();
   Serial.printf("Display HTTP %d\n", status);
@@ -482,8 +520,8 @@ FetchResult fetchAndDraw()
   const String imageUrl = response["image_url"] | "";
   const String filename = response["filename"] | "";
 
-  // A press always redraws, so the person pressing sees the panel respond.
-  if (pressKind == PRESS_NONE && filename.length() > 0 && filename == lastFilename)
+  // A press or a turn always redraws, so the person sees the panel respond.
+  if (pressKind == PRESS_NONE && clicks == 0 && filename.length() > 0 && filename == lastFilename)
   {
     result.ok = true;
     result.unchanged = true;
@@ -518,7 +556,7 @@ FetchResult fetchAndDraw()
 // Button
 // =====================================================================
 
-// Woken by ext0 on a falling edge, so the button is down right now.
+// Woken by the button going low, so it is down right now.
 // Measure how long it stays down to tell short from long.
 PressKind classifyPress()
 {
@@ -541,6 +579,102 @@ PressKind classifyPress()
 
   Serial.println("Short press: force refresh");
   return PRESS_SHORT;
+}
+
+// =====================================================================
+// Dial
+// =====================================================================
+
+bool hasDial()
+{
+  return PIN_DIAL_A >= 0 && PIN_DIAL_B >= 0;
+}
+
+uint8_t readDial()
+{
+  return (digitalRead(PIN_DIAL_A) << 1) | digitalRead(PIN_DIAL_B);
+}
+
+// Quadrature decoding: each change of the two pins is a quarter step one
+// way or the other, and a click is counted when the dial comes back to
+// rest at least halfway round, so contact bounce doesn't add clicks.
+// Clockwise, A falls first: 11 -> 01 -> 00 -> 10 -> 11.
+void IRAM_ATTR onDialChange()
+{
+  const uint8_t state = readDial();
+
+  portENTER_CRITICAL_ISR(&dialLock);
+
+  if (state != dialState)
+  {
+    dialQuarters += DIAL_QUARTERS[(dialState << 2) | state];
+    dialState = state;
+    dialMovedAt = millis();
+
+    if (state == DIAL_REST)
+    {
+      // A click already under way when counting began was counted from
+      // the pin that woke the chip.
+      if (dialAtRest && dialQuarters >= 2) dialClicks++;
+      if (dialAtRest && dialQuarters <= -2) dialClicks--;
+
+      dialQuarters = 0;
+      dialAtRest = true;
+    }
+  }
+
+  portEXIT_CRITICAL_ISR(&dialLock);
+}
+
+// Called as early in setup() as possible, since the chip wakes a quarter
+// of a second or so after the click that woke it. `wakeClick` is that
+// click: +1 or -1, from which pin went low first, or 0.
+void startDial(int32_t wakeClick)
+{
+  if (!hasDial()) return;
+
+  rtc_gpio_deinit((gpio_num_t)PIN_DIAL_A);
+  rtc_gpio_deinit((gpio_num_t)PIN_DIAL_B);
+  pinMode(PIN_DIAL_A, INPUT_PULLUP);
+  pinMode(PIN_DIAL_B, INPUT_PULLUP);
+
+  portENTER_CRITICAL(&dialLock);
+  dialState = readDial();
+  dialAtRest = dialState == DIAL_REST;
+  dialQuarters = 0;
+  dialClicks = wakeClick;
+  dialMovedAt = millis();
+  portEXIT_CRITICAL(&dialLock);
+
+  attachInterrupt(digitalPinToInterrupt(PIN_DIAL_A), onDialChange, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(PIN_DIAL_B), onDialChange, CHANGE);
+}
+
+// Waits for a turn still in progress to finish, then hands over its
+// clicks: positive forward, negative back. Turned back and forth, they
+// can come to 0. A dial left between clicks is still, so it doesn't hold
+// the panel awake.
+int32_t takeDialClicks()
+{
+  if (!hasDial()) return 0;
+
+  while (true)
+  {
+    portENTER_CRITICAL(&dialLock);
+    const uint32_t movedAt = dialMovedAt;
+    portEXIT_CRITICAL(&dialLock);
+
+    if (millis() - movedAt >= DIAL_SETTLE_MS) break;
+    delay(10);
+  }
+
+  portENTER_CRITICAL(&dialLock);
+  const int32_t clicks = dialClicks;
+  dialClicks = 0;
+  portEXIT_CRITICAL(&dialLock);
+
+  if (clicks != 0) Serial.printf("Dial: %+ld\n", (long)clicks);
+  return clicks;
 }
 
 // =====================================================================
@@ -570,10 +704,30 @@ void sleepFor(uint32_t seconds)
   // E-ink holds its image with no power, so cut the panel rail.
   digitalWrite(PIN_PWR, LOW);
 
-  const gpio_num_t wakePin = (gpio_num_t)PIN_BUTTON;
-  rtc_gpio_pullup_en(wakePin);
-  rtc_gpio_pulldown_dis(wakePin);
-  esp_sleep_enable_ext0_wakeup(wakePin, 0);  // wake on LOW
+  // Any of the button's and dial's pins going LOW wakes the chip. A pin
+  // already LOW -- a button held, a dial left between clicks -- would
+  // wake it straight back up, so it is left out until the next sleep.
+  const int wakePins[] = { PIN_BUTTON, PIN_DIAL_A, PIN_DIAL_B };
+  uint64_t wakeMask = 0;
+
+  for (int pin : wakePins)
+  {
+    if (pin < 0) continue;
+
+    const bool low = digitalRead(pin) == LOW;
+    rtc_gpio_pullup_en((gpio_num_t)pin);
+    rtc_gpio_pulldown_dis((gpio_num_t)pin);
+
+    if (low) Serial.printf("GPIO %d is held low; not waking on it\n", pin);
+    else wakeMask |= 1ULL << pin;
+  }
+
+  if (wakeMask != 0)
+  {
+    // The internal pull-ups need the RTC peripherals powered in sleep.
+    esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_ON);
+    esp_sleep_enable_ext1_wakeup(wakeMask, ESP_EXT1_WAKEUP_ANY_LOW);
+  }
 
   esp_sleep_enable_timer_wakeup((uint64_t)seconds * 1000000ULL);
   esp_deep_sleep_start();
@@ -585,19 +739,50 @@ void sleepFor(uint32_t seconds)
 
 void setup()
 {
-  Serial.begin(115200);
-  uint32_t serialWait = millis();
-  while (!Serial && millis() - serialWait < 3000) delay(10);
-  delay(200);
-
-  bootCount++;
+  // Before anything slow: the dial has to be counting while the person
+  // is still turning it.
+  int32_t wakeClick = 0;
 
   switch (esp_sleep_get_wakeup_cause())
   {
-    case ESP_SLEEP_WAKEUP_TIMER: wakeReason = WAKE_TIMER;  break;
-    case ESP_SLEEP_WAKEUP_EXT0:  wakeReason = WAKE_BUTTON; break;
-    default:                     wakeReason = WAKE_BOOT;   break;
+    case ESP_SLEEP_WAKEUP_TIMER: wakeReason = WAKE_TIMER; break;
+
+    case ESP_SLEEP_WAKEUP_EXT1:
+    {
+      // Which pins went low. The one that went first tells the direction
+      // of the click that woke the chip; both at once can't.
+      const uint64_t pins = esp_sleep_get_ext1_wakeup_status();
+      const bool a = hasDial() && (pins & (1ULL << PIN_DIAL_A));
+      const bool b = hasDial() && (pins & (1ULL << PIN_DIAL_B));
+
+      if (pins & (1ULL << PIN_BUTTON)) wakeReason = WAKE_BUTTON;
+      else if (a || b)
+      {
+        wakeReason = WAKE_DIAL;
+        wakeClick = a == b ? 0 : (a ? 1 : -1);
+      }
+      // Woken by none of the pins this knows: nobody is waiting, and it
+      // isn't a boot either.
+      else wakeReason = WAKE_TIMER;
+      break;
+    }
+
+    default: wakeReason = WAKE_BOOT; break;
   }
+
+  startDial(wakeClick);
+
+  Serial.begin(115200);
+  // Someone at the panel is waiting on it, so only other wakes hold on
+  // for a USB serial monitor to attach.
+  if (wakeReason != WAKE_BUTTON && wakeReason != WAKE_DIAL)
+  {
+    uint32_t serialWait = millis();
+    while (!Serial && millis() - serialWait < 3000) delay(10);
+    delay(200);
+  }
+
+  bootCount++;
 
   Serial.printf("\nBoot %lu, wake=%d\n", (unsigned long)bootCount, wakeReason);
 
@@ -615,6 +800,7 @@ void setup()
     delay(BOOT_HOLD_MS);
   }
 
+  rtc_gpio_deinit((gpio_num_t)PIN_BUTTON);
   pinMode(PIN_BUTTON, INPUT_PULLUP);
 
   // Holding the button through a cold boot clears the stored API key, so
@@ -676,7 +862,19 @@ void setup()
     }
   }
 
-  FetchResult result = fetchAndDraw();
+  FetchResult result = fetchAndDraw(takeDialClicks());
+
+  // A press is sent once. Clicks made while the image drew move the panel
+  // again before it sleeps, so a turn is never lost to a busy panel.
+  pressKind = PRESS_NONE;
+
+  for (int round = 1; result.ok && round < MAX_DIAL_ROUNDS; round++)
+  {
+    const int32_t clicks = takeDialClicks();
+    if (clicks == 0) break;
+
+    result = fetchAndDraw(clicks);
+  }
 
   if (result.ok)
   {

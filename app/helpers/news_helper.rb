@@ -73,9 +73,9 @@ module NewsHelper
     end)
   end
 
-  # Little pictures drawn on a pixel grid, for a paper's decorations: a
-  # patriot's flag stars, a wizarding paper's sparkles. Whole-pixel rects
-  # keep them crisp on the 1-bit panel.
+  # Little pictures drawn on a pixel grid, for a paper's decorations (a
+  # patriot's flag stars, a wizarding paper's sparkles) and the navigation
+  # strip's arrows. Whole-pixel rects keep them crisp on the 1-bit panel.
   PIXEL_ART = {
     star: [
       "....#....",
@@ -96,6 +96,31 @@ module NewsHelper
       "...#.#...",
       "....#....",
       "....#...."
+    ],
+    # An even height, so it centers on whole pixels in the strip.
+    arrow_previous: [
+      "....#",
+      "...##",
+      "..###",
+      ".####",
+      "#####",
+      "#####",
+      ".####",
+      "..###",
+      "...##",
+      "....#"
+    ],
+    arrow_next: [
+      "#....",
+      "##...",
+      "###..",
+      "####.",
+      "#####",
+      "#####",
+      "####.",
+      "###..",
+      "##...",
+      "#...."
     ]
   }.freeze
 

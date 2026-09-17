@@ -104,6 +104,10 @@ en:
       # The builder's preview status, once it draws changes not yet saved.
       preview_draft: "The preview includes changes that aren't saved yet."
   devices:
+    # A device setting: the strip drawn along the foot of its frames.
+    show_navigation:
+      label: "Show the navigation strip"
+      hint: "Draws a strip along the bottom naming the dashboard showing, the ones before and after it, and where it is in this panel's list. Useful with a dial or the special function."
     # Beside the device page's link to the panel's last frame.
     bitmap_hint: "Opening the bitmap shows the last frame the panel was sent. It doesn't render a new one or count as a check-in."
     # Under the display fields of a device's settings.
