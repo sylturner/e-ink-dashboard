@@ -60,6 +60,13 @@
   <% if item.shows?("dateline") %>
     <div class="paper-dateline">
       <span><%= panel_date(now, :long) %></span>
+      <% if style.workspaces? %>
+        <span class="paper-workspaces">
+          <% t("renders.newspaper.styles.#{style.key}.workspaces").each_with_index do |name, index| %>
+            <%= tag.span name, class: [ "paper-workspace", ("paper-workspace--current" if index.zero?) ] %>
+          <% end %>
+        </span>
+      <% end %>
       <span><%= motto %></span>
     </div>
   <% end %>

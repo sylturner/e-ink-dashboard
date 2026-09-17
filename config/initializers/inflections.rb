@@ -14,3 +14,8 @@
 # ActiveSupport::Inflector.inflections(:en) do |inflect|
 #   inflect.acronym "RESTful"
 # end
+
+# The CDE dashboard theme and newspaper, titleized in the admin UI.
+ActiveSupport::Inflector.inflections(:en) do |inflect|
+  inflect.acronym "CDE"
+end

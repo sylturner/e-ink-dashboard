@@ -567,6 +567,25 @@ class RendersControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "--win-sizing-buttons: url("
   end
 
+  test "a CDE paper on a CDE dashboard puts its date line in a Front Panel" do
+    render_newspaper { |paper| paper.update!(view: "cde") && paper.dashboard.update!(theme: "cde") }
+
+    assert_select "html[data-theme=cde] .paper--cde" do
+      assert_select ".paper-dateline", /Common Desktop Environment/
+      assert_select ".paper-dateline .paper-workspace", 4
+      assert_select ".paper-dateline .paper-workspace--current", "One"
+      assert_select "style", /--paper-chrome: 400 16px\/16px "Pixel Operator", monospace;/
+    end
+    assert_equal 1, response.body.scan('font-family: "Pixel Operator";').size, "the page declares the font once"
+    assert_includes response.body, "--cde-window-buttons: url("
+  end
+
+  test "only a CDE paper has workspaces" do
+    render_newspaper { |paper| paper.update!(view: "windows") }
+
+    assert_select ".paper-workspaces", 0
+  end
+
   test "a paper without a chrome font declares none" do
     render_newspaper
 

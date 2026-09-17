@@ -47,6 +47,14 @@
 }
 
 @font-face {
+  font-family: "Pixel Operator";
+  src: url("PixelOperator.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
   font-family: "VHS VCR OSD";
   src: url("vhs-vcr-osd.ttf") format("truetype");
   font-weight: normal;
@@ -103,6 +111,42 @@
      with the theme. The classic Windows theme and newspaper use them. */
   --win-control-menu: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='19' height='20'><path fill-rule='evenodd' d='M18 0h1v20h-1zM0 19h18v1H0zM3 8h11v3H3zM4 9h9v1H4zM4 11h11v1H4zM14 9h1v2h-1z'/></svg>");
   --win-sizing-buttons: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='36' height='20'><path fill-rule='evenodd' d='M0 0h36v20H0zM1 0h16v18H1zM5 7h7v1h-1v1h-1v1h-1v1h-1v-1h-1v-1h-1v-1h-1zM19 0h16v18H19zM26 7h1v1h1v1h1v1h1v1h-7v-1h1v-1h1v-1h1z'/></svg>");
+
+  /* CDE's Motif window chrome, as masks of its ink like Windows': the
+     window menu button (20px), and the title's edge with the minimize and
+     maximize buttons (41px). The CDE theme and newspaper use them. */
+  --cde-window-menu: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20'><path d='M19 0h1v20h-1zM0 19h19v1H0zM5 8h10v1H5zM5 11h10v1H5zM5 9h1v2H5zM14 9h1v2h-1zM6 12h10v1H6zM15 9h1v3h-1z'/></svg>");
+  --cde-window-buttons: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='41' height='20'><path d='M0 0h1v20H0zM1 19h40v1H1zM20 0h1v19h-1zM40 0h1v19h-1zM8 7h4v1H8zM8 10h4v1H8zM8 8h1v2H8zM11 8h1v2h-1zM9 11h4v1H9zM12 8h1v3h-1zM25 4h10v1H25zM25 13h10v1H25zM25 5h1v8H25zM34 5h1v8h-1zM26 14h10v1H26zM35 5h1v9h-1z'/></svg>");
+
+  /* Motif's gray is a checkerboard. */
+  --cde-gray: conic-gradient(var(--ink) 25%, transparent 0 50%, var(--ink) 0 75%, transparent 0) 0 0 / 2px 2px;
+
+  /* A 5px Motif frame, for a box with a 5px transparent border: an outline,
+     lit from the top left, gray between, and a notch across it 24px from
+     each corner. Layer it under the box's own fill, clipped to its
+     padding box. */
+  --cde-frame:
+    linear-gradient(var(--ink), var(--ink)) left 24px top 0 / 1px 5px no-repeat border-box,
+    linear-gradient(var(--ink), var(--ink)) right 24px top 0 / 1px 5px no-repeat border-box,
+    linear-gradient(var(--ink), var(--ink)) left 24px bottom 0 / 1px 5px no-repeat border-box,
+    linear-gradient(var(--ink), var(--ink)) right 24px bottom 0 / 1px 5px no-repeat border-box,
+    linear-gradient(var(--ink), var(--ink)) left 0 top 24px / 5px 1px no-repeat border-box,
+    linear-gradient(var(--ink), var(--ink)) right 0 top 24px / 5px 1px no-repeat border-box,
+    linear-gradient(var(--ink), var(--ink)) left 0 bottom 24px / 5px 1px no-repeat border-box,
+    linear-gradient(var(--ink), var(--ink)) right 0 bottom 24px / 5px 1px no-repeat border-box,
+    linear-gradient(var(--paper), var(--paper)) left 1px top 1px / calc(100% - 2px) 1px no-repeat border-box,
+    linear-gradient(var(--paper), var(--paper)) left 1px top 1px / 1px calc(100% - 2px) no-repeat border-box,
+    linear-gradient(var(--ink), var(--ink)) left 1px bottom 1px / calc(100% - 2px) 1px no-repeat border-box,
+    linear-gradient(var(--ink), var(--ink)) right 1px top 1px / 1px calc(100% - 2px) no-repeat border-box,
+    linear-gradient(var(--ink), var(--ink)) left 0 top 0 / 100% 1px no-repeat border-box,
+    linear-gradient(var(--ink), var(--ink)) left 0 bottom 0 / 100% 1px no-repeat border-box,
+    linear-gradient(var(--ink), var(--ink)) left 0 top 0 / 1px 100% no-repeat border-box,
+    linear-gradient(var(--ink), var(--ink)) right 0 top 0 / 1px 100% no-repeat border-box,
+    var(--cde-gray) border-box,
+    linear-gradient(var(--paper), var(--paper)) border-box;
+
+  /* CDE's granite backdrop, a 64px tile of 1-bit noise */
+  --cde-granite: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABAAQAAAACCEkxzAAACS0lEQVR42gFAAr/9AZ31LT7ubw8PAR7tZBk/F1V2APYX/gH/9PDjAu7s7Gz9CAz3AINl0PX5/iwGAf9R+ddDmnbcBLwRN/mavvLxAdj59sC2dBTbAv9mCLjPzLohAuzIAgpAcTfgA+ApF+ZaUWPMAOP181Nd5vsfAv76dBqy/D56AEFwf//LkP0eAr8BQP77YPEzAIf7X/9dgN+BAhNikAAAYXIOAMTY+sHd8HPXAKDP8Aj53fe7Ajgu3sVo6AQMAPz4WfENh57hAj0DGPgIcOmZBEC13wr56sDmAE/w+rv+hEHfAf+h827M+L68Ae8AXBdo+f4eAN778fvcA/NRAO/9/7fNYvXxA1oVgogP+70DAuiIwJ7/ovhkAFDSg7EEBfIfAo4K+H+2Tgw5AHscH/YM+ryfAMYcTf/FHQEeBF0AEvplgsBIAcchApgXTt9yAoAJS/6lFgkAAwzlnPmosAmMAI+/xhPgDN/4AA4S796QDr3+AWwaEWh1xf3hApT878CK0V0aBEAgYDFptdjoBE3MACTU47piAN7rAQbwLyPXAfzHQGPuw6bCAPCpB17tFNn/AOBqH///u/P3BCbp5aDwbQS/BP0NNDgo/ZC+AkT45PD4whqqAAfe795f/3+xBGw4UebSAq/OAPgCUe6/rXP+BDIbIhAw6wwAAK445/H7zvG/AfVu9O2eHAHQAOD3DMPxL++XAONrhGLnF7/oAOJwAA/ffPXIA/Dg2wjIfIW/AKAF+or38XQCAA9/vvb3H/0SAUKNEMQv/RlXMiMjxbp6TqgAAAAASUVORK5CYII=") 0 0 / 64px 64px;
 
   /* Header treatment */
   /* --header-fill: var(--ink); */
@@ -479,6 +523,53 @@ body {
 [data-theme="classic_windows"] .card-header::after {
   -webkit-mask: var(--win-sizing-buttons) no-repeat;
   mask: var(--win-sizing-buttons) no-repeat;
+}
+
+/* CDE: tiles as Motif windows in gray beveled frames on granite. A tile's
+   header is its title bar, over a strip of the frame's gray, and its body
+   is sunk into the frame. A tile without a header is a framed box. */
+[data-theme="cde"] {
+  --card-border: 5px solid transparent;
+  --card-fill: linear-gradient(var(--paper), var(--paper)) padding-box, var(--cde-frame);
+  --header-font: "Pixel Operator", monospace;
+  --header-fs: 16px;
+  --header-lh: 20px;
+  --header-fill:
+    linear-gradient(var(--ink), var(--ink)) left bottom / 100% 1px no-repeat padding-box,
+    linear-gradient(var(--paper), var(--paper)) padding-box,
+    var(--cde-gray) border-box;
+  --header-text: var(--ink);
+  --header-pad: 0;
+  --header-rule: 2px solid transparent;
+}
+
+/* The desktop. The CDE newspaper sits on it too. */
+[data-theme="cde"] body,
+.card--newspaper:has(.paper--cde) {
+  background: var(--cde-granite), var(--paper);
+}
+
+[data-theme="cde"] .card:not(.card--newspaper) > .card-body { box-shadow: inset 1px 1px 0 var(--ink); }
+
+/* The title between the window menu button and the minimize and
+   maximize buttons */
+[data-theme="cde"] .card-header {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) 41px;
+  text-align: center;
+}
+[data-theme="cde"] .card-header::before,
+[data-theme="cde"] .card-header::after {
+  content: "";
+  background: var(--ink);
+}
+[data-theme="cde"] .card-header::before {
+  -webkit-mask: var(--cde-window-menu) no-repeat;
+  mask: var(--cde-window-menu) no-repeat;
+}
+[data-theme="cde"] .card-header::after {
+  -webkit-mask: var(--cde-window-buttons) no-repeat;
+  mask: var(--cde-window-buttons) no-repeat;
 }
 
 
@@ -1258,14 +1349,15 @@ body {
   letter-spacing: 0;
 }
 
-/* ---------- Classic desktops: Mac and Windows windows, under a menu bar ----------
+/* ---------- Classic desktops: Mac, Windows and CDE windows ----------
 
-   Every box is a window with a title bar. The menu bar and titles are set
-   in the style's chrome font (--paper-chrome, from NewspaperStyle#css).
+   Every box is a window with a title bar. Mac and Windows put the date
+   line in a menu bar; CDE makes it the Front Panel. The menu bar, panel
+   and titles are set in the style's chrome font (--paper-chrome, from NewspaperStyle#css).
    Window titles are drawn here, as the hacker paper's prompts are. Their
    desktops are the matching dashboard themes', under Themes. */
 
-:is(.paper--mac, .paper--windows) :is(.paper-small, .paper-dateline, .paper-byline, .paper-events-title) {
+:is(.paper--mac, .paper--windows, .paper--cde) :is(.paper-small, .paper-dateline, .paper-byline, .paper-events-title) {
   text-transform: none;
   letter-spacing: 0;
 }
@@ -1292,7 +1384,7 @@ body {
 }
 :is(.paper--mac, .paper--windows) .paper-dateline > span:first-child { order: 2; }
 
-:is(.paper--mac, .paper--windows) .paper-name {
+:is(.paper--mac, .paper--windows, .paper--cde) .paper-name {
   background: var(--paper);
 }
 /* In an alert box's frame: thin, a gap, thick */
@@ -1309,37 +1401,35 @@ body {
   box-shadow: inset 0 0 0 3px var(--paper), inset 0 0 0 4px var(--ink);
 }
 
-:is(.paper--mac, .paper--windows) :is(.paper-ear, .paper-lead, .paper-column) {
+:is(.paper--mac, .paper--windows, .paper--cde) :is(.paper-ear, .paper-lead, .paper-column) {
   position: relative;
   border: 1px solid var(--ink);
   background: var(--paper);
 }
 .paper--mac :is(.paper-ear, .paper-lead, .paper-column) { box-shadow: 1px 1px 0 var(--ink); }
-:is(.paper--mac, .paper--windows) .paper-ear {
+:is(.paper--mac, .paper--windows, .paper--cde) .paper-ear {
   justify-self: stretch;
   padding: 0 var(--pad) 2px;
 }
-:is(.paper--mac, .paper--windows) :is(.paper-lead, .paper-column) { padding: 0 var(--pad) var(--pad-tight); }
+:is(.paper--mac, .paper--windows, .paper--cde) :is(.paper-lead, .paper-column) { padding: 0 var(--pad) var(--pad-tight); }
 
 /* The title bar, and the title over it */
-:is(.paper--mac, .paper--windows) :is(.paper-ear, .paper-lead, .paper-column)::before {
+:is(.paper--mac, .paper--windows, .paper--cde) :is(.paper-ear, .paper-lead, .paper-column)::before {
   content: "";
   display: block;
   flex: none;
   margin: 0 calc(-1 * var(--pad)) var(--pad-tight);
 }
-:is(.paper--mac, .paper--windows) :is(.paper-ear, .paper-lead, .paper-column)::after {
+:is(.paper--mac, .paper--windows, .paper--cde) :is(.paper-ear, .paper-lead, .paper-column)::after {
   position: absolute;
   font: var(--paper-chrome);
   white-space: nowrap;
 }
-.paper--mac .paper-ear::after,
-.paper--windows .paper-ear::after { content: "Weather"; }
-.paper--mac .paper-ear--right::after,
-.paper--windows .paper-ear--right::after { content: "Clock"; }
-:is(.paper--mac, .paper--windows) .paper-lead::after { content: "Top Story"; }
-:is(.paper--mac, .paper--windows) .paper-column:first-child::after { content: "Headlines"; }
-:is(.paper--mac, .paper--windows) .paper-column:last-child::after { content: "More News"; }
+:is(.paper--mac, .paper--windows, .paper--cde) .paper-ear::after { content: "Weather"; }
+:is(.paper--mac, .paper--windows, .paper--cde) .paper-ear--right::after { content: "Clock"; }
+:is(.paper--mac, .paper--windows, .paper--cde) .paper-lead::after { content: "Top Story"; }
+:is(.paper--mac, .paper--windows, .paper--cde) .paper-column:first-child::after { content: "Headlines"; }
+:is(.paper--mac, .paper--windows, .paper--cde) .paper-column:last-child::after { content: "More News"; }
 
 /* Mac: six lines, broken by the close box and the title. The classic Mac
    theme draws the same bar around a tile's header. */
@@ -1387,8 +1477,68 @@ body {
 
 /* Upcoming events as a list under a plain header */
 .paper--mac .paper-events { box-shadow: 1px 1px 0 var(--ink); }
-:is(.paper--mac, .paper--windows) .paper-events-title {
+:is(.paper--mac, .paper--windows, .paper--cde) .paper-events-title {
   border-bottom: 1px solid var(--ink);
   background: none;
   color: var(--ink);
+}
+
+/* CDE: every window, the name's dialog and the Front Panel in a Motif
+   frame (--cde-frame) */
+.paper--cde :is(.paper-name, .paper-ear, .paper-lead, .paper-column, .paper-dateline) {
+  border: 5px solid transparent;
+  background: linear-gradient(var(--paper), var(--paper)) padding-box, var(--cde-frame);
+}
+.paper--cde .paper-name { padding: 0 var(--pad); }
+
+/* The window menu button, the title's raised face, the minimize and
+   maximize buttons, and a strip of the frame's gray under them */
+.paper--cde :is(.paper-ear, .paper-lead, .paper-column)::before {
+  height: 22px;
+  margin-bottom: var(--pad-tight);
+  background: var(--ink);
+  -webkit-mask:
+    var(--cde-window-menu) left top no-repeat,
+    linear-gradient(#000 0 0) left 0 top 19px / 100% 1px no-repeat,
+    var(--cde-window-buttons) right top no-repeat,
+    conic-gradient(#000 25%, #0000 0 50%, #000 0 75%, #0000 0) left bottom / 2px 2px repeat-x;
+  mask:
+    var(--cde-window-menu) left top no-repeat,
+    linear-gradient(#000 0 0) left 0 top 19px / 100% 1px no-repeat,
+    var(--cde-window-buttons) right top no-repeat,
+    conic-gradient(#000 25%, #0000 0 50%, #000 0 75%, #0000 0) left bottom / 2px 2px repeat-x;
+}
+.paper--cde :is(.paper-ear, .paper-lead, .paper-column)::after {
+  top: 2px;
+  left: 20px;
+  right: 41px;
+  overflow: hidden;
+  text-align: center;
+}
+
+/* The Front Panel across the foot of the tile: the date, the workspace
+   switcher and the motto */
+.paper--cde .paper-dateline {
+  order: 1;
+  margin: 0 calc(-1 * var(--pad-tight));
+  padding: 2px var(--pad);
+  align-items: center;
+}
+.paper--cde .paper-dateline > span { font: var(--paper-chrome); }
+
+.paper-workspaces {
+  display: flex;
+  gap: var(--pad-tight);
+}
+/* Raised buttons; the current workspace pressed in */
+.paper-workspace {
+  min-width: 64px;
+  padding: 0 var(--pad);
+  border: 1px solid var(--ink);
+  border-width: 1px 2px 2px 1px;
+}
+.paper-workspace--current {
+  border-width: 2px 1px 1px 2px;
+  background: var(--ink);
+  color: var(--paper);
 }

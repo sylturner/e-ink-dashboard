@@ -181,6 +181,7 @@ class Component
         "wizard"     => "Wizarding gazette",
         "mac"        => "Classic Mac",
         "windows"    => "Classic Windows",
+        "cde"        => "CDE",
         "custom"     => "Custom"
       },
       source_types: %w[RssProvider WeatherProvider IcalProvider],

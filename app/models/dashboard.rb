@@ -1,6 +1,6 @@
 class Dashboard < ApplicationRecord
   # Keep in sync with the [data-theme] blocks in render.css.
-  THEMES = %w[default quiet night dense classic_mac classic_windows].freeze
+  THEMES = %w[default quiet night dense classic_mac classic_windows cde].freeze
 
   # What the builder's Dashboard card edits, for saving and for previewing.
   FORM_ATTRIBUTES = %i[name theme grid_columns grid_rows].freeze
