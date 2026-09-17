@@ -41,7 +41,8 @@
           </div>
           <div class="col-sm-4">
             <%= f.label :image_format, "Format" %>
-            <%= f.select :image_format, Device::IMAGE_FORMATS.map { [ it.upcase, it ] } %>
+            <%= f.select :image_format, Device::IMAGE_FORMATS.map { [ it.upcase, it ] }, {},
+                         aria: { describedby: f.field_id(:bit_depth, :hint) } %>
             <%= f.invalid_feedback :image_format %>
           </div>
           <div class="col-sm-4">
@@ -50,8 +51,7 @@
             <%= f.invalid_feedback :rotation %>
           </div>
           <div id="<%= f.field_id(:bit_depth, :hint) %>" class="form-text mt-1">
-            The panel reports its size, depth and format when it enrolls. Only
-            1-bit frames can be rendered so far.
+            <%= t("devices.display_hint", size: Device::BMP_SIZE.join("×")) %>
           </div>
         </div>
 

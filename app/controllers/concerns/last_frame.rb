@@ -8,28 +8,10 @@ module LastFrame
 
   private
     def send_last_frame(frames)
-      frame = frames.rendered.recent.select(:id, :device_id, :checksum, :format).first
+      frame = frames.rendered.recent.select(:id, :checksum, :format).first
       return head(:not_found) if frame.nil?
+      return unless stale?(etag: frame.checksum)
 
-      device = frame.device
-      return unless stale?(etag: [ frame.checksum, device.width, device.height ])
-
-      data = Frame.where(id: frame.id).pick(:data)
-
-      if frame.format == "raw"
-        png = raw_png(data, device)
-        png ? send_data(png, type: "image/png", disposition: "inline") : head(:not_found)
-      else
-        send_data data, type: "image/bmp", disposition: "inline"
-      end
-    end
-
-    # Browsers can't show a raw frame, so it is drawn to a PNG at the
-    # panel's size -- unless the panel has been resized since, and the
-    # bytes no longer fit it.
-    def raw_png(data, device)
-      Bitmap.from_raw(data, width: device.width, height: device.height).to_png
-    rescue ArgumentError
-      nil
+      send_data Frame.where(id: frame.id).pick(:data), type: frame.content_type, disposition: "inline"
     end
 end

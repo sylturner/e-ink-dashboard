@@ -11,8 +11,15 @@ class Device < ApplicationRecord
   CLAIM_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789".chars.freeze
 
   BIT_DEPTHS    = [ 1, 2, 4 ].freeze
-  IMAGE_FORMATS = %w[bmp raw].freeze
+  IMAGE_FORMATS = %w[bmp png].freeze
   ROTATIONS     = [ 0, 90, 180, 270 ].freeze
+
+  # TRMNL's firmware decodes a BMP only at this size; any other panel is
+  # sent PNG.
+  BMP_SIZE = [ 800, 480 ].freeze
+
+  # A LiPo's voltage from empty to full, for estimating its charge.
+  BATTERY_VOLTS = 3.30..4.20
 
   # The settings a frame is rendered from: changing one leaves the frame
   # on the panel out of date. Rotation isn't used when rendering.
@@ -39,6 +46,7 @@ class Device < ApplicationRecord
   validates :name, presence: true
   validates :bit_depth, inclusion: { in: BIT_DEPTHS }
   validates :image_format, inclusion: { in: IMAGE_FORMATS }
+  validate :bmp_fits_the_firmware, if: -> { image_format == "bmp" }
   validates :rotation, inclusion: { in: ROTATIONS }
 
   # "none" keeps the plain black/white threshold.
@@ -78,6 +86,20 @@ class Device < ApplicationRecord
       code = Array.new(4) { CLAIM_ALPHABET.sample }.join
       break code unless exists?(claim_code: code)
     end
+  end
+
+  # The format TRMNL's firmware can decode at a panel's size.
+  def self.image_format_for(width, height)
+    [ width, height ] == BMP_SIZE ? "bmp" : "png"
+  end
+
+  # The charge a battery voltage suggests, on a rough linear curve: good
+  # enough to decide "charge it soon", not to trust below about 20%.
+  # Most panels report only the voltage. Nil when there's no reading.
+  def self.battery_percent_for(volts)
+    return if volts.nil? || volts <= 0.1
+
+    ((volts - BATTERY_VOLTS.begin) / (BATTERY_VOLTS.end - BATTERY_VOLTS.begin) * 100).clamp(0, 100).round
   end
 
   # A panel is claimed once it has something to show.
@@ -168,5 +190,11 @@ class Device < ApplicationRecord
 
     def assign_claim_code
       self.claim_code = self.class.generate_claim_code if claim_code.blank?
+    end
+
+    def bmp_fits_the_firmware
+      return if self.class.image_format_for(width, height) == "bmp"
+
+      errors.add(:image_format, :bmp_size, size: BMP_SIZE.join("×"))
     end
 end

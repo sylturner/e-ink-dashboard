@@ -105,7 +105,7 @@
               <li class="list-group-item d-flex flex-wrap align-items-center column-gap-3 row-gap-2">
                 <div class="me-auto">
                   <%= link_to "#{device.name} bitmap",
-                              device_frame_path(token: device.token),
+                              device_last_frame_path(device),
                               target: "_blank", rel: "noopener", class: "fw-semibold" %>
                   <div class="small text-body-secondary font-monospace"><%= device_spec(device) %></div>
                 </div>

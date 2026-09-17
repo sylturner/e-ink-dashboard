@@ -182,7 +182,7 @@ class DevicesControllerTest < ActionDispatch::IntegrationTest
       assert_select ".panel-placeholder", /No frame yet/
       assert_select "dd", /84% \(3.91 V\)/
       assert_select "dd", /Good \(-62 dBm\)/
-      assert_select "a[href=?][target=_blank][aria-describedby=?]", device_frame_path(token: @device.token), "live-bitmap-hint"
+      assert_select "a[href=?][target=_blank][aria-describedby=?]", device_last_frame_path(@device), "bitmap-hint"
     end
     assert_select ".device-assignments li", 1 do
       assert_select "a[href=?]", edit_dashboard_path(dashboards(:one))

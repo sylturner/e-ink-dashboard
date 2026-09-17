@@ -148,7 +148,7 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".builder-preview .device-list li", 1
     assert_select ".device-list a[href=?][target=_blank]",
-                  device_frame_path(token: device.token), device.name.to_s + " bitmap"
+                  device_last_frame_path(device), device.name.to_s + " bitmap"
     assert_select ".device-list a[href=?]", edit_device_path(device)
     assert_select ".device-list .font-monospace", "800×480 · 1-bit bmp"
   end
@@ -161,7 +161,7 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
 
     assert_select ".device-list li", 2
     [ devices(:one), devices(:two) ].each do |device|
-      assert_select ".device-list a[href=?]", device_frame_path(token: device.token)
+      assert_select ".device-list a[href=?]", device_last_frame_path(device)
     end
   end
 

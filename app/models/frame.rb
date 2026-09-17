@@ -8,6 +8,18 @@ class Frame < ApplicationRecord
   scope :recent, -> { order(rendered_at: :desc) }
   scope :rendered, -> { where.not(data: nil) }
 
+  # What a panel calls the image. It follows the pixels rather than the
+  # row, so a re-render that draws the same image keeps the name and the
+  # panel skips the download. Short: TRMNL's firmware keeps it in a
+  # 36-byte buffer.
+  def filename
+    "#{checksum.first(24)}.#{format}"
+  end
+
+  def content_type
+    format == "png" ? "image/png" : "image/bmp"
+  end
+
   private
 
   def set_metadata
