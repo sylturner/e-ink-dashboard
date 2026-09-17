@@ -1,6 +1,15 @@
 class DashboardItem < ApplicationRecord
   KINDS = Component::KINDS
 
+  # What the tile inspector edits, for saving and for previewing. Position
+  # and placement are owned by the builder, not by these forms.
+  #
+  # settings is an arbitrary hash, nested for a layout's parts and sizes:
+  # the keys are whatever the registry rendered and the values only ever
+  # reach ERB. Do not extend that to anything that reaches SQL or send.
+  FORM_ATTRIBUTES = [ :dashboard_id, :kind, :view, :title, :col_span, :row_span, :visible,
+                      { source_ids: [], settings: {} } ].freeze
+
   belongs_to :dashboard
   has_many :dashboard_item_sources,
            -> { order(:position) }, dependent: :destroy
@@ -48,6 +57,17 @@ class DashboardItem < ApplicationRecord
   # draws the app's.
   def news_template
     NewsTemplate.from(settings["template"].presence || AppSetting.current.news_template.to_h)
+  end
+
+  # An unsaved copy with the inspector's changes, for the builder's
+  # preview. It shares this tile's id and dashboard, and assigning sources
+  # to a new record stays in memory, so nothing is written.
+  def draft(attributes, dashboard: self.dashboard)
+    self.class.new(self.attributes).tap do |copy|
+      copy.dashboard = dashboard
+      copy.source_ids = source_ids unless attributes.key?(:source_ids)
+      copy.assign_attributes(attributes)
+    end
   end
 
   def grid_style

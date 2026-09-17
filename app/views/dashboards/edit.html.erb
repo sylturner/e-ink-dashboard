@@ -10,10 +10,14 @@
      data-controller="grid"
      data-grid-cols-value="<%= cols %>"
      data-grid-rows-value="<%= rows %>"
+     data-grid-draft-message-value="<%= t(".preview_draft") %>"
      data-action="pointermove@window->grid#move
                   pointerup@window->grid#end
                   pointercancel@window->grid#end
-                  keydown@window->grid#nudge">
+                  keydown@window->grid#nudge
+                  item-form:changed->grid#draft
+                  item-form:rebuilding->grid#rebuilding
+                  turbo:frame-load->grid#inspected">
 
   <%= page_title name, parent: [ "Dashboards", dashboards_path ], crumb: "Builder" %>
 
@@ -68,11 +72,25 @@
         <%# Focusable and labeled, so keyboard users can scroll it when it is
             narrower than the panel (WCAG 2.1.1). %>
         <div class="builder-preview-frame" role="region" aria-label="Preview frame" tabindex="0">
-          <iframe data-grid-target="preview"
+          <iframe data-grid-target="preview" name="builder-preview"
                   src="<%= render_dashboard_path(dashboard_id: @dashboard.id) %>"
                   width="800" height="480"
                   title="Dashboard preview"></iframe>
         </div>
+
+        <%# Empty until the preview draws unsaved changes. %>
+        <p class="builder-preview-status small text-body-secondary mb-0"
+           data-grid-target="previewStatus" role="status"></p>
+
+        <%# Posts the unsaved changes in the tile inspector and the Dashboard
+            card into the iframe above: grid_controller#preview copies their
+            fields in. A native post into the named frame, so the preview is
+            a page of its own, with its own headers. %>
+        <%= form_with url: render_preview_path,
+                      html: { hidden: true, target: "builder-preview" },
+                      data: { turbo: false, grid_target: "previewer" } do %>
+          <%= hidden_field_tag :dashboard_id, @dashboard.id, id: nil %>
+        <% end %>
       </div>
 
       <%# The iframe above is the HTML the panel is rendered from. These go

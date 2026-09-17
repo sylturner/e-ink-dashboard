@@ -33,6 +33,13 @@ class DashboardItemsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "the inspector's form tells the builder which tile its changes preview" do
+    get edit_dashboard_item_url(@dashboard_item)
+
+    assert_select "form[data-grid-target=draft][data-item-id=?]", @dashboard_item.id.to_s
+    assert_select "select[name=?][data-item-form-target=kind]", "dashboard_item[kind]"
+  end
+
   test "should update dashboard_item" do
     patch dashboard_item_url(@dashboard_item), params: { dashboard_item: { col: @dashboard_item.col, col_span: @dashboard_item.col_span, dashboard_id: @dashboard_item.dashboard_id, kind: @dashboard_item.kind, position: @dashboard_item.position, row: @dashboard_item.row, row_span: @dashboard_item.row_span, settings: @dashboard_item.settings, title: @dashboard_item.title, view: @dashboard_item.view, visible: @dashboard_item.visible } }
     assert_redirected_to edit_dashboard_url(@dashboard_item.dashboard)
@@ -185,6 +192,19 @@ class DashboardItemsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "select[name=?]", "dashboard_item[source_ids][]", 0
+    assert_select "input[type=hidden][name=?][value='']", "dashboard_item[source_ids][]"
+  end
+
+  test "switching a tile to a kind with no sources lets go of its sources" do
+    assert @dashboard_item.sources.any?
+
+    patch dashboard_item_url(@dashboard_item), params: {
+      dashboard_item: { kind: "clock", view: "time", source_ids: [ "" ] }
+    }
+
+    assert_redirected_to edit_dashboard_url(@dashboard_item.dashboard)
+    assert_equal "clock", @dashboard_item.reload.kind
+    assert_empty @dashboard_item.sources
   end
 
   test "settings round-trip through the form" do

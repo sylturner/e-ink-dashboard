@@ -1,0 +1,14 @@
+<%# The builder's preview of changes that couldn't be saved: why, in
+    place of the dashboard. %>
+<div class="grid" style="--grid-cols: 1; --grid-rows: 1;">
+  <div class="card">
+    <div class="card-header"><%= t(".heading") %></div>
+    <div class="card-body">
+      <ul>
+        <% @errors.each do |error| %>
+          <li><%= error %></li>
+        <% end %>
+      </ul>
+    </div>
+  </div>
+</div>

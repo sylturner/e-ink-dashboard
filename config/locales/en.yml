@@ -88,6 +88,10 @@ en:
     part_hints:
       note:
         qr_code_html: "Needs the server address, set in %{settings}."
+  dashboards:
+    edit:
+      # The builder's preview status, once it draws changes not yet saved.
+      preview_draft: "The preview includes changes that aren't saved yet."
   devices:
     # Beside links to a panel's live frame URL: the builder's device list
     # and the device page.
@@ -175,6 +179,9 @@ en:
           result: "a line across"
   # Text drawn on a panel.
   renders:
+    # The builder's preview of changes that couldn't be saved.
+    invalid:
+      heading: "These changes can't be saved"
     # PanelTimeHelper#panel_age: how long ago a headline was published.
     age:
       now: "now"

@@ -587,4 +587,72 @@ class RendersControllerTest < ActionDispatch::IntegrationTest
       assert_select ".headline-text > .t-xs.t-clip-1", "Ada · The Paper · 2h · Sep 6"
     end
   end
+
+  def post_preview(params)
+    travel_to(NOW) { post render_preview_path, params: { dashboard_id: @dashboard.id }.merge(params) }
+    response.body
+  end
+
+  def saved_state
+    [ @item.reload.attributes, @dashboard.reload.attributes, DashboardItemSource.count ]
+  end
+
+  test "the preview draws a tile's unsaved changes, and saves none of them" do
+    second = merge_a_second_calendar(starts_at: "2026-09-06T14:00:00Z")
+
+    assert_no_changes -> { saved_state } do
+      post_preview item_id: @item.id, dashboard_item: {
+        view: "today", title: "Draft header", source_ids: [ "", @source.id.to_s ],
+        settings: { parts: { today: { times: "0" } } }
+      }
+    end
+
+    assert_response :success
+    assert_select ".card-header", "Draft header"
+    assert_includes response.body, "Standup"
+    assert_not_includes response.body, "9:00"
+    assert_not_includes response.body, second.name
+    assert_select "span.tag", 0
+  end
+
+  test "the preview keeps a tile's sources when the form sends none" do
+    body = post_preview item_id: @item.id, dashboard_item: { view: "today" }
+
+    assert_response :success
+    assert_includes body, "Standup"
+  end
+
+  test "the preview draws the dashboard's unsaved settings" do
+    assert_no_changes -> { saved_state } do
+      post_preview dashboard: { name: @dashboard.name, theme: "night", grid_columns: "6", grid_rows: "4" },
+                   item_id: @item.id, dashboard_item: { view: "week" }
+    end
+
+    assert_response :success
+    assert_select "html[data-theme=?]", "night"
+    assert_match(/--grid-cols: 6;/, response.body)
+  end
+
+  test "the preview leaves out a tile unchecked from the dashboard" do
+    post_preview item_id: @item.id, dashboard_item: { visible: "0" }
+
+    assert_response :success
+    assert_select ".card", 0
+  end
+
+  test "the preview says why changes that can't be saved aren't drawn" do
+    post_preview dashboard: { name: "", theme: "default", grid_columns: "12", grid_rows: "6" },
+                 item_id: @item.id, dashboard_item: { view: "forecast" }
+
+    assert_response :unprocessable_content
+    assert_select ".card-header", "These changes can't be saved"
+    assert_select "li", "Name can't be blank"
+    assert_select "li", /View isn't available/
+  end
+
+  test "the preview only takes a tile from the dashboard it draws" do
+    post_preview item_id: dashboard_items(:one).id, dashboard_item: { title: "Elsewhere" }
+
+    assert_response :not_found
+  end
 end

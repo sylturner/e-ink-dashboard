@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["view", "setting", "group"]
+  static targets = ["kind", "view", "setting", "group"]
 
   connect() {
     this.viewChanged()
@@ -24,11 +24,21 @@ export default class extends Controller {
     })
   }
 
+  // Tells the builder (grid_controller) a field changed, so it can
+  // preview the change. Not the component, which rebuilds the form.
+  changed({ target }) {
+    if (this.hasKindTarget && target === this.kindTarget) return
+
+    this.dispatch("changed")
+  }
+
   // Kind determines which views and source types exist, so the server
-  // has to rebuild the form.
+  // has to rebuild the form. The builder previews the rebuilt one.
   kindChanged(event) {
     const frame = this.element.closest("turbo-frame")
     if (!frame) return
+
+    this.dispatch("rebuilding")
 
     const url = new URL(frame.src || window.location.href, window.location.origin)
     url.searchParams.set("kind", event.target.value)

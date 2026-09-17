@@ -1,7 +1,7 @@
 <div class="grid"
      style="--grid-cols: <%= @dashboard.grid_columns %>;
             --grid-rows: <%= @dashboard.grid_rows %>;">
-  <% @dashboard.dashboard_items.visible.each do |item| %>
+  <% @items.each do |item| %>
     <%= render "renders/item", item: item, now: @now %>
   <% end %>
 </div>
