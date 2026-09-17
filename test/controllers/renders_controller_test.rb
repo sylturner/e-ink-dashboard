@@ -708,4 +708,58 @@ class RendersControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :not_found
   end
+
+  # --- the navigation strip ---
+
+  test "a panel with the strip draws its dashboards around the one showing" do
+    device = devices(:two) # showing the office dashboard
+    hallway = Dashboard.create!(name: "Hallway")
+    device.device_dashboards.create!(dashboard: dashboards(:one), position: 1)
+    device.device_dashboards.create!(dashboard: hallway, position: 2)
+    device.update!(show_navigation: true)
+
+    render_dashboard(@dashboard)
+
+    assert_select "nav.nav" do
+      assert_select ".nav-step--previous .nav-name", "Hallway"
+      assert_select ".nav-current", "Office"
+      assert_select ".nav-step--next .nav-name", "Kitchen"
+      assert_select ".nav-pip", 3
+      assert_select ".nav-pip--current:first-child", 1
+    end
+  end
+
+  test "past eight dashboards the strip counts instead of drawing pips" do
+    device = devices(:two)
+    8.times { |index| device.device_dashboards.create!(dashboard: Dashboard.create!(name: "Extra #{index}"), position: index + 1) }
+    device.update!(show_navigation: true)
+
+    render_dashboard(@dashboard)
+
+    assert_select ".nav-pip", 0
+    assert_select ".nav-count", "1/9"
+  end
+
+  test "with one dashboard the strip names it and offers no steps" do
+    devices(:two).update!(show_navigation: true)
+
+    render_dashboard(@dashboard)
+
+    assert_select ".nav-current", "Office"
+    assert_select ".nav-step", 0
+  end
+
+  test "a panel without the strip draws the grid alone" do
+    render_dashboard(@dashboard)
+
+    assert_select "nav", 0
+  end
+
+  test "the preview's strip names the dashboard as it is being edited" do
+    devices(:two).update!(show_navigation: true)
+
+    post_preview dashboard: { name: "Study", theme: "default", grid_columns: "12", grid_rows: "6" }
+
+    assert_select ".nav-current", "Study"
+  end
 end

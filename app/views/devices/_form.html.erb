@@ -65,6 +65,14 @@
             pixel to the nearest; the others trade grays for dot patterns.
           </div>
         </div>
+
+        <div class="form-check mt-3 mb-0">
+          <%= f.checkbox :show_navigation, aria: { describedby: f.field_id(:show_navigation, :hint) } %>
+          <%= f.label :show_navigation, t("devices.show_navigation.label"), class: "form-check-label" %>
+          <div id="<%= f.field_id(:show_navigation, :hint) %>" class="form-text">
+            <%= t("devices.show_navigation.hint") %>
+          </div>
+        </div>
       </fieldset>
 
       <fieldset class="border-top pt-3 mb-3">

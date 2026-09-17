@@ -1,0 +1,38 @@
+<%# The navigation strip along the foot of a panel (Device#navigation):
+    the dashboard a step back, the one showing and where it sits among the
+    panel's, and the one a step on. Pips stand for the dashboards while
+    they fit; past that it's a count. With one dashboard there is nowhere
+    to step. %>
+<% steps = navigation.count > 1 %>
+<nav class="nav">
+  <span class="nav-side">
+    <% if steps %>
+      <span class="nav-step nav-step--previous">
+        <%= pixel_art(:arrow_previous) %>
+        <span class="nav-name"><%= navigation.previous_dashboard.name %></span>
+      </span>
+    <% end %>
+  </span>
+
+  <span class="nav-here">
+    <span class="nav-current"><%= navigation.current.name %></span>
+    <% if steps && navigation.count <= 8 %>
+      <span class="nav-pips">
+        <% navigation.count.times do |index| %>
+          <%= tag.span class: [ "nav-pip", ("nav-pip--current" if index == navigation.index) ] %>
+        <% end %>
+      </span>
+    <% elsif steps %>
+      <span class="nav-count"><%= navigation.position %>/<%= navigation.count %></span>
+    <% end %>
+  </span>
+
+  <span class="nav-side nav-side--next">
+    <% if steps %>
+      <span class="nav-step nav-step--next">
+        <span class="nav-name"><%= navigation.next_dashboard.name %></span>
+        <%= pixel_art(:arrow_next) %>
+      </span>
+    <% end %>
+  </span>
+</nav>

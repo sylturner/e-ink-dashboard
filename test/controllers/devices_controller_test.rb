@@ -217,12 +217,13 @@ class DevicesControllerTest < ActionDispatch::IntegrationTest
   test "saving the settings returns to the page and asks for a fresh frame" do
     @device.update_columns(refresh_requested_at: nil)
 
-    patch device_url(@device), params: { device: { dither: "none", time_zone: "America/Chicago" } }
+    patch device_url(@device), params: { device: { dither: "none", time_zone: "America/Chicago", show_navigation: "1" } }
 
     assert_redirected_to edit_device_url(@device)
     @device.reload
     assert_equal "none", @device.dither
     assert_equal "America/Chicago", @device.time_zone
+    assert @device.show_navigation?
     assert_not_nil @device.refresh_requested_at
   end
 

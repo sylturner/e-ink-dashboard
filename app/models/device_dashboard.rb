@@ -14,7 +14,12 @@ class DeviceDashboard < ApplicationRecord
 
   private
 
+    # A panel drawing the navigation strip names its dashboards, so the
+    # frame on it is out of date too.
     def sync_device
-      device&.sync_active_dashboard
+      return if device.nil?
+
+      device.sync_active_dashboard
+      device.request_refresh! if device.show_navigation?
     end
 end

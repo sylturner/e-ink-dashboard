@@ -10,6 +10,13 @@ class Api::DisplaysController < Api::BaseController
   # dashboard.
   SPECIAL_FUNCTION = "restart_playlist"
 
+  # Not part of TRMNL's protocol: a panel with a dial (the esp32/ sketch)
+  # sends how many dashboards it was turned through, negative for back.
+  NAVIGATE_HEADER = "Navigate"
+
+  # A turn this far either way is a garbled header, not a person.
+  MAX_STEPS = 100
+
   def show
     # On a 500 the firmware drops its API key and sets itself up again,
     # which is what a panel deleted here needs.
@@ -17,8 +24,9 @@ class Api::DisplaysController < Api::BaseController
 
     record_telemetry
 
-    if special_function?
-      current_device.advance_dashboard!
+    steps = navigate_steps + (special_function? ? 1 : 0)
+    if steps.nonzero?
+      current_device.step_dashboard!(steps)
       current_device.reload
     end
 
@@ -63,10 +71,16 @@ class Api::DisplaysController < Api::BaseController
       request.get_header("HTTP_SPECIAL_FUNCTION").present?
     end
 
-    # A press means someone is standing there waiting for the panel to
-    # change, so it renders now rather than on the schedule.
+    # The signed number of dashboards to move, or 0 without the header.
+    def navigate_steps
+      value = request.headers[NAVIGATE_HEADER].to_s.strip
+      value.match?(/\A[+-]?\d+\z/) ? value.to_i.clamp(-MAX_STEPS, MAX_STEPS) : 0
+    end
+
+    # A press or a turn means someone is standing there waiting for the
+    # panel to change, so it renders now rather than on the schedule.
     def forced?
-      request.headers["Update-Source"] == "button" || special_function?
+      request.headers["Update-Source"] == "button" || special_function? || navigate_steps.nonzero?
     end
 
     def current_frame

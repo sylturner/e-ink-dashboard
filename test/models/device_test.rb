@@ -79,6 +79,81 @@ class DeviceTest < ActiveSupport::TestCase
     assert_equal [ @office ], @device.reload.other_dashboards.to_a
   end
 
+  # --- stepping through its dashboards ---
+
+  # Kitchen, Office, Hallway, in that order whatever their ids.
+  def assign_three
+    hallway = Dashboard.create!(name: "Hallway")
+    @device.dashboards = []
+    [ hallway, @office, @kitchen ].zip([ 2, 1, 0 ]).each do |dashboard, position|
+      @device.device_dashboards.create!(dashboard:, position:)
+    end
+    @device.reload.update!(dashboard: @kitchen)
+    hallway
+  end
+
+  test "stepping moves through the panel's own dashboards in order, wrapping at either end" do
+    hallway = assign_three
+    unassigned = Dashboard.create!(name: "Attic")
+
+    @device.step_dashboard!(1)
+    assert_equal @office, @device.reload.dashboard
+
+    @device.step_dashboard!(2)
+    assert_equal @kitchen, @device.reload.dashboard
+
+    @device.step_dashboard!(-1)
+    assert_equal hallway, @device.reload.dashboard
+
+    assert_not_includes [ @device.reload.dashboard ], unassigned
+  end
+
+  test "a panel with nothing assigned has nowhere to step" do
+    @device.dashboards = []
+    @device.save!
+
+    @device.step_dashboard!(1)
+    assert_nil @device.reload.dashboard
+  end
+
+  test "the navigation strip is off until the panel asks for it" do
+    assign_three
+
+    assert_nil @device.navigation
+  end
+
+  test "navigation names the neighbors and the position of the dashboard drawn" do
+    hallway = assign_three
+    @device.update!(show_navigation: true)
+
+    navigation = @device.navigation
+    assert_equal [ hallway, @kitchen, @office ], [ navigation.previous_dashboard, navigation.current, navigation.next_dashboard ]
+    assert_equal [ 1, 3 ], [ navigation.position, navigation.count ]
+
+    at_end = @device.navigation(hallway)
+    assert_equal [ @office, @kitchen, 3 ], [ at_end.previous_dashboard, at_end.next_dashboard, at_end.position ]
+  end
+
+  test "navigation draws a dashboard being edited as it is, and none it isn't assigned" do
+    assign_three
+    @device.update!(show_navigation: true)
+
+    @office.name = "Study"
+    assert_equal "Study", @device.navigation(@office).current.name
+    assert_nil @device.navigation(Dashboard.create!(name: "Attic"))
+  end
+
+  test "changing a panel's dashboards asks for a new frame only when its strip names them" do
+    @device.update_columns(refresh_requested_at: nil)
+    @device.device_dashboards.create!(dashboard: @office)
+    assert_nil @device.reload.refresh_requested_at
+
+    @device.update!(show_navigation: true)
+    @device.update_columns(refresh_requested_at: nil)
+    @device.device_dashboards.find_by!(dashboard: @office).destroy
+    assert_not_nil @device.reload.refresh_requested_at
+  end
+
   test "destroying a dashboard clears it off the panels showing it" do
     @device.dashboards = [ @kitchen ]
     assert_equal @kitchen, @device.reload.dashboard
@@ -168,6 +243,9 @@ class DeviceTest < ActiveSupport::TestCase
     assert_not @device.frame_settings_changed?
 
     @device.update!(dither: "none")
+    assert @device.frame_settings_changed?
+
+    @device.update!(show_navigation: true)
     assert @device.frame_settings_changed?
   end
 

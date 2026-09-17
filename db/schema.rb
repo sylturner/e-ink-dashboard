@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_16_120100) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_17_120000) do
   create_table "app_settings", force: :cascade do |t|
     t.integer "active_from_hour", default: 6, null: false
     t.integer "active_until_hour", default: 23, null: false
@@ -97,6 +97,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_16_120100) do
     t.datetime "refresh_requested_at"
     t.integer "refresh_seconds", default: 300
     t.integer "rotation", default: 0
+    t.boolean "show_navigation", default: false, null: false
     t.string "time_zone"
     t.string "token"
     t.datetime "updated_at", null: false

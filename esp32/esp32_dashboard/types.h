@@ -15,7 +15,8 @@ enum WakeReason
 {
   WAKE_BOOT,    // cold boot or reset
   WAKE_TIMER,   // scheduled wake
-  WAKE_BUTTON   // ext0 on the button pin
+  WAKE_BUTTON,  // the button pin went low
+  WAKE_DIAL     // one of the dial's pins went low
 };
 
 // What the button press meant, once its duration was measured.

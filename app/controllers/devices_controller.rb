@@ -97,7 +97,7 @@ class DevicesController < ApplicationController
     # Telemetry and assignments are left out: the panel reports the one,
     # and DeviceDashboardsController changes the other.
     def device_params
-      params.expect(device: [ :name, :dashboard_id, :width, :height, :bit_depth, :image_format, :dither, :rotation,
+      params.expect(device: [ :name, :dashboard_id, :width, :height, :bit_depth, :image_format, :dither, :rotation, :show_navigation,
                               :refresh_seconds, :night_refresh_seconds, :active_from_hour, :active_until_hour, :time_zone ])
     end
 end

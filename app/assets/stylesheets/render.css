@@ -172,6 +172,12 @@
 
   /* Weather */
   --weather-font: "Spleen", monospace;
+
+  /* Navigation strip: 24px inside, so everything in it centers on whole
+     pixels. With the gap above it, it takes 40px off the grid. */
+  --nav-h: 24px;
+  --nav-fill: var(--paper);
+  --nav-rule: var(--rule) solid var(--ink);
 }
 
 /* ---------- Reset ---------- */
@@ -1530,15 +1536,110 @@ body {
   display: flex;
   gap: var(--pad-tight);
 }
-/* Raised buttons; the current workspace pressed in */
-.paper-workspace {
+/* Raised buttons; the current workspace pressed in. The CDE theme's
+   navigation strip draws its steps the same way. */
+.paper-workspace,
+[data-theme="cde"] :is(.nav-step, .nav-current) {
   min-width: 64px;
   padding: 0 var(--pad);
   border: 1px solid var(--ink);
   border-width: 1px 2px 2px 1px;
 }
-.paper-workspace--current {
+.paper-workspace--current,
+[data-theme="cde"] .nav-current {
   border-width: 2px 1px 1px 2px;
   background: var(--ink);
   color: var(--paper);
 }
+
+
+/* ============================================================
+   Navigation strip — renders/_navigation, for a panel that
+   steps through its dashboards
+   ============================================================ */
+
+/* The grid gives up the foot of the screen to the strip */
+body:has(> .nav) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--grid-gap);
+}
+body:has(> .nav) > .grid {
+  flex: 1 1 0;
+  min-height: 0;
+  height: auto;
+}
+
+/* The steps either side, the current dashboard between them */
+.nav {
+  flex: none;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: var(--pad-loose);
+  box-sizing: content-box;
+  height: var(--nav-h);
+  padding: 4px var(--pad) 3px;
+  border-top: var(--nav-rule);
+  background: var(--nav-fill);
+  color: var(--ink);
+  font-family: var(--header-font);
+  font-size: var(--header-fs);
+  line-height: var(--header-lh);
+  white-space: nowrap;
+}
+
+.nav-side {
+  display: flex;
+  min-width: 0;
+}
+.nav-side--next { justify-content: flex-end; }
+
+.nav-step {
+  display: flex;
+  align-items: center;
+  gap: var(--pad-tight);
+  min-width: 0;
+}
+.nav-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nav-here {
+  display: flex;
+  align-items: center;
+  gap: var(--pad);
+}
+
+.nav-current {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  padding: 0 var(--pad);
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* One pip for each dashboard, the one showing filled */
+.nav-pips {
+  display: flex;
+  gap: var(--pad-tight);
+}
+.nav-pip {
+  width: 8px;
+  height: 8px;
+  border: var(--rule) solid var(--ink);
+}
+.nav-pip--current { background: var(--ink); }
+
+/* CDE: a Front Panel in a Motif frame, its steps raised buttons and the
+   current dashboard pressed in (with .paper-workspace). The buttons'
+   padding makes up their borders to the strip's 24px. */
+[data-theme="cde"] .nav {
+  padding: 1px var(--pad-tight);
+  border: 5px solid transparent;
+  background: linear-gradient(var(--paper), var(--paper)) padding-box, var(--cde-frame);
+}
+[data-theme="cde"] .nav-step { padding-top: 1px; }
+[data-theme="cde"] .nav-current { padding-bottom: 1px; }
