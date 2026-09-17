@@ -10,12 +10,13 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_13_220100) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_16_120100) do
   create_table "app_settings", force: :cascade do |t|
     t.integer "active_from_hour", default: 6, null: false
     t.integer "active_until_hour", default: 23, null: false
     t.string "clock", default: "12h", null: false
     t.datetime "created_at", null: false
+    t.json "news_template"
     t.integer "night_refresh_seconds", default: 3600, null: false
     t.integer "refresh_seconds", default: 900, null: false
     t.string "server_url"

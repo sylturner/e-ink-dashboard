@@ -6,7 +6,10 @@
   </div>
 
   <div class="card-body">
-    <%= form_with model: dashboard do |f| %>
+    <%# In the builder, grid_controller previews its changes before they're
+        saved. %>
+    <%= form_with model: dashboard,
+                  data: { grid_target: "draft", action: "input->grid#draft change->grid#draft" } do |f| %>
       <%= f.error_messages %>
 
       <div class="mb-3">

@@ -9,6 +9,14 @@ module ApplicationHelper
     tag.time time.future? ? "in #{words}" : "#{words} ago", datetime: time.iso8601
   end
 
+  # A builder for fields nested in a hash under the form's object, named
+  # object[key][key]...: nested_fields(f, :settings, :template) builds
+  # dashboard_item[settings][template][...]. There's no object to read
+  # values from, so each field passes its own.
+  def nested_fields(form, *keys)
+    form.class.new("#{form.object_name}#{keys.map { "[#{it}]" }.join}", nil, self, form.options)
+  end
+
   # A small status label, tinted by `tone` (:success, :warning, :danger,
   # :secondary). The subtle backgrounds and emphasis text meet contrast
   # in both themes.

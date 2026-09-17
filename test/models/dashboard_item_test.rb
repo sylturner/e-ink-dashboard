@@ -120,4 +120,29 @@ class DashboardItemTest < ActiveSupport::TestCase
     assert_not @item.valid?
     assert_includes @item.errors.full_messages.to_sentence, "extends past the grid"
   end
+
+  test "a new news tile starts with the app's headline template, and keeps its own after" do
+    AppSetting.current.update!(news_template: { "image" => { "placement" => "right" } })
+    news = dashboards(:one).dashboard_items.create!(kind: "news", col: 1, row: 7, col_span: 2, row_span: 2)
+
+    assert_equal "right", news.settings.dig("template", "image", "placement")
+
+    AppSetting.current.update!(news_template: NewsTemplate::DEFAULT)
+    assert_equal "right", news.reload.news_template.image.placement
+  end
+
+  test "a news tile's template is saved in the shape NewsTemplate reads" do
+    news = dashboards(:one).dashboard_items.create!(kind: "news", col: 1, row: 7, col_span: 2, row_span: 2,
+                                                    settings: { "template" => { "lines" => { "0" => { "field" => "summary", "clamp" => "3" } } } })
+
+    assert_equal({ "field" => "summary", "format" => "", "size" => "medium", "clamp" => 3 },
+                 news.settings.dig("template", "lines", 0))
+    assert_equal NewsTemplate::LINE_COUNT, news.settings.dig("template", "lines").size
+  end
+
+  test "only a news tile keeps a template" do
+    @item.update!(settings: { "day_count" => "3" })
+
+    assert_not @item.settings.key?("template")
+  end
 end

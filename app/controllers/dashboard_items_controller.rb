@@ -104,16 +104,7 @@ class DashboardItemsController < ApplicationController
       params.expect(dashboard_item: [ :col, :row, :col_span, :row_span ])
     end
 
-    # Only allow a list of trusted parameters through. Position and
-    # placement are owned by the builder, not by these forms.
-    #
-    # settings is an arbitrary hash, nested for a layout's parts and
-    # sizes: the keys are whatever the registry rendered and the values
-    # only ever reach ERB. Do not extend that to anything that reaches SQL
-    # or send.
     def dashboard_item_params
-      params.expect(dashboard_item: [ :dashboard_id, :kind, :view, :title,
-                                      :col_span, :row_span, :visible,
-                                      { source_ids: [], settings: {} } ])
+      params.expect(dashboard_item: DashboardItem::FORM_ATTRIBUTES)
     end
 end

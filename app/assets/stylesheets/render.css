@@ -39,6 +39,14 @@
 }
 
 @font-face {
+  font-family: "Pixel Operator Bold";
+  src: url("PixelOperator-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
   font-family: "VHS VCR OSD";
   src: url("vhs-vcr-osd.ttf") format("truetype");
   font-weight: normal;
@@ -87,6 +95,14 @@
   --rule: 1px;
   --card-border: var(--rule) solid var(--ink);
   --card-fill: var(--paper);
+  --card-shadow: none;
+
+  /* Windows 3.1's title bar controls, as masks of their ink: the control-menu box
+     (19px, with its bar) and the minimize and maximize buttons (36px).
+     Their faces show the window's paper through the mask, so they invert
+     with the theme. The classic Windows theme and newspaper use them. */
+  --win-control-menu: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='19' height='20'><path fill-rule='evenodd' d='M18 0h1v20h-1zM0 19h18v1H0zM3 8h11v3H3zM4 9h9v1H4zM4 11h11v1H4zM14 9h1v2h-1z'/></svg>");
+  --win-sizing-buttons: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='36' height='20'><path fill-rule='evenodd' d='M0 0h36v20H0zM1 0h16v18H1zM5 7h7v1h-1v1h-1v1h-1v1h-1v-1h-1v-1h-1v-1h-1zM19 0h16v18H19zM26 7h1v1h1v1h1v1h1v1h-7v-1h1v-1h1v-1h1z'/></svg>");
 
   /* Header treatment */
   /* --header-fill: var(--ink); */
@@ -180,6 +196,7 @@ body {
   overflow: hidden;
   border: var(--card-border);
   background: var(--card-fill);
+  box-shadow: var(--card-shadow);
 }
 
 .card-header {
@@ -291,6 +308,8 @@ body {
 .t-clip-2 { -webkit-line-clamp: 2; }
 .t-clip-3 { -webkit-line-clamp: 3; }
 .t-clip-4 { -webkit-line-clamp: 4; }
+.t-clip-5 { -webkit-line-clamp: 5; }
+.t-clip-6 { -webkit-line-clamp: 6; }
 
 /* ---------- Lists ---------- */
 
@@ -348,6 +367,118 @@ body {
   --header-pad: var(--pad-tight);
   --body-pad: var(--pad-tight);
   --footer-pad: var(--pad-tight);
+}
+
+/* Classic Mac: tiles as windows on a dotted desktop. A tile's header is
+   its striped title bar; a tile without one is a plain box. The shadow
+   is drawn inside the border, so tiles at the panel's edge keep it. */
+[data-theme="classic_mac"] {
+  --card-shadow: inset -1px -1px 0 var(--ink);
+  --header-font: "Pixel Operator Bold", monospace;
+  --header-fs: 16px;
+  --header-lh: 16px;
+  --header-fill: transparent;
+  --header-text: var(--ink);
+  --header-rule: var(--rule) solid var(--ink);
+  --header-pad: 1px 2px 0 1px;
+}
+
+/* The desktop: two dots in every 4px square. The classic Mac newspaper
+   (.paper--mac) sits on it too. */
+[data-theme="classic_mac"] body,
+.card--newspaper:has(.paper--mac) {
+  background:
+    conic-gradient(from 270deg at 1px 1px, var(--ink) 25%, transparent 0) 0 0 / 4px 4px,
+    conic-gradient(from 270deg at 1px 1px, var(--ink) 25%, transparent 0) 2px 2px / 4px 4px,
+    var(--paper);
+}
+
+/* 18px of title bar over its rule. The title sits between two runs of
+   six lines, the first broken by the close box. The Mac newspaper's
+   windows draw the same bar as one piece (.paper--mac), since their
+   titles come from CSS rather than the page. */
+[data-theme="classic_mac"] .card-header {
+  display: flex;
+  align-items: flex-start;
+  height: 19px;
+}
+[data-theme="classic_mac"] .card-header::before,
+[data-theme="classic_mac"] .card-header::after {
+  content: "";
+  flex: 1 1 0;
+  height: 11px;
+  margin-top: 2px;
+  background: repeating-linear-gradient(var(--ink) 0 1px, transparent 1px 2px);
+}
+[data-theme="classic_mac"] .card-header::before {
+  min-width: 20px;
+  margin-right: 6px;
+  background:
+    linear-gradient(var(--paper), var(--paper)) 7px 1px / 9px 9px no-repeat,
+    linear-gradient(var(--ink), var(--ink)) 6px 0 / 11px 11px no-repeat,
+    linear-gradient(var(--paper), var(--paper)) 5px 0 / 13px 11px no-repeat,
+    repeating-linear-gradient(var(--ink) 0 1px, transparent 1px 2px);
+}
+[data-theme="classic_mac"] .card-header::after { margin-left: 6px; }
+
+/* Classic Windows (3.1): tiles as framed windows under black title bars.
+   A tile without a header is a framed box. */
+[data-theme="classic_windows"] {
+  --header-font: "Pixel Operator Bold", monospace;
+  --header-fs: 16px;
+  --header-lh: 20px;
+  --header-fill: linear-gradient(var(--ink), var(--ink)) 19px 0 / calc(100% - 55px) 100% no-repeat;
+  --header-text: var(--paper);
+  --header-pad: 0;
+  --header-rule: none;
+}
+
+/* The desktop: one dot in every 4px square. The Windows newspaper sits
+   on it too. */
+[data-theme="classic_windows"] body,
+.card--newspaper:has(.paper--windows) {
+  background:
+    conic-gradient(from 270deg at 1px 1px, var(--ink) 25%, transparent 0) 0 0 / 4px 4px,
+    var(--paper);
+}
+
+/* The sizing frame: a line 3px inside the border, cut near each corner */
+[data-theme="classic_windows"] .card:not(.card--newspaper) {
+  padding: 4px;
+  background:
+    linear-gradient(var(--ink), var(--ink)) left 3px top 3px / calc(100% - 6px) 1px no-repeat,
+    linear-gradient(var(--ink), var(--ink)) left 3px bottom 3px / calc(100% - 6px) 1px no-repeat,
+    linear-gradient(var(--ink), var(--ink)) left 3px top 3px / 1px calc(100% - 6px) no-repeat,
+    linear-gradient(var(--ink), var(--ink)) right 3px top 3px / 1px calc(100% - 6px) no-repeat,
+    linear-gradient(var(--ink), var(--ink)) left 22px top 0 / 1px 3px no-repeat,
+    linear-gradient(var(--ink), var(--ink)) right 22px top 0 / 1px 3px no-repeat,
+    linear-gradient(var(--ink), var(--ink)) left 22px bottom 0 / 1px 3px no-repeat,
+    linear-gradient(var(--ink), var(--ink)) right 22px bottom 0 / 1px 3px no-repeat,
+    linear-gradient(var(--ink), var(--ink)) left 0 top 22px / 3px 1px no-repeat,
+    linear-gradient(var(--ink), var(--ink)) left 0 bottom 22px / 3px 1px no-repeat,
+    linear-gradient(var(--ink), var(--ink)) right 0 top 22px / 3px 1px no-repeat,
+    linear-gradient(var(--ink), var(--ink)) right 0 bottom 22px / 3px 1px no-repeat,
+    var(--card-fill);
+}
+
+/* The title between the control-menu box and the buttons */
+[data-theme="classic_windows"] .card-header {
+  display: grid;
+  grid-template-columns: 19px minmax(0, 1fr) 36px;
+  text-align: center;
+}
+[data-theme="classic_windows"] .card-header::before,
+[data-theme="classic_windows"] .card-header::after {
+  content: "";
+  background: var(--ink);
+}
+[data-theme="classic_windows"] .card-header::before {
+  -webkit-mask: var(--win-control-menu) no-repeat;
+  mask: var(--win-control-menu) no-repeat;
+}
+[data-theme="classic_windows"] .card-header::after {
+  -webkit-mask: var(--win-sizing-buttons) no-repeat;
+  mask: var(--win-sizing-buttons) no-repeat;
 }
 
 
@@ -418,24 +549,46 @@ body {
   height: calc(var(--lh-xs) * 2);
 }
 
-/* Headlines wrap, so rows need to stack rather than sit on one line */
-.rows--stacked > li {
-  display: block;
-  white-space: normal;
-}
-
 /* Icon cells in a row shouldn't stretch */
 .rows > li > span {
   display: flex;
   align-items: center;
 }
 
-.feed img {
+/* The images layout's pictures, one after another */
+.feed > img {
   max-width: 100%;
   height: auto;
   display: block;
   margin-left: auto;
   margin-right: auto;
+}
+
+/* Headlines drawn from a NewsTemplate: lines of text, with a picture
+   beside or above them */
+.headlines > li {
+  align-items: flex-start;
+  white-space: normal;
+}
+.headlines--none > li { display: block; }
+.headlines--right > li { flex-direction: row-reverse; }
+.headlines--above > li {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--pad-tight);
+}
+
+/* Cropped to the template's size rather than squashed into it */
+.headline-image {
+  flex: none;
+  display: block;
+  object-fit: cover;
+}
+.headlines--above .headline-image { width: 100%; }
+
+.headline-text {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 /* ============================================================
@@ -612,3 +765,630 @@ body {
 
 .setup-steps ol { margin: 8px 0 8px 24px; }
 .setup-steps li { margin-bottom: 4px; }
+
+/* ============================================================
+   Newspaper: a front page filling the panel
+   ============================================================
+
+   Its fonts and headline sizes come from the paper's style
+   (NewspaperStyle#css, in a <style> in the tile): pixel faces set only at
+   whole multiples of their grids, so every glyph lands on the panel's
+   pixels. Keep sizes, spacing and borders here in whole pixels too. */
+
+.card--newspaper {
+  border: none;
+  box-shadow: none;
+}
+.card--newspaper .card-body { padding: 0 var(--pad-tight); }
+
+.paper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Labels, datelines and bylines */
+.paper-small,
+.paper-dateline,
+.paper-byline,
+.paper-events-title,
+.paper-kicker {
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.paper--caps .paper-headline { text-transform: uppercase; }
+
+/* The name centered between two boxed ears of equal width */
+.paper-masthead {
+  flex: none;
+  display: grid;
+  grid-template-columns: 128px minmax(0, 1fr) 128px;
+  align-items: center;
+  gap: var(--pad);
+  padding: var(--pad-tight) 0;
+}
+
+.paper-ear {
+  justify-self: start;
+  padding: 2px var(--pad);
+  border: var(--rule) solid var(--ink);
+}
+.paper-ear:empty { visibility: hidden; }
+.paper-ear--right {
+  justify-self: end;
+  text-align: right;
+}
+
+.paper-weather {
+  display: flex;
+  align-items: center;
+  gap: var(--pad-tight);
+}
+
+/* Stepped down by the page's fitting script until it fits */
+.paper-name {
+  justify-self: center;
+  max-width: 100%;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* The rules under a masthead: thick, then thin */
+.paper-dateline {
+  flex: none;
+  display: flex;
+  justify-content: space-between;
+  gap: var(--pad);
+  padding: 2px;
+  border-top: 3px solid var(--ink);
+  border-bottom: var(--rule) solid var(--ink);
+}
+
+/* Three columns split by hairlines, the lead twice as wide */
+.paper-page {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: var(--pad);
+  padding: var(--pad) 0 var(--pad-tight);
+}
+
+.paper-column,
+.paper-lead {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.paper-lead {
+  display: flex;
+  flex-direction: column;
+  padding: 0 var(--pad);
+  border-left: var(--rule) solid var(--ink);
+  border-right: var(--rule) solid var(--ink);
+}
+
+/* A tabloid: the lead across two thirds, everything else beside it */
+.paper-page--tabloid { grid-template-columns: 2fr 1fr; }
+.paper-page--tabloid .paper-lead {
+  padding-left: 0;
+  border-left: none;
+}
+
+.paper-lead > .paper-story {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.paper-column > .paper-story {
+  display: flow-root;
+  padding-bottom: var(--pad-tight);
+  margin-bottom: var(--pad-tight);
+  border-bottom: var(--rule) solid var(--ink);
+}
+
+/* A label over the lead's headline */
+.paper-kicker {
+  align-self: flex-start;
+  margin-bottom: var(--pad-tight);
+  padding: 1px var(--pad-tight);
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* Upcoming events: a boxed index under an inverted label */
+.paper-events {
+  margin-bottom: var(--pad);
+  border: var(--rule) solid var(--ink);
+}
+.paper-events-title {
+  padding: 2px var(--pad-tight);
+  background: var(--ink);
+  color: var(--paper);
+}
+.paper-event {
+  padding: 2px var(--pad-tight);
+}
+.paper-event + .paper-event { border-top: var(--rule) solid var(--ink); }
+.paper-event-title .tag {
+  margin-right: var(--pad-tight);
+  padding: 0 2px;
+  vertical-align: 2px;
+}
+
+.paper-headline { margin-bottom: 2px; }
+.paper-lead .paper-headline { margin-bottom: var(--pad-tight); }
+
+.paper-photo {
+  display: block;
+  width: 100%;
+  object-fit: cover;
+}
+/* The lead's photo takes the height its headline and summary leave */
+.paper-story--fill .paper-photo {
+  flex: 1 1 0;
+  min-height: 160px;
+  margin-bottom: 2px;
+}
+.paper-story--top .paper-photo {
+  height: 96px;
+  margin: 2px 0;
+}
+
+.paper-thumb {
+  float: right;
+  width: 56px;
+  height: 56px;
+  margin: 2px 0 2px 6px;
+  object-fit: cover;
+}
+
+.paper-byline {
+  margin-top: 1px;
+  text-overflow: ellipsis;
+}
+
+/* Shifted letters (NewsHelper#shifted_letters); their shifts are in the
+   paper's own stylesheet */
+.shift-word { white-space: nowrap; }
+.shift { display: inline-block; }
+.shift--inverted {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* The motto running up the side of the page, turned a whole quarter so
+   it stays on the pixel grid */
+.paper-page:has(> .paper-strip) { grid-template-columns: 14px 1fr 2fr 1fr; }
+.paper-page--tabloid:has(> .paper-strip) { grid-template-columns: 14px 2fr 1fr; }
+.paper-strip {
+  overflow: hidden;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  white-space: nowrap;
+  line-height: 14px;
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* ---------- Tabloid: a masthead in a black box, a shouting lead ---------- */
+
+.paper--tabloid .paper-name {
+  padding: 0 var(--pad);
+  background: var(--ink);
+  color: var(--paper);
+}
+.paper--tabloid .paper-dateline { border-top-width: 5px; }
+.paper--tabloid .paper-ear { border-width: 2px; }
+
+/* ---------- Zine: cut-out letters, dashed rules, photocopied photos ---------- */
+
+.paper--zine .paper-masthead { border-bottom: 2px dashed var(--ink); }
+.paper--zine .paper-dateline {
+  border-top: var(--rule) dashed var(--ink);
+  border-bottom: var(--rule) dashed var(--ink);
+}
+.paper--zine .paper-ear,
+.paper--zine .paper-events { border-style: dashed; }
+.paper--zine .paper-lead {
+  border-left-style: dashed;
+  border-right-style: dashed;
+}
+.paper--zine .paper-column > .paper-story { border-bottom-style: dashed; }
+
+/* The lead's headline printed over its photo, inverting whatever it
+   lands on */
+.paper--zine .paper-lead .paper-headline {
+  position: relative;
+  z-index: 1;
+  margin-bottom: -40px;
+  color: #fff;
+  mix-blend-mode: difference;
+}
+
+/* A second pass through the copier, a few pixels off */
+.paper--zine .paper-photo { box-shadow: 4px 4px 0 var(--ink); }
+.paper--zine .paper-story--top .paper-photo { width: calc(100% - 4px); }
+
+/* Blown-out contrast, like a photocopy of a photocopy */
+.paper--zine .paper-photo,
+.paper--zine .paper-thumb { filter: grayscale(1) contrast(1.8); }
+
+.ransom { display: inline-block; }
+.ransom + .ransom { margin-left: 2px; }
+.ransom-space { display: inline-block; width: var(--pad); }
+.ransom--inverted {
+  padding: 0 2px;
+  background: var(--ink);
+  color: var(--paper);
+}
+.ransom--boxed {
+  padding: 0 2px;
+  border: var(--rule) solid var(--ink);
+}
+
+/* ---------- Patriot: a flag under the masthead, double-ruled ears ---------- */
+
+.paper--patriot .paper-ear { border: 3px double var(--ink); }
+.paper--patriot .paper-dateline { border-top-width: var(--rule); }
+
+.paper-flag {
+  flex: none;
+  display: flex;
+  height: 24px;
+  margin-bottom: 2px;
+}
+
+.paper-canton {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  width: 128px;
+  padding: 0 var(--pad-tight);
+  background: var(--ink);
+  color: var(--paper);
+}
+.pixel-art { display: block; fill: currentColor; }
+
+/* Seven stripes of 3px, ink and paper */
+.paper-stripes {
+  flex: 1 1 auto;
+  background-image: repeating-linear-gradient(
+    180deg, var(--ink) 0 3px, var(--paper) 3px 6px
+  );
+  background-size: 100% 6px;
+}
+
+/* ---------- Wizarding gazette: stretched, outlined, rolling type ----------
+
+   Stretches are whole-number scales and letters shift by whole pixels, so
+   the pixel faces stay crisp. The name and the lead's headline are set at
+   half size (NewspaperStyle) and scaled up, so the fitting script still
+   measures their real space. Only boxes and photos tilt. */
+
+.paper--wizard .paper-masthead { padding: var(--pad) 0 12px; }
+
+/* The name twice as tall, hollow, with a hard shadow */
+.paper--wizard .paper-name {
+  overflow: visible;
+  color: var(--paper);
+  text-shadow:
+    1px 0 var(--ink), -1px 0 var(--ink), 0 1px var(--ink), 0 -1px var(--ink),
+    1px 1px var(--ink), -1px -1px var(--ink), 1px -1px var(--ink), -1px 1px var(--ink),
+    3px 2px var(--ink);
+  transform: scaleY(2);
+}
+
+.paper--wizard .paper-ear {
+  border: 3px double var(--ink);
+  transform: rotate(-3deg);
+}
+.paper--wizard .paper-ear--right { transform: rotate(4deg); }
+
+/* A rule with sparkles, under the masthead */
+.paper-flourish {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--pad-loose);
+  height: 13px;
+  background-image: linear-gradient(var(--ink), var(--ink));
+  background-size: 100% 1px;
+  background-position: 0 6px;
+  background-repeat: no-repeat;
+}
+.paper-flourish .pixel-art {
+  padding: 0 var(--pad);
+  background: var(--paper);
+  box-sizing: content-box;
+}
+
+.paper--wizard .paper-dateline {
+  justify-content: center;
+  gap: var(--pad-loose);
+  border-top: 3px double var(--ink);
+  border-bottom: 3px double var(--ink);
+}
+
+.paper--wizard .paper-strip {
+  background: var(--paper);
+  color: var(--ink);
+  border-left: 3px double var(--ink);
+  border-right: 3px double var(--ink);
+}
+
+/* The lead's headline set in half its width, then stretched across it */
+.paper--wizard .paper-lead > .paper-story { position: relative; }
+.paper--wizard .paper-lead .paper-headline {
+  width: 50%;
+  transform: scaleX(2);
+  transform-origin: 0 0;
+}
+
+/* The lead's photo in an oval frame, a round stamp slapped on it */
+.paper--wizard .paper-story--fill .paper-photo {
+  margin: 2px var(--pad) var(--pad);
+  width: auto;
+  padding: 3px;
+  border: 3px double var(--ink);
+  border-radius: 50%;
+}
+.paper--wizard .paper-kicker {
+  position: absolute;
+  right: 0;
+  bottom: 40px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 76px;
+  height: 76px;
+  padding: var(--pad);
+  border: 3px double var(--ink);
+  border-radius: 50%;
+  background: var(--paper);
+  color: var(--ink);
+  white-space: normal;
+  text-align: center;
+  transform: rotate(-14deg);
+}
+
+/* A drop cap in the headline's blackletter */
+.paper--wizard .paper-lead .paper-summary { display: block; }
+.paper--wizard .paper-lead .paper-summary::first-letter {
+  float: left;
+  margin: 2px var(--pad-tight) 0 0;
+  font-family: "np-jacquard12", serif;
+  font-size: 42px;
+  line-height: 36px;
+}
+
+/* Column photos pinned up askew; thumbnails in circles the text wraps */
+.paper--wizard .paper-column { padding: var(--pad-tight) 6px; }
+.paper--wizard .paper-story--top .paper-photo {
+  padding: 2px;
+  border: 3px double var(--ink);
+  transform: rotate(2deg);
+}
+.paper--wizard .paper-thumb {
+  border-radius: 50%;
+  border: 2px solid var(--ink);
+  shape-outside: circle(50%);
+  shape-margin: 2px;
+}
+
+.paper--wizard .paper-column > .paper-story { border-bottom: 3px double var(--ink); }
+
+/* The events box's heading turned up its side */
+.paper--wizard .paper-events {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  border: 3px double var(--ink);
+}
+.paper--wizard .paper-events-title {
+  grid-row: 1 / span 99;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  text-align: center;
+}
+
+/* ---------- 90s hacker: a terminal, white on black ----------
+
+   Ink and paper swap for the whole card, so every rule, box and inverted
+   label turns over with it. */
+
+.card--newspaper:has(.paper--hacker) {
+  --ink: #fff;
+  --paper: #000;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+/* The name with a block cursor after it */
+.paper--hacker .paper-name::after {
+  content: "";
+  display: inline-block;
+  width: 0.5em;
+  height: 0.75em;
+  margin-left: 0.25em;
+  background: currentColor;
+}
+
+/* The date line as a status bar */
+.paper--hacker .paper-dateline {
+  border: none;
+  background: var(--ink);
+  color: var(--paper);
+}
+.paper--hacker .paper-dateline span:first-child::before { content: "[ONLINE] "; }
+
+/* A prompt. In shifted headlines it goes inside the first word, whose
+   letters are inline blocks a line could otherwise break before. */
+.paper--hacker .paper-headline:not(:has(.shift-word))::before,
+.paper--hacker .paper-headline .shift-word:first-child::before { content: "> "; }
+.paper--hacker .paper-summary::before { content: "// "; }
+.paper--hacker .paper-byline::before { content: "["; }
+.paper--hacker .paper-byline::after { content: "]"; }
+.paper--hacker .paper-events-title::before { content: "$ "; }
+.paper--hacker .paper-kicker::before,
+.paper--hacker .paper-kicker::after { content: " *** "; }
+
+/* Photos through a CRT: every third row of pixels blanked */
+.paper--hacker .paper-photo,
+.paper--hacker .paper-thumb {
+  filter: grayscale(1) contrast(1.3);
+  -webkit-mask-image: repeating-linear-gradient(180deg, #000 0 2px, transparent 2px 3px);
+  mask-image: repeating-linear-gradient(180deg, #000 0 2px, transparent 2px 3px);
+}
+
+.paper--hacker .paper-strip {
+  border-right: var(--rule) solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  letter-spacing: 0;
+}
+
+/* ---------- Classic desktops: Mac and Windows windows, under a menu bar ----------
+
+   Every box is a window with a title bar. The menu bar and titles are set
+   in the style's chrome font (--paper-chrome, from NewspaperStyle#css).
+   Window titles are drawn here, as the hacker paper's prompts are. Their
+   desktops are the matching dashboard themes', under Themes. */
+
+:is(.paper--mac, .paper--windows) :is(.paper-small, .paper-dateline, .paper-byline, .paper-events-title) {
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* The date line becomes the menu bar, across the top of the tile */
+:is(.paper--mac, .paper--windows) .paper-dateline {
+  order: -1;
+  margin: 0 calc(-1 * var(--pad-tight));
+  padding: 2px 12px 1px;
+  justify-content: flex-start;
+  gap: 16px;
+  border: none;
+  border-bottom: 1px solid var(--ink);
+  background: var(--paper);
+}
+:is(.paper--mac, .paper--windows) .paper-dateline::before { white-space: pre; }
+.paper--mac .paper-dateline::before { content: "File   Edit   View   Special"; }
+.paper--windows .paper-dateline::before { content: "File   Options   Window   Help"; }
+:is(.paper--mac, .paper--windows) .paper-dateline::before,
+:is(.paper--mac, .paper--windows) .paper-dateline > span { font: var(--paper-chrome); }
+:is(.paper--mac, .paper--windows) .paper-dateline > span:last-child {
+  order: 1;
+  margin-left: auto;
+}
+:is(.paper--mac, .paper--windows) .paper-dateline > span:first-child { order: 2; }
+
+:is(.paper--mac, .paper--windows) .paper-name {
+  background: var(--paper);
+}
+/* In an alert box's frame: thin, a gap, thick */
+.paper--mac .paper-name {
+  margin: 2px;
+  padding: 0 var(--pad);
+  border: 2px solid var(--ink);
+  box-shadow: 0 0 0 1px var(--paper), 0 0 0 2px var(--ink);
+}
+/* In a dialog's frame: a line 3px inside the border */
+.paper--windows .paper-name {
+  padding: 4px var(--pad);
+  border: 1px solid var(--ink);
+  box-shadow: inset 0 0 0 3px var(--paper), inset 0 0 0 4px var(--ink);
+}
+
+:is(.paper--mac, .paper--windows) :is(.paper-ear, .paper-lead, .paper-column) {
+  position: relative;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+}
+.paper--mac :is(.paper-ear, .paper-lead, .paper-column) { box-shadow: 1px 1px 0 var(--ink); }
+:is(.paper--mac, .paper--windows) .paper-ear {
+  justify-self: stretch;
+  padding: 0 var(--pad) 2px;
+}
+:is(.paper--mac, .paper--windows) :is(.paper-lead, .paper-column) { padding: 0 var(--pad) var(--pad-tight); }
+
+/* The title bar, and the title over it */
+:is(.paper--mac, .paper--windows) :is(.paper-ear, .paper-lead, .paper-column)::before {
+  content: "";
+  display: block;
+  flex: none;
+  margin: 0 calc(-1 * var(--pad)) var(--pad-tight);
+}
+:is(.paper--mac, .paper--windows) :is(.paper-ear, .paper-lead, .paper-column)::after {
+  position: absolute;
+  font: var(--paper-chrome);
+  white-space: nowrap;
+}
+.paper--mac .paper-ear::after,
+.paper--windows .paper-ear::after { content: "Weather"; }
+.paper--mac .paper-ear--right::after,
+.paper--windows .paper-ear--right::after { content: "Clock"; }
+:is(.paper--mac, .paper--windows) .paper-lead::after { content: "Top Story"; }
+:is(.paper--mac, .paper--windows) .paper-column:first-child::after { content: "Headlines"; }
+:is(.paper--mac, .paper--windows) .paper-column:last-child::after { content: "More News"; }
+
+/* Mac: six lines, broken by the close box and the title. The classic Mac
+   theme draws the same bar around a tile's header. */
+.paper--mac :is(.paper-ear, .paper-lead, .paper-column)::before {
+  height: 18px;
+  border-bottom: 1px solid var(--ink);
+  background:
+    linear-gradient(var(--paper), var(--paper)) 8px 4px / 9px 9px no-repeat,
+    linear-gradient(var(--ink), var(--ink)) 7px 3px / 11px 11px no-repeat,
+    linear-gradient(var(--paper), var(--paper)) 6px 2px / 13px 13px no-repeat,
+    repeating-linear-gradient(var(--ink) 0 1px, transparent 1px 2px) 1px 3px / calc(100% - 2px) 11px no-repeat;
+}
+.paper--mac :is(.paper-ear, .paper-lead, .paper-column)::after {
+  top: 1px;
+  left: 0;
+  right: 0;
+  width: fit-content;
+  margin: 0 auto;
+  padding: 0 6px;
+  background: var(--paper);
+}
+
+/* Windows: black, between the control-menu box and the buttons, whose
+   faces show the window's paper through the mask */
+.paper--windows :is(.paper-ear, .paper-lead, .paper-column)::before {
+  height: 20px;
+  background: var(--ink);
+  -webkit-mask:
+    var(--win-control-menu) left top no-repeat,
+    linear-gradient(#000 0 0) 19px 0 / calc(100% - 55px) 100% no-repeat,
+    var(--win-sizing-buttons) right top no-repeat;
+  mask:
+    var(--win-control-menu) left top no-repeat,
+    linear-gradient(#000 0 0) 19px 0 / calc(100% - 55px) 100% no-repeat,
+    var(--win-sizing-buttons) right top no-repeat;
+}
+.paper--windows :is(.paper-ear, .paper-lead, .paper-column)::after {
+  top: 2px;
+  left: 19px;
+  right: 36px;
+  overflow: hidden;
+  text-align: center;
+  color: var(--paper);
+}
+
+/* Upcoming events as a list under a plain header */
+.paper--mac .paper-events { box-shadow: 1px 1px 0 var(--ink); }
+:is(.paper--mac, .paper--windows) .paper-events-title {
+  border-bottom: 1px solid var(--ink);
+  background: none;
+  color: var(--ink);
+}

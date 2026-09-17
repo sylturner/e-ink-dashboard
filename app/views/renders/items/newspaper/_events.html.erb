@@ -1,0 +1,18 @@
+<%# locals: (item:, now:, style:, events:) %>
+<% if events.present? %>
+  <section class="paper-events">
+    <div class="paper-events-title"><%= t("renders.newspaper.styles.#{style.key}.events") %></div>
+    <% tags = item.sources.count { it.providable_type == "IcalProvider" } > 1 %>
+    <% events.each do |event| %>
+      <div class="paper-event">
+        <div class="paper-byline"><%= newspaper_event_when(event, now) %></div>
+        <div class="paper-event-title">
+          <% if tags && event.tag.present? %>
+            <span class="tag"><%= event.tag %></span>
+          <% end %>
+          <%= event.title %>
+        </div>
+      </div>
+    <% end %>
+  </section>
+<% end %>

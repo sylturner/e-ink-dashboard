@@ -29,6 +29,7 @@ class SettingsController < ApplicationController
 
     def setting_params
       params.expect(app_setting: [ :time_zone, :clock, :week_start, :units, :server_url,
-                                   *CheckInSchedule::SCHEDULE_ATTRIBUTES ])
+                                   *CheckInSchedule::SCHEDULE_ATTRIBUTES,
+                                   { news_template: {} } ])
     end
 end

@@ -1,17 +1,30 @@
 <%
   limit = item.setting("event_limit").to_i
-  entries = (data["items"] || []).first(limit)
+  entries = NewsFeed.for(item)
+  # A feed can mix items with and without pictures; the images layout
+  # skips the ones it has nothing to draw for.
+  entries = entries.select { it["image"].present? } if item.view == "images"
+  entries = entries.first(limit)
 %>
 <div class="feed">
   <% case item.view %>
   <% when "headlines" %>
-    <ul class="rows rows--stacked">
+    <% template = item.news_template %>
+    <% lines = template.lines.select(&:shown?) %>
+    <ul class="rows headlines headlines--<%= template.image.placement %>">
       <% entries.each do |entry| %>
         <li>
-          <span class="t-clip t-clip-2"><%= entry["title"] %></span>
-          <% if item.shows?("source") && entry["source"].present? %>
-            <span class="t-xs nowrap"><%= entry["source"] %></span>
+          <% if template.image.shown? && entry["image"].present? %>
+            <% width, height = template.image.dimensions %>
+            <%= image_tag entry["image"], class: "headline-image", width:, height:, alt: "" %>
           <% end %>
+          <div class="headline-text">
+            <% lines.each do |line| %>
+              <% if (text = headline_line(line, entry, now)) %>
+                <%= tag.div text, class: [ "t-clip", "t-clip-#{line.clamp}", line.size_class ] %>
+              <% end %>
+            <% end %>
+          </div>
         </li>
       <% end %>
     </ul>

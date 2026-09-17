@@ -65,6 +65,15 @@
             </div>
           </fieldset>
 
+          <fieldset class="border-top pt-3 mb-3" aria-describedby="new-news-tiles-hint">
+            <legend class="fs-6 fw-semibold"><%= t("news_templates.settings_legend") %></legend>
+            <p id="new-news-tiles-hint" class="form-text mt-0 mb-3"><%= t("news_templates.settings_hint") %></p>
+
+            <%= render "news_templates/fields", fields: nested_fields(f, :news_template),
+                                                template: @setting.news_template,
+                                                paths: feed_field_paths(Source.where(providable_type: "RssProvider")) %>
+          </fieldset>
+
           <fieldset class="border-top pt-3 mb-3" aria-describedby="new-panels-hint">
             <legend class="fs-6 fw-semibold">New panels</legend>
             <p id="new-panels-hint" class="form-text mt-0 mb-3">

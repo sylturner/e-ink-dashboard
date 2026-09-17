@@ -57,4 +57,6 @@ Rails.application.routes.draw do
   root "dashboards#index"
   get "devices/:token/frame", to: "frames#show", as: :device_frame
   get "render/dashboard",     to: "renders#dashboard"
+  # The builder's preview of changes that aren't saved yet. Nothing is.
+  post "render/preview",      to: "renders#preview", as: :render_preview
 end

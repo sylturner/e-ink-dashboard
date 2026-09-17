@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <title>Example &amp; News</title>
+    <link>https://news.example.com/</link>
+    <description>News</description>
+    <image>
+      <url>/logo.png</url>
+      <title>Example News</title>
+      <link>https://news.example.com/</link>
+    </image>
+    <item>
+      <title>Media content, widest wins</title>
+      <link>https://news.example.com/a</link>
+      <pubDate>Tue, 15 Sep 2026 10:00:00 GMT</pubDate>
+      <media:content url="https://img.example.com/a-140.jpg" width="140"/>
+      <media:content url="https://img.example.com/a-460.jpg" width="460"/>
+      <media:thumbnail url="https://img.example.com/a-thumb.jpg"/>
+      <description><![CDATA[A <b>short</b> summary.]]></description>
+      <dc:creator>Ada Lovelace</dc:creator>
+      <category>World</category>
+      <category>Science</category>
+    </item>
+    <item>
+      <title><![CDATA[<b>Enclosure</b> image &amp; entities]]></title>
+      <link>https://news.example.com/b</link>
+      <pubDate>Wed, 16 Sep 2026 10:00:00 GMT</pubDate>
+      <enclosure url="https://img.example.com/b.png" type="image/png" length="1"/>
+    </item>
+    <item>
+      <title>Image in the description</title>
+      <link>https://news.example.com/posts/c</link>
+      <dc:date>2026-09-14T10:00:00Z</dc:date>
+      <description><![CDATA[<p><img src="https://feeds.feedburner.com/~r/example/~4/abc" height="1" width="1"/><img src="images/c.jpg"/></p>]]></description>
+    </item>
+    <item>
+      <title>Item-level image element</title>
+      <link>https://news.example.com/d</link>
+      <pubDate>Sun, 13 Sep 2026 10:00:00 GMT</pubDate>
+      <image>https://img.example.com/d.jpg</image>
+    </item>
+    <item>
+      <title>No image of its own</title>
+      <link>https://news.example.com/e</link>
+      <pubDate>Sat, 12 Sep 2026 10:00:00 GMT</pubDate>
+      <media:content url="https://video.example.com/e.mp4"/>
+    </item>
+  </channel>
+</rss>

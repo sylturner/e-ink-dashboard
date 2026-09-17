@@ -1,0 +1,85 @@
+<%# locals: (fields:, template:, paths: []) %>
+<%# A NewsTemplate's fields, under the builder `fields` names: the tile
+    inspector's dashboard_item[settings][template], and Settings'
+    app_setting[news_template]. news_template_controller hides what the
+    current choices don't use; hidden fields still save. %>
+<div data-controller="news-template">
+  <% image = nested_fields(fields, :image) %>
+  <fieldset class="mb-3">
+    <legend class="fs-6 fw-semibold mb-2"><%= t("news_templates.image") %></legend>
+    <div class="row g-2">
+      <div class="col-7">
+        <%= image.label :placement, t("news_templates.placement") %>
+        <%= image.select :placement, news_template_placement_options,
+                         { selected: template.image.placement },
+                         data: { news_template_target: "placement", action: "news-template#update" } %>
+      </div>
+      <%= tag.div class: "col-5", hidden: !template.image.shown?, data: { news_template_target: "imageSize" } do %>
+        <%= image.label :size, t("components.size") %>
+        <%= image.select :size, news_template_image_size_options, selected: template.image.size %>
+      <% end %>
+    </div>
+  </fieldset>
+
+  <% template.lines.each_with_index do |line, index| %>
+    <% row = nested_fields(fields, :lines, index) %>
+    <fieldset class="mb-3">
+      <legend class="fs-6 fw-semibold mb-2"><%= t("news_templates.line", number: index + 1) %></legend>
+
+      <div class="mb-2">
+        <%= row.label :field, t("news_templates.shows") %>
+        <%= row.select :field, news_template_field_options, { selected: line.field },
+                       data: { news_template_target: "field", action: "news-template#update" } %>
+      </div>
+
+      <%= tag.div class: "mb-2", hidden: !line.custom?, data: { news_template_target: "format" } do %>
+        <%= row.label :format, t("news_templates.format") %>
+        <%= row.text_field :format, value: line.format, maxlength: NewsTemplate::FORMAT_LENGTH,
+                           placeholder: t("news_templates.format_placeholder"),
+                           spellcheck: false, autocomplete: "off",
+                           aria: { describedby: row.field_id(:format, :hint) } %>
+        <div id="<%= row.field_id(:format, :hint) %>" class="form-text"><%= t("news_templates.format_hint") %></div>
+      <% end %>
+
+      <%= tag.div class: "row g-2", hidden: line.field == NewsTemplate::NONE, data: { news_template_target: "style" } do %>
+        <div class="col-7">
+          <%= row.label :size, t("components.size") %>
+          <%= row.select :size, news_template_line_size_options, selected: line.size %>
+        </div>
+        <div class="col-5">
+          <%= row.label :clamp, t("news_templates.clamp") %>
+          <%= row.number_field :clamp, value: line.clamp, min: NewsTemplate::CLAMPS.min, max: NewsTemplate::CLAMPS.max %>
+        </div>
+      <% end %>
+    </fieldset>
+  <% end %>
+
+  <details class="mb-3">
+    <summary><%= t("news_templates.tokens.summary") %></summary>
+    <table class="table table-sm small mt-2 mb-2">
+      <thead>
+        <tr>
+          <th scope="col"><%= t("news_templates.tokens.token") %></th>
+          <th scope="col"><%= t("news_templates.tokens.draws") %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% NewsTemplate::FIELDS.each do |name| %>
+          <tr>
+            <td><code>{<%= name %>}</code></td>
+            <td><%= t("news_templates.tokens.named.#{name}") %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+    <p class="small mb-2"><%= t("news_templates.tokens.paths_html") %></p>
+    <% if paths.any? %>
+      <p class="small mb-1"><%= t("news_templates.tokens.in_feeds") %></p>
+      <ul class="list-inline small text-break mb-0">
+        <% paths.each do |path| %>
+          <li class="list-inline-item"><code>{<%= path %>}</code></li>
+        <% end %>
+      </ul>
+    <% end %>
+  </details>
+</div>
