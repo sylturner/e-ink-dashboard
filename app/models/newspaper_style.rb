@@ -48,7 +48,10 @@ class NewspaperStyle
                       subhead: %w[vaticanus bitrimus], text: "pixantiqua", label: "vaticanus", name: 13..32, lead_min: 16 },
     # Their boxes are windows on a desktop, under a menu bar (render.css).
     "mac"        => DESKTOP_FONTS,
-    "windows"    => DESKTOP_FONTS
+    "windows"    => DESKTOP_FONTS,
+    # Motif titles its windows in a regular weight, and has no menu bar:
+    # its date line is the Front Panel, with a workspace switcher.
+    "cde"        => DESKTOP_FONTS.merge(chrome: "pixel_operator", workspaces: true)
   }.freeze
 
   KEYS = [ *PRESETS.keys, "custom" ].freeze
@@ -129,6 +132,7 @@ class NewspaperStyle
   def kicker? = @config[:kicker] ? true : false
   def flag?   = @config[:flag] ? true : false
   def flourish? = @config[:flourish] ? true : false
+  def workspaces? = @config[:workspaces] ? true : false
   # What its side strip spells (STRIPS), or nil for none.
   def strip
     @config[:strip] == true ? "motto" : @config[:strip].presence_in(STRIPS)

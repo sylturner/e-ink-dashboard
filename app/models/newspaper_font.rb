@@ -48,7 +48,7 @@ class NewspaperFont
     new("home_video", "Home Video (capitals)", [ cut("home_video", "HomeVideo-Regular.woff2", 20, leading: 2) ]),
     new("press_start", "Press Start 2P", [ cut("press_start", "PressStart2P-Regular.ttf", 8, leading: 2, shared: "PressStart2P") ]),
     new("pixel_operator_bold", "Pixel Operator Bold", [ cut("pixel_operator_bold", "PixelOperator-Bold.woff2", 16, weight: 700, shared: "Pixel Operator Bold") ]),
-    new("pixel_operator", "Pixel Operator", [ cut("pixel_operator", "PixelOperator.woff2", 16) ]),
+    new("pixel_operator", "Pixel Operator", [ cut("pixel_operator", "PixelOperator.woff2", 16, shared: "Pixel Operator") ]),
     new("pixel_operator_mono_bold", "Pixel Operator Mono Bold", [ cut("pixel_operator_mono_bold", "PixelOperatorMono-Bold.woff2", 16, weight: 700) ]),
     new("pixel_operator_mono", "Pixel Operator Mono (typewriter)", [ cut("pixel_operator_mono", "PixelOperatorMono.woff2", 16) ]),
     new("bitrimus", "Bitrimus (narrow)", [ cut("bitrimus", "Bitrimus.woff2", 16, leading: -1) ]),

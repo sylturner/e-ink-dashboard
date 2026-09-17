@@ -240,6 +240,11 @@ en:
         windows:
           motto: "Program Manager"
           events: "Calendar"
+        cde:
+          motto: "Common Desktop Environment"
+          events: "Calendar"
+          # The Front Panel's workspace switcher, the first one current.
+          workspaces: [ "One", "Two", "Three", "Four" ]
         custom:
           motto: "All the news that fits"
           events: "Upcoming events"
