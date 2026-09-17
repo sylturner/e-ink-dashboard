@@ -67,6 +67,6 @@ class DashboardsController < ApplicationController
     end
 
     def dashboard_params
-      params.expect(dashboard: [ :name, :theme, :grid_columns, :grid_rows ])
+      params.expect(dashboard: Dashboard::FORM_ATTRIBUTES)
     end
 end

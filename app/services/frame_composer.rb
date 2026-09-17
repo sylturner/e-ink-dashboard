@@ -13,6 +13,7 @@ class FrameComposer
       layout: "render",
       assigns: {
         dashboard: dashboard,
+        items: dashboard&.dashboard_items&.visible,
         device: device,
         now: device ? device.local_time : Time.current
       }

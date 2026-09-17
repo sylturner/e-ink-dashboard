@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
+  <channel>
+    <title>The Example Show</title>
+    <link>https://pod.example.com</link>
+    <itunes:image href="https://pod.example.com/art-3000.jpg"/>
+    <image><url>https://pod.example.com/art-144.jpg</url></image>
+    <item>
+      <title>Episode 2</title>
+      <pubDate>Wed, 16 Sep 2026 06:00:00 +0000</pubDate>
+      <guid isPermaLink="false">ep2</guid>
+      <enclosure url="https://cdn.example.com/ep2.mp3" type="audio/mpeg" length="123"/>
+      <itunes:image href="https://pod.example.com/ep2.jpg"/>
+    </item>
+    <item>
+      <title>Episode 1</title>
+      <link>https://pod.example.com/1</link>
+      <pubDate>Wed, 09 Sep 2026 06:00:00 +0000</pubDate>
+      <enclosure url="https://cdn.example.com/ep1.mp3" type="audio/mpeg" length="123"/>
+    </item>
+  </channel>
+</rss>

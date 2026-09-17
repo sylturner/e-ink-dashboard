@@ -1,0 +1,13 @@
+{
+  "version": "https://jsonfeed.org/version/1.1",
+  "title": "JSON Example",
+  "home_page_url": "https://json.example.com/",
+  "icon": "https://json.example.com/icon.png",
+  "items": [
+    { "id": "1", "url": "https://json.example.com/1", "title": "With an image",
+      "image": "https://json.example.com/1.jpg", "date_published": "2026-09-16T10:00:00Z",
+      "summary": "The summary.", "authors": [ { "name": "Grace Hopper" } ], "tags": [ "code", "navy" ] },
+    { "id": "2", "content_html": "<p>A <b>microblog</b> post with no title at all.</p>",
+      "date_published": "2026-09-15T10:00:00Z" }
+  ]
+}

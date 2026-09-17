@@ -64,6 +64,7 @@ en:
       small: "Small"
       medium: "Medium"
       large: "Large"
+      extra_large: "Extra large"
     # One label per part, shared by every layout of the component that
     # draws it.
     parts:
@@ -75,8 +76,13 @@ en:
       clock:
         date: "Date"
         time: "Time"
-      news:
-        source: "Feed name"
+      newspaper:
+        bylines: "Feed and time"
+        dateline: "Date line"
+        events: "Upcoming events"
+        photos: "Photos beside the lead"
+        summaries: "Summaries"
+        weather: "Weather"
       note:
         qr_code: "QR code to edit"
       weather:
@@ -93,6 +99,10 @@ en:
     part_hints:
       note:
         qr_code_html: "Needs the server address, set in %{settings}."
+  dashboards:
+    edit:
+      # The builder's preview status, once it draws changes not yet saved.
+      preview_draft: "The preview includes changes that aren't saved yet."
   devices:
     # Beside the device page's link to the panel's last frame.
     bitmap_hint: "Opening the bitmap shows the last frame the panel was sent. It doesn't render a new one or count as a check-in."
@@ -101,6 +111,50 @@ en:
     # The Devices page banner. The server is the address a panel is
     # pointed at.
     index_description: "Your e-paper panels. A new panel adds itself the first time it connects, then waits here for a dashboard. To add a TRMNL, set its API Server to %{server} in its Wi-Fi setup."
+    # Beside links to a panel's live frame URL: the builder's device list
+    # and the device page.
+    live_bitmap_hint: "Opening the live bitmap renders a fresh frame if one is due, and counts as a check-in for the panel."
+  # A headline template's fields (news_templates/_fields): in a news tile's
+  # inspector, and for new tiles on the Settings page.
+  news_templates:
+    legend: "Each headline"
+    settings_legend: "New news tiles"
+    settings_hint: "How a new news tile draws each headline. Existing tiles keep their own."
+    image: "Picture"
+    placement: "Placement"
+    placements:
+      none: "None"
+      left: "Left of the text"
+      right: "Right of the text"
+      above: "Above the text"
+    line: "Line %{number}"
+    shows: "Shows"
+    fields:
+      none: "Nothing"
+      title: "Title"
+      summary: "Summary"
+      author: "Author"
+      source: "Feed name"
+      date: "Date"
+      age: "Time since"
+      custom: "Custom format"
+    format: "Format"
+    format_placeholder: "{source} · {age}"
+    format_hint: "Text and tokens, like {author} · {date}. See the tokens below."
+    clamp: "Max lines"
+    tokens:
+      summary: "Tokens"
+      token: "Token"
+      draws: "Draws"
+      named:
+        title: "The headline"
+        summary: "The summary or description, as plain text"
+        author: "The author"
+        source: "The feed's name"
+        date: "When it was published: Sep 16"
+        age: "How long ago: 5m, 3h, 2d"
+      paths_html: "Any other part of a feed item works too, by its path in the feed: <code>{dc:creator}</code>, <code>{category}</code>, <code>{enclosure@length}</code>. A line whose tokens are all empty isn't drawn."
+      in_feeds: "Found in these feeds:"
   # A note's phone page (NotesController) and its source form.
   notes:
     body: "Note"
@@ -143,6 +197,61 @@ en:
           result: "a line across"
   # Text drawn on a panel.
   renders:
+    # The builder's preview of changes that couldn't be saved.
+    invalid:
+      heading: "These changes can't be saved"
+    # PanelTimeHelper#panel_age: how long ago a headline was published.
+    age:
+      now: "now"
+      minutes: "%{count}m"
+      hours: "%{count}h"
+      days: "%{count}d"
+    # The newspaper tile's front page.
+    newspaper:
+      # Each type of paper's own words (NewspaperStyle): the motto when the
+      # tile has none, the events box's heading, and the label over the
+      # lead for a style with a kicker.
+      styles:
+        broadsheet:
+          motto: "All the news that fits"
+          events: "Upcoming events"
+        tabloid:
+          motto: "Shocking but true!"
+          events: "What's on"
+          kicker: "Exclusive!"
+        zine:
+          motto: "Photocopied with love"
+          events: "Be there or be square"
+        patriot:
+          motto: "Land of the free, home of the headlines"
+          events: "Mark your calendar"
+          kicker: "Breaking news"
+        hacker:
+          motto: "All your news are belong to us"
+          events: "crontab -l"
+          kicker: "Access granted"
+        wizard:
+          motto: "Mischief, marvels and the morning news"
+          events: "Coming to a cauldron near you"
+          kicker: "Special edition"
+        mac:
+          motto: "Welcome to Macintosh"
+          events: "Calendar"
+        windows:
+          motto: "Program Manager"
+          events: "Calendar"
+        custom:
+          motto: "All the news that fits"
+          events: "Upcoming events"
+      # NewsHelper#newspaper_event_when: "Today · 1:00 PM".
+      event_when: "%{day} · %{time}"
+      today: "Today"
+      tomorrow: "Tomorrow"
+      all_day: "All day"
+      now: "Now"
+      edition: "%{time} edition"
+      number: "No. %{day}"
+      high_low: "H %{high}° · L %{low}°"
     weather:
       humidity: "Humidity %{percent}%"
       # The chance of rain on its own, when the high and low it follows
@@ -153,6 +262,10 @@ en:
     units:
       imperial: "Fahrenheit"
       metric: "Celsius"
+  date:
+    formats:
+      # A day further off than tomorrow, on a newspaper's events box.
+      panel_weekday: "%A"
   time:
     formats:
       # Times drawn on a panel, one for each of AppSetting's clocks. Read
@@ -166,3 +279,7 @@ en:
       # event_time_label cuts the 12-hour meridiem to one letter: "12:00p".
       panel_event_12h: "%-l:%M%P"
       panel_event_24h: "%H:%M"
+      # PanelTimeHelper#panel_date, on either clock.
+      panel_short_date: "%b %-d"
+      # A newspaper's date line, on either clock.
+      panel_long_date: "%A, %B %-d, %Y"

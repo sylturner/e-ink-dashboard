@@ -1,0 +1,189 @@
+<%
+  style   = NewspaperStyle.for(item)
+  weather = item.sources.find { it.providable_type == "WeatherProvider" }&.payload || {}
+  current = weather["current"]
+  today   = Array(weather["daily"]).first
+  photos  = item.shows?("photos")
+
+  # The lead is the newest story with a photo. The next story with one
+  # opens a column, a big headline from another source follows or opens
+  # the other, and briefs fill the rest, the sources taking turns.
+  stories = NewsFeed.for(item)
+  lead    = stories.find { it["image"].present? } || stories.first
+  rest    = stories - [ lead ]
+  second  = (rest.find { it["image"].present? } if photos) || rest.first
+  rest   -= [ second ]
+  third   = rest.find { it["source_name"] != lead&.dig("source_name") } || rest.first
+  briefs  = NewsFeed.by_turns(rest - [ third ]).first(item.setting("story_count").to_i)
+
+  # Everything on the tile's calendars under way or starting within its
+  # hours ahead.
+  events = if item.shows?("events")
+    EventFeed.between(EventFeed.for(item, zone: now.time_zone), now, now + item.setting("event_hours").to_i.hours)
+             .first(NewspaperStyle::EVENT_LIMIT)
+  end
+
+  story = ->(entry, slot, photo:, summary:, kicker: false) do
+    render "renders/items/newspaper/story", item:, now:, story: entry, sizes: style.ladder(slot),
+           photo:, summary:, kicker: (t("renders.newspaper.styles.#{style.key}.kicker", default: "") if kicker && style.kicker?),
+           letters: (style.letters unless slot == :lead)
+  end
+  id    = "paper-#{item.id}"
+  motto = item.setting("motto").presence || t("renders.newspaper.styles.#{style.key}.motto")
+
+  # A strip running up the side of the page: the motto, or its bits.
+  strip = capture do
+    case style.strip
+    when "motto"  then tag.div(Array.new(4, motto).join(" * "), class: "paper-strip")
+    when "binary" then tag.div(Array.new(4, motto.unpack1("B*").scan(/.{8}/).join(" ")).join(" * "),
+                               class: "paper-strip paper-strip--binary")
+    end
+  end
+%>
+<%= tag.div id:, class: [ "paper", "paper--#{style.key}", ("paper--caps" if style.caps?) ] do %>
+  <%# Only the fonts this paper uses, and the sizes it can set them at. %>
+  <style><%= raw style.css(id) %></style>
+
+  <%= render "renders/items/newspaper/masthead", item:, now:, style:, current:, today: %>
+
+  <% if style.flag? %>
+    <div class="paper-flag">
+      <div class="paper-canton"><% 4.times do %><%= pixel_art(:star) %><% end %></div>
+      <div class="paper-stripes"></div>
+    </div>
+  <% end %>
+
+  <% if style.flourish? %>
+    <div class="paper-flourish"><%= pixel_art(:sparkle) %><%= pixel_art(:sparkle) %><%= pixel_art(:sparkle) %></div>
+  <% end %>
+
+  <% if item.shows?("dateline") %>
+    <div class="paper-dateline">
+      <span><%= panel_date(now, :long) %></span>
+      <span><%= motto %></span>
+    </div>
+  <% end %>
+
+  <% if style.layout == "tabloid" %>
+    <div class="paper-page paper-page--tabloid">
+      <%= strip %>
+      <div class="paper-lead" data-fit>
+        <%= story.(lead, :lead, photo: :fill, summary: 3, kicker: true) if lead %>
+      </div>
+
+      <div class="paper-column" data-fit>
+        <%= render "renders/items/newspaper/events", item:, now:, style:, events: %>
+        <%= story.(second, :big, photo: (:top if photos), summary: 3) if second %>
+        <%= story.(third, :feature, photo: nil, summary: 2) if third %>
+        <% briefs.each_with_index do |entry, index| %>
+          <%= story.(entry, :brief, photo: (:thumb if photos && index.odd?), summary: 0) %>
+        <% end %>
+      </div>
+    </div>
+  <% else %>
+    <% left, right = briefs.partition.with_index { |_, index| index.even? } %>
+    <div class="paper-page">
+      <%= strip %>
+      <div class="paper-column" data-fit>
+        <%= story.(second, :feature, photo: (:top if photos), summary: 4) if second %>
+        <% left.each_with_index do |entry, index| %>
+          <%= story.(entry, :brief, photo: (:thumb if photos && index.odd?), summary: 2) %>
+        <% end %>
+      </div>
+
+      <div class="paper-lead" data-fit>
+        <%= story.(lead, :lead, photo: :fill, summary: 3, kicker: true) if lead %>
+      </div>
+
+      <div class="paper-column" data-fit>
+        <%= render "renders/items/newspaper/events", item:, now:, style:, events: %>
+        <%= story.(third, :big, photo: nil, summary: 6) if third %>
+        <% right.each_with_index do |entry, index| %>
+          <%= story.(entry, :brief, photo: (:thumb if photos && index.even?), summary: 0) %>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <%# Sets the page once its fonts have loaded (BrowserPool waits for them
+      too, and photos have fixed sizes, so the capture sees the result).
+      Headlines are never cut off: a box's first story steps its headline
+      down its sizes until it fits, in height and with no word too wide, giving up its summary and photo only
+      at the smallest; an events box then gives up its latest events; and
+      the stories after them are kept while they fit.
+      The gaps left at the foot of the columns then take the stories that
+      didn't fit anywhere, cut down to a small headline. The masthead's
+      name steps down until it fits between the ears. %>
+  <%= javascript_tag nonce: true do %>
+    (() => {
+      const paper = document.currentScript.closest(".paper")
+      const tall = (box) => box.scrollHeight > box.clientHeight
+      const wide = (box) => box.scrollWidth > box.clientWidth
+
+      // Moves an element to its next smaller size, or says it can't.
+      const shrink = (element) => {
+        const sizes = (element?.dataset.sizes || "").split(" ")
+        const at = sizes.findIndex((size) => element.classList.contains(`hl-${size}`))
+        if (at < 0 || at === sizes.length - 1) return false
+        element.classList.replace(`hl-${sizes[at]}`, `hl-${sizes[at + 1]}`)
+        return true
+      }
+
+      // Adds a story at the foot of a box, and takes it back out if it
+      // doesn't fit there.
+      const place = (box, story) => {
+        box.append(story)
+        if (!tall(box)) return true
+
+        story.remove()
+        return false
+      }
+
+      // What a story gives up to fit a gap, in order: everything but its
+      // headline (at its smallest) and byline, then the byline.
+      const cuts = [
+        (story) => {
+          story.querySelectorAll(".paper-summary, .paper-thumb, .paper-photo").forEach((part) => part.remove())
+          const headline = story.querySelector(".paper-headline")
+          while (shrink(headline)) {}
+        },
+        (story) => story.querySelector(".paper-byline")?.remove()
+      ]
+
+      const fit = () => {
+        const name = paper.querySelector(".paper-name")
+        while (wide(name) && shrink(name)) {}
+
+        const waiting = []
+
+        paper.querySelectorAll("[data-fit]").forEach((box) => {
+          const [first, ...others] = box.querySelectorAll(".paper-story")
+          others.forEach((story) => story.remove())
+
+          if (first) {
+            const headline = first.querySelector(".paper-headline")
+            while ((tall(box) || wide(headline)) && shrink(headline)) {}
+            for (const part of [".paper-summary", ".paper-photo"]) {
+              if (tall(box)) first.querySelector(part)?.remove()
+            }
+          }
+
+          const events = [ ...box.querySelectorAll(".paper-event") ]
+          while (tall(box) && events.length > 0) events.pop().remove()
+          if (events.length === 0) box.querySelector(".paper-events")?.remove()
+
+          others.forEach((story) => place(box, story) || waiting.push(story))
+        })
+
+        paper.querySelectorAll(".paper-column").forEach((column) => {
+          for (const story of [ ...waiting ]) {
+            const fits = place(column, story) || cuts.some((cut) => (cut(story), place(column, story)))
+            if (fits) waiting.splice(waiting.indexOf(story), 1)
+          }
+        })
+      }
+
+      document.fonts.ready.then(fit)
+    })()
+  <% end %>
+<% end %>

@@ -85,6 +85,14 @@ class ComponentTest < ActiveSupport::TestCase
     end
   end
 
+  test "templates are declared only for layouts the kind offers" do
+    Component::KINDS.each do |kind|
+      assert_empty Component.templates(kind) - Component.views(kind).keys, "#{kind} templates an unknown view"
+    end
+    assert_equal %w[headlines], Component.templates("news")
+    assert_empty Component.templates("nope")
+  end
+
   test "every part has a label, and a sized part offers every size" do
     Component::KINDS.each do |kind|
       Component.views(kind).each_key do |view|

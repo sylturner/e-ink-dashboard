@@ -33,4 +33,16 @@ class PanelTimeHelperTest < ActionView::TestCase
   test "an all-day event says so" do
     assert_equal "9/7 All day", event_time_label(event(AFTERNOON.beginning_of_day, all_day: true))
   end
+
+  test "a date without its year, on either clock" do
+    assert_equal "Sep 7", panel_date(AFTERNOON)
+  end
+
+  test "an age is as brief as a byline" do
+    assert_equal "now", panel_age(AFTERNOON, AFTERNOON + 30.seconds)
+    assert_equal "now", panel_age(AFTERNOON, AFTERNOON - 5.minutes), "a clock running ahead of the feed"
+    assert_equal "5m", panel_age(AFTERNOON, AFTERNOON + 5.minutes)
+    assert_equal "3h", panel_age(AFTERNOON, AFTERNOON + 3.hours + 59.minutes)
+    assert_equal "2d", panel_age(AFTERNOON, AFTERNOON + 2.days)
+  end
 end

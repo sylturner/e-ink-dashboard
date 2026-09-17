@@ -96,4 +96,21 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input.is-invalid[name=?]", "app_setting[server_url]"
     assert_nil @setting.reload.server_url
   end
+
+  test "new news tiles' headline template is edited here, without asking panels for a frame" do
+    Device.update_all(refresh_requested_at: nil)
+    get edit_settings_url
+
+    assert_select "fieldset legend", "New news tiles"
+    assert_select "select[name=?] option[selected][value=?]", "app_setting[news_template][lines][0][field]", "title"
+
+    patch settings_url, params: { app_setting: { news_template: {
+      "image" => { "placement" => "above", "size" => "medium" },
+      "lines" => { "0" => { "field" => "summary", "size" => "small", "clamp" => "4" } }
+    } } }
+
+    assert_redirected_to edit_settings_url
+    assert_equal [ "above", "{summary}" ], @setting.reload.news_template.then { [ it.image.placement, it.lines.first.tokens ] }
+    assert_equal 0, Device.where.not(refresh_requested_at: nil).count
+  end
 end

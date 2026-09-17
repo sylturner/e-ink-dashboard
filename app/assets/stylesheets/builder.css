@@ -108,3 +108,7 @@
 }
 
 .assign-device { max-width: 28rem; }
+
+/* Takes no room until it has something to say. Never hidden, so it is
+   still announced when it does (WCAG 4.1.3). */
+.builder-preview-status:not(:empty) { margin-top: .5rem; }

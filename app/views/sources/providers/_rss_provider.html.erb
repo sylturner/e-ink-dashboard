@@ -4,7 +4,8 @@
                   aria: { describedby: f.field_id(:feed_url, :hint) } %>
   <%= f.invalid_feedback :feed_url %>
   <div id="<%= f.field_id(:feed_url, :hint) %>" class="form-text">
-    The RSS or Atom URL. Save it, then use Test on the source list to
+    An RSS, Atom, JSON Feed or podcast URL, or the address of a site that
+    links to its feed. Save it, then use Test on the source list to
     confirm it parses before putting it on a dashboard.
   </div>
 </div>

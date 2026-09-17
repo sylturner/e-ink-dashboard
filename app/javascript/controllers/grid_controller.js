@@ -1,12 +1,14 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["canvas", "tile", "preview", "status", "mover"]
-  static values = { cols: Number, rows: Number }
+  static targets = ["canvas", "tile", "preview", "status", "mover",
+                    "draft", "previewer", "previewStatus"]
+  static values = { cols: Number, rows: Number, draftMessage: String }
 
   connect() {
     this.drag = null
     this.selected = null
+    this.drafted = false
     this.layout()
 
     this.onResize = () => this.layout()
@@ -267,6 +269,9 @@ export default class extends Controller {
     })
     this.selected = tile
     this.moverTargets.forEach((button) => { button.disabled = false })
+    // Any change still waiting to be previewed belongs to the tile being
+    // closed. inspected() previews again once the new one is open.
+    clearTimeout(this.previewTimer)
 
     // The view renders each tile's URLs from the routes, so none are
     // spelled out here.
@@ -286,12 +291,72 @@ export default class extends Controller {
     if (this.hasStatusTarget) this.statusTarget.textContent = message
   }
 
+  // After a move is saved. A preview of unsaved changes is posted again
+  // rather than reloaded, which would ask to resubmit the form.
   refreshPreview() {
     if (!this.hasPreviewTarget) return
 
     clearTimeout(this.previewTimer)
     this.previewTimer = setTimeout(() => {
-      this.previewTarget.contentWindow.location.reload()
+      if (this.drafted) {
+        this.preview()
+      } else {
+        this.previewTarget.src = this.previewTarget.getAttribute("src")
+      }
     }, 400)
+  }
+
+  // --- preview of unsaved changes -----------------------------------
+
+  // A field changed in the tile inspector or the Dashboard card.
+  // Debounced, so typing a header posts one preview, not one per key.
+  draft() {
+    this.drafted = true
+    clearTimeout(this.previewTimer)
+    this.previewTimer = setTimeout(() => this.preview(), 300)
+  }
+
+  // The inspector is rebuilding its form for another component. The
+  // preview waits for the new form, which inspected() previews.
+  rebuilding() {
+    this.drafted = true
+    clearTimeout(this.previewTimer)
+  }
+
+  // The inspector loaded a tile. Once the preview has drawn unsaved
+  // changes, draw it again from the forms as they are now, so changes
+  // discarded with the last tile leave it.
+  inspected() {
+    if (this.drafted) this.draft()
+  }
+
+  // Copies every draft form's fields into the preview form and posts it
+  // into the iframe. RendersController#preview applies them without
+  // saving anything.
+  preview() {
+    if (!this.hasPreviewerTarget) return
+
+    const form = this.previewerTarget
+    form.querySelectorAll("[data-drafted]").forEach((input) => input.remove())
+
+    this.draftTargets.forEach((source) => {
+      if (source.dataset.itemId) this.carry(form, "item_id", source.dataset.itemId)
+
+      for (const [name, value] of new FormData(source)) {
+        if (name !== "authenticity_token" && name !== "_method") this.carry(form, name, value)
+      }
+    })
+
+    form.requestSubmit()
+    if (this.hasPreviewStatusTarget) this.previewStatusTarget.textContent = this.draftMessageValue
+  }
+
+  carry(form, name, value) {
+    const input = document.createElement("input")
+    input.type = "hidden"
+    input.name = name
+    input.value = value
+    input.dataset.drafted = ""
+    form.append(input)
   }
 }

@@ -63,4 +63,5 @@ Rails.application.routes.draw do
     post "log",        to: "logs#create"
     get  "images/:id", to: "images#show", as: :image
   end
+
 end

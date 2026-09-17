@@ -26,6 +26,15 @@ class AppSetting < ApplicationRecord
   validates :refresh_seconds, :night_refresh_seconds,
             numericality: { only_integer: true, in: MIN_SLEEP..MAX_SLEEP }
 
+  # The headline template a new news tile starts with.
+  def news_template
+    NewsTemplate.from(self[:news_template].presence || NewsTemplate::DEFAULT)
+  end
+
+  def news_template=(value)
+    self[:news_template] = NewsTemplate.from(value).to_h
+  end
+
   # Loaded once per request or job; Current is reset between them.
   def self.current
     Current.app_setting ||= first_or_create!

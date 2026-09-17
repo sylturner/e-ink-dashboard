@@ -6,8 +6,11 @@ module Http
 
   TIMEOUT = 10
   USER_AGENT = "eink-dashboard/1.0"
+  MAX_REDIRECTS = 5
 
-  def self.get(url, headers: {})
+  # Follows redirects: feeds and calendars move (http to https, a new
+  # host, FeedBurner) and keep answering at the old address with a 301.
+  def self.get(url, headers: {}, redirects: MAX_REDIRECTS)
     uri = URI.parse(url)
     raise Error, "unsupported scheme" unless uri.is_a?(URI::HTTP)
 
@@ -23,14 +26,21 @@ module Http
       http.request(request)
     end
 
-    unless response.is_a?(Net::HTTPSuccess)
+    case response
+    when Net::HTTPSuccess
+      response.body
+    when Net::HTTPRedirection
+      location = response["location"]
+      raise Error, "#{response.code} from #{uri.host} with nowhere to go" if location.blank?
+      raise Error, "too many redirects from #{uri.host}" if redirects <= 0
+
+      get(URI.join(uri, location).to_s, headers: headers, redirects: redirects - 1)
+    else
       raise Error, "#{response.code} from #{uri.host}"
     end
-
-    response.body
   rescue Net::OpenTimeout, Net::ReadTimeout
     raise Error, "timed out fetching #{uri&.host}"
-  rescue SocketError => e
+  rescue URI::InvalidURIError, SocketError, SystemCallError, OpenSSL::SSL::SSLError, IOError => e
     raise Error, e.message
   end
 

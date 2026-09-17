@@ -1,6 +1,9 @@
 class Dashboard < ApplicationRecord
   # Keep in sync with the [data-theme] blocks in render.css.
-  THEMES = %w[default quiet night dense].freeze
+  THEMES = %w[default quiet night dense classic_mac classic_windows].freeze
+
+  # What the builder's Dashboard card edits, for saving and for previewing.
+  FORM_ATTRIBUTES = %i[name theme grid_columns grid_rows].freeze
 
   has_many :dashboard_items, -> { order(:position) }, dependent: :destroy
   has_many :device_dashboards, dependent: :destroy

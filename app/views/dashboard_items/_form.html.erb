@@ -1,4 +1,9 @@
+<%# In the builder's inspector, grid_controller previews its changes
+    before they're saved, as the tile with this id. %>
 <%= form_with model: item, data: { controller: "item-form",
+                                   action: "input->item-form#changed change->item-form#changed",
+                                   grid_target: "draft",
+                                   item_id: item.id,
                                    turbo_frame: item.new_record? ? nil : "_top" } do |f| %>
   <%= f.error_messages %>
 
@@ -12,7 +17,8 @@
   <div class="mb-3">
     <%= f.label :kind, "Component" %>
     <%= f.select :kind, component_options, {},
-                 data: { action: "change->item-form#kindChanged" } %>
+                 data: { action: "change->item-form#kindChanged",
+                         item_form_target: "kind" } %>
   </div>
 
   <div class="mb-3">
@@ -45,9 +51,24 @@
         <%= link_to "Manage sources", sources_path %>
       </div>
     </div>
+  <% else %>
+    <%# A component without sources lets go of the ones a tile switched
+        from it had. %>
+    <%= hidden_field_tag "#{f.object_name}[source_ids][]", "", id: nil %>
   <% end %>
 
   <%= render "dashboard_items/parts", f:, item: %>
+
+  <% templates = Component.templates(item.kind) %>
+  <% if templates.any? %>
+    <%= tag.fieldset class: "mb-3", hidden: !templates.include?(item.view),
+                     data: { item_form_target: "setting", views: templates.join(" ") } do %>
+      <legend class="fs-6 fw-semibold mb-2"><%= t("news_templates.legend") %></legend>
+      <%= render "news_templates/fields", fields: nested_fields(f, :settings, :template),
+                                          template: item.news_template,
+                                          paths: feed_field_paths(item.sources) %>
+    <% end %>
+  <% end %>
 
   <% settings = Component.settings(item.kind) %>
   <% if settings.any? %>
@@ -72,6 +93,10 @@
             <% when :integer %>
               <%= s.label setting.key, setting.label %>
               <%= s.number_field setting.key, value:, min: 1 %>
+            <% when :select %>
+              <% options = setting.options.respond_to?(:call) ? setting.options.call : setting.options %>
+              <%= s.label setting.key, setting.label %>
+              <%= s.select setting.key, options, selected: value %>
             <% when :text %>
               <%= s.label setting.key, setting.label %>
               <%= s.textarea setting.key, value:, rows: 3 %>

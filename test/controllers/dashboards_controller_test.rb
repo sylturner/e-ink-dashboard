@@ -88,6 +88,17 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "the builder posts unsaved changes into its preview" do
+    get edit_dashboard_url(@dashboard)
+
+    assert_select "iframe[name=builder-preview][data-grid-target=preview]"
+    assert_select "form[action=?][target=builder-preview][data-turbo=false][hidden]", render_preview_path do
+      assert_select "input[name=dashboard_id][value=?]", @dashboard.id.to_s
+    end
+    assert_select ".builder-preview [role=status][data-grid-target=previewStatus]"
+    assert_select ".dashboard-settings form[data-grid-target=draft]"
+  end
+
   test "saving the settings returns to the builder" do
     patch dashboard_url(@dashboard), params: { dashboard: { name: @dashboard.name, theme: "night", grid_columns: 8, grid_rows: 8 } }
 

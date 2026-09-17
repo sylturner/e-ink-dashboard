@@ -25,6 +25,16 @@ class InlineAssets
       end
     end
 
+    # A font in app/assets/fonts as a data: URI, for a page that declares
+    # its own @font-face (a newspaper embeds only the faces it uses).
+    def font(file)
+      path = FONT_DIR.join(File.basename(file))
+      return data_uri(path) if Rails.env.development?
+
+      @fonts ||= {}
+      @fonts[path.to_s] ||= data_uri(path)
+    end
+
     private
 
     def build(name)

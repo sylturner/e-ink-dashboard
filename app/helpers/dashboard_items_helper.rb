@@ -4,7 +4,7 @@ module DashboardItemsHelper
   # DashboardItem#shows? and #size_of read. The settings hash is no
   # object to read values from, so each field passes its own.
   def part_fields(form, group, view)
-    form.class.new("#{form.object_name}[settings][#{group}][#{view}]", nil, self, form.options)
+    nested_fields(form, :settings, group, view)
   end
 
   # A line under a part in the inspector saying why it won't draw yet, or

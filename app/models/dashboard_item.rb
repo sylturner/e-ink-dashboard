@@ -1,6 +1,15 @@
 class DashboardItem < ApplicationRecord
   KINDS = Component::KINDS
 
+  # What the tile inspector edits, for saving and for previewing. Position
+  # and placement are owned by the builder, not by these forms.
+  #
+  # settings is an arbitrary hash, nested for a layout's parts and sizes:
+  # the keys are whatever the registry rendered and the values only ever
+  # reach ERB. Do not extend that to anything that reaches SQL or send.
+  FORM_ATTRIBUTES = [ :dashboard_id, :kind, :view, :title, :col_span, :row_span, :visible,
+                      { source_ids: [], settings: {} } ].freeze
+
   belongs_to :dashboard
   has_many :dashboard_item_sources,
            -> { order(:position) }, dependent: :destroy
@@ -44,6 +53,23 @@ class DashboardItem < ApplicationRecord
     Component.part!(kind, view, key).size(size_name(key))
   end
 
+  # How a news tile draws its headlines. A tile saved before it had one
+  # draws the app's.
+  def news_template
+    NewsTemplate.from(settings["template"].presence || AppSetting.current.news_template.to_h)
+  end
+
+  # An unsaved copy with the inspector's changes, for the builder's
+  # preview. It shares this tile's id and dashboard, and assigning sources
+  # to a new record stays in memory, so nothing is written.
+  def draft(attributes, dashboard: self.dashboard)
+    self.class.new(self.attributes).tap do |copy|
+      copy.dashboard = dashboard
+      copy.source_ids = source_ids unless attributes.key?(:source_ids)
+      copy.assign_attributes(attributes)
+    end
+  end
+
   def grid_style
     "grid-column: #{col} / span #{col_span}; " \
     "grid-row: #{row} / span #{row_span};"
@@ -53,6 +79,13 @@ class DashboardItem < ApplicationRecord
 
     def apply_defaults
       self.view = Component.default_view(kind) if view.blank? && kind.present?
+      self.settings = settings.merge("template" => news_template.to_h) if templated?
+    end
+
+    # A new tile starts with the app's template, and a saved one is kept in
+    # the shape NewsTemplate reads, whatever the form sent.
+    def templated?
+      Component.templates(kind).any?
     end
 
     # settings[group][view][key], or nil. The nested hashes arrive
