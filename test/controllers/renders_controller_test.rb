@@ -539,6 +539,40 @@ class RendersControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "a classic Mac paper sets its menu bar and window titles in its chrome font" do
+    render_newspaper { |paper| paper.update!(view: "mac") }
+
+    assert_select ".paper--mac" do
+      assert_select ".paper-dateline", /Welcome to Macintosh/
+      assert_select ".paper-lead .paper-headline[data-sizes=?]", "pixel_operator_bold-48 pixel_operator_bold-32 pixel_operator_bold-16"
+      assert_select "style", /#paper-\d+ \{ --paper-chrome: 700 16px\/16px "Pixel Operator Bold", monospace; \}/
+    end
+    assert_select ".paper-kicker, .paper-strip", 0
+  end
+
+  test "a classic Mac dashboard draws in the font a classic Mac paper shares with it" do
+    render_newspaper { |paper| paper.update!(view: "mac") && paper.dashboard.update!(theme: "classic_mac") }
+
+    assert_select "html[data-theme=classic_mac] .paper--mac"
+    assert_equal 1, response.body.scan('font-family: "Pixel Operator Bold"').size, "the page declares the font once"
+  end
+
+  test "a classic Windows paper on a classic Windows dashboard" do
+    render_newspaper { |paper| paper.update!(view: "windows") && paper.dashboard.update!(theme: "classic_windows") }
+
+    assert_select "html[data-theme=classic_windows] .paper--windows" do
+      assert_select ".paper-dateline", /Program Manager/
+      assert_select "style", /--paper-chrome: 700 16px\/16px "Pixel Operator Bold"/
+    end
+    assert_includes response.body, "--win-sizing-buttons: url("
+  end
+
+  test "a paper without a chrome font declares none" do
+    render_newspaper
+
+    assert_select ".paper--broadsheet style", text: /--paper-chrome/, count: 0
+  end
+
   test "a custom paper takes its fonts and arrangement from its settings" do
     render_newspaper("layout" => "tabloid", "caps" => "1", "headline_font" => "press_start",
                      "masthead_font" => "ransom", "text_font" => "Kernel") { |paper| paper.update!(view: "custom") }

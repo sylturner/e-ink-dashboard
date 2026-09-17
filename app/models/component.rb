@@ -179,6 +179,8 @@ class Component
         "patriot"    => "Patriot",
         "hacker"     => "90s hacker",
         "wizard"     => "Wizarding gazette",
+        "mac"        => "Classic Mac",
+        "windows"    => "Classic Windows",
         "custom"     => "Custom"
       },
       source_types: %w[RssProvider WeatherProvider IcalProvider],

@@ -7,7 +7,10 @@
 # .paper--<key>. Custom takes its fonts, arrangement and capitals from the
 # tile's settings.
 class NewspaperStyle
-  ROLES = %i[masthead headline subhead text label].freeze
+  # `chrome` is optional: the font a style draws its interface in, such as
+  # a classic Mac's menu bar and window titles (render.css reads it as
+  # --paper-chrome).
+  ROLES = %i[masthead headline subhead text label chrome].freeze
 
   # A masthead of cut-out letters in mixed fonts, instead of one font.
   RANSOM = "ransom".freeze
@@ -17,6 +20,12 @@ class NewspaperStyle
   # The most upcoming events the events box lists, before the fitting
   # script drops any that don't fit.
   EVENT_LIMIT = 6
+
+  # Classic desktops draw their pages in system fonts, with window titles
+  # and a menu bar in the chrome font.
+  DESKTOP_FONTS = { layout: "broadsheet", masthead: "pixel_operator_bold", headline: "pixel_operator_bold",
+                    subhead: %w[pixel_operator_bold bitrimus], text: "pixel_operator", label: "pixeloid_sans",
+                    chrome: "pixel_operator_bold" }.freeze
 
   PRESETS = {
     "broadsheet" => { layout: "broadsheet", masthead: "jacquard", headline: "jersey",
@@ -36,7 +45,10 @@ class NewspaperStyle
                       name: 16..64, temperature: 24 },
     "wizard"     => { layout: "broadsheet", masthead: "jacquarda_bastarda", headline: "jacquard", kicker: true, flourish: true,
                       letters: "wave", strip: true,
-                      subhead: %w[vaticanus bitrimus], text: "pixantiqua", label: "vaticanus", name: 13..32, lead_min: 16 }
+                      subhead: %w[vaticanus bitrimus], text: "pixantiqua", label: "vaticanus", name: 13..32, lead_min: 16 },
+    # Their boxes are windows on a desktop, under a menu bar (render.css).
+    "mac"        => DESKTOP_FONTS,
+    "windows"    => DESKTOP_FONTS
   }.freeze
 
   KEYS = [ *PRESETS.keys, "custom" ].freeze
@@ -127,6 +139,7 @@ class NewspaperStyle
     @config[:letters].presence_in(LETTER_SHIFTS.keys)
   end
   def ransom? = @config[:masthead] == RANSOM
+  def chrome? = fonts.fetch(:chrome).any?
 
   # The steps (.hl-<step> classes) a slot's headline steps down through,
   # largest first.
@@ -157,6 +170,7 @@ class NewspaperStyle
       "##{id} .paper-event-title { #{font(*step_cut(ladder(:brief).first))} }",
       "##{id} .paper-temp { #{font(*temperature)} }"
     ]
+    rules << "##{id} { --paper-chrome: #{font_value(*body(:chrome, 12))}; }" if chrome?
     rules += ransom_rules if ransom?
     rules += letter_rules if letters
     rules.join("\n")
@@ -208,11 +222,16 @@ class NewspaperStyle
       cuts  = %i[lead big feature brief].flat_map { ladder(it) }.map { step_cut(it).first }
       cuts += ransom? ? RANSOM_LETTERS.values.flatten(1).map { all_cuts.fetch(it.first) } : ladder(:name).map { step_cut(it).first }
       cuts += [ body(:text, 12), body(:label, 8), temperature ].map(&:first)
+      cuts << body(:chrome, 12).first if chrome?
       cuts.uniq(&:key)
     end
 
     def font(cut, size)
-      %(font: #{cut.weight} #{size}px/#{size + cut.leading}px "#{cut.family}", monospace;)
+      "font: #{font_value(cut, size)};"
+    end
+
+    def font_value(cut, size)
+      %(#{cut.weight} #{size}px/#{size + cut.leading}px "#{cut.family}", monospace)
     end
 
     def font_face(cut)

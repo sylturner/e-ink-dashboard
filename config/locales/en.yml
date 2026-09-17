@@ -216,6 +216,12 @@ en:
           motto: "Mischief, marvels and the morning news"
           events: "Coming to a cauldron near you"
           kicker: "Special edition"
+        mac:
+          motto: "Welcome to Macintosh"
+          events: "Calendar"
+        windows:
+          motto: "Program Manager"
+          events: "Calendar"
         custom:
           motto: "All the news that fits"
           events: "Upcoming events"
