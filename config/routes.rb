@@ -53,6 +53,8 @@ Rails.application.routes.draw do
   # Defines the root path route ("/")
   root "dashboards#index"
   get "render/dashboard", to: "renders#dashboard"
+  # The builder's preview of changes that aren't saved yet. Nothing is.
+  post "render/preview",  to: "renders#preview", as: :render_preview
 
   # The panels' API: TRMNL's BYOS protocol, spoken by TRMNL's own panels
   # and the sketch in esp32/. Deliberately unauthenticated (see
