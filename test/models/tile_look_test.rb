@@ -54,7 +54,7 @@ class TileLookTest < ActiveSupport::TestCase
 
     assert_equal 1, css.scan("@font-face").size
     assert_includes css, %(font-family: "np-tiny5")
-    assert_includes css, %(.card.look--body-tiny5-16 { --body-font: "np-tiny5", monospace; --body-fs: 16px; --body-lh: 17px; font-weight: 400; })
+    assert_includes css, %(.card.look--body-tiny5-16 { --body-font: "np-tiny5", monospace; --body-fs: 16px; --body-lh: 17px; font-weight: 400; --md-grid: 8px; --md-leading: 1px; })
     assert_includes css, %(.card.look--header-tiny5-16 { --header-font: "np-tiny5")
     assert_includes css, %(--body-font: "Silkscreen")
   end

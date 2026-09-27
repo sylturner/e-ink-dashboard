@@ -1,0 +1,13 @@
+{
+  "ignored_warnings": [
+    {
+      "warning_type": "Cross-Site Scripting",
+      "fingerprint": "ed7fb1ce9f069cc1c2b18d65384a25cb488b130c95ef81c4e9ec0ab15f78f1c7",
+      "file": "app/views/renders/dashboard.html.erb",
+      "line": 3,
+      "code": "TileLook.css(((Dashboard.find_by(:id => params[:dashboard_id]).devices.first or Device.first).dashboard or Dashboard.first).dashboard_items.visible.map(&:look))",
+      "note": "TileLook.css writes no text from the tile: TileLook keeps only fonts found in NewspaperFont::REGISTRY and choices from TileLook::CHOICES, so the CSS is built from registry keys, integer sizes and inlined font files."
+    }
+  ],
+  "brakeman_version": "8.0.6"
+}

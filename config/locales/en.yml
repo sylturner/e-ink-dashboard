@@ -92,6 +92,24 @@ en:
         label: "Text size"
         small: "Small"
         large: "Large"
+    # Under a tile's text: the tokens it can carry (PanelTokensHelper).
+    # %{example} is what the token would draw now.
+    tokens:
+      hint: "Tokens in double braces, like {{CURRENT_TIME}}, are filled in when the panel is drawn."
+      summary: "Tokens"
+      unset: "nothing until the server address is set"
+      names:
+        current_time: "The time: %{example}"
+        current_date: "The date: %{example}"
+        long_date: "The whole date: %{example}"
+        weekday: "The day of the week: %{example}"
+        month: "The month: %{example}"
+        year: "The year: %{example}"
+        week_number: "The week of the year, from Monday: %{example}"
+        greeting: "Good morning, afternoon or evening: %{example}"
+        days_until: "Days until a date (year-month-day): %{example}"
+        days_since: "Days since a date: %{example}"
+        server_url: "This server's address, from Settings: %{example}"
     # Beside a part that comes in sizes. The part's name is read out
     # before it, visually hidden.
     size: "Size"
@@ -195,9 +213,40 @@ en:
       paths_html: "Any other part of a feed item works too, by its path in the feed: <code>{dc:creator}</code>, <code>{category}</code>, <code>{enclosure@length}</code>. A line whose tokens are all empty isn't drawn."
       in_feeds: "Found in these feeds:"
   # A note's phone page (NotesController) and its source form.
+  # The Markdown editor (application/_markdown_editor): a toolbar that
+  # types the Markdown, and images uploaded as they're added. %{name} is
+  # the image's file name.
+  markdown_editor:
+    toolbar: "Formatting"
+    shortcut: "%{label} (Ctrl+%{key} or ⌘%{key})"
+    hint: "Markdown. Paste, drop or choose an image to add it."
+    uploading: "Uploading %{name}…"
+    uploaded: "Added %{name}."
+    failed: "Couldn't upload %{name}. Try again."
+    not_image: "%{name} isn't an image."
+    too_big: "%{name} is larger than %{max}."
+    font: "Font"
+    size: "Size"
+    sizes:
+      small: "Small"
+      medium: "Medium"
+      large: "Large"
+      huge: "Huge"
+    buttons:
+      heading: "Heading"
+      bold: "Bold"
+      italic: "Italic"
+      strike: "Strikethrough"
+      quote: "Quote"
+      code: "Code"
+      link: "Link"
+      bullet: "Bulleted list"
+      numbered: "Numbered list"
+      task: "Task list"
+      image: "Add an image"
   notes:
     body: "Note"
-    hint: "Markdown works. Up to %{max} characters."
+    hint: "Up to %{max} characters."
     save: "Save note"
     saved: "Note saved. Panels showing it pick it up at their next check-in."
     last_edited: "Last edited"
@@ -234,11 +283,21 @@ en:
           result: "an indented quote"
         - type: "---"
           result: "a line across"
+        - type: "{font:jersey}Hello{/font}"
+          result: "Hello in the Jersey font (the Font menu lists them)"
+        - type: "{size:large}Hello{/size}"
+          result: "Hello larger: small, medium, large or huge"
   # Text drawn on a panel.
   renders:
     # The builder's preview of changes that couldn't be saved.
     invalid:
       heading: "These changes can't be saved"
+    # What PanelTokensHelper fills a token with, where it's words.
+    tokens:
+      greeting:
+        morning: "Good morning"
+        afternoon: "Good afternoon"
+        evening: "Good evening"
     # PanelTimeHelper#panel_age: how long ago a headline was published.
     age:
       now: "now"
@@ -310,6 +369,8 @@ en:
     formats:
       # A day further off than tomorrow, on a newspaper's events box.
       panel_weekday: "%A"
+      # The {{MONTH}} token (PanelTokensHelper).
+      panel_month: "%B"
   time:
     formats:
       # Times drawn on a panel, one for each of AppSetting's clocks. Read

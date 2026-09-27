@@ -61,14 +61,13 @@ class TileLook
     types = looks.flat_map(&:types).uniq
     return "" if types.empty?
 
-    faces = types.map { it[:cut] }.uniq(&:key).reject(&:shared?).map do |cut|
-      %(@font-face { font-family: "#{cut.family}"; src: url(#{InlineAssets.font(cut.file)}); font-weight: #{cut.weight}; font-display: block; })
-    end
+    faces = types.map { it[:cut] }.uniq(&:key).reject(&:shared?).map(&:face)
 
     rules = types.map do |type|
       cut, size = type.values_at(:cut, :size)
       font = %(--#{type[:role]}-font: "#{cut.family}", monospace; --#{type[:role]}-fs: #{size}px; --#{type[:role]}-lh: #{size + cut.leading}px;)
-      font += " font-weight: #{cut.weight};" if type[:role] == "body"
+      # A Markdown {size:…} marker scales the body's font (MarkdownHelper).
+      font += " font-weight: #{cut.weight}; --md-grid: #{cut.grid}px; --md-leading: #{cut.leading}px;" if type[:role] == "body"
       ".card.#{type[:class]} { #{font} }"
     end
 
@@ -84,7 +83,7 @@ class TileLook
 
       role   = setting == "header_font" ? "header" : "body"
       target = role == "header" ? HEADER_TARGET : TARGETS.fetch(@choices["scale"])
-      cut, size = nearest(font, target)
+      cut, size = font.nearest(target)
 
       { role:, cut:, size:, class: "look--#{role}-#{cut.key}-#{size}" }
     end
@@ -94,13 +93,5 @@ class TileLook
 
     def type_classes
       types.map { it[:class] }
-    end
-
-    # The cut and size of `font` nearest `target`, the larger one on a tie
-    # (easier to read across a room).
-    def nearest(font, target)
-      font.cuts.flat_map { |cut| cut.sizes(1..(target * 3)).map { [ cut, it ] } }
-                .min_by { |cut, size| [ (size - target).abs, -size ] } ||
-        [ font.cuts.first, font.cuts.first.grid ]
     end
 end

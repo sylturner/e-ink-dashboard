@@ -2,7 +2,7 @@
     phone page and on its source form. %>
 <div class="mb-3">
   <%= f.label :body, t("notes.body") %>
-  <%= f.textarea :body, rows:, aria: { describedby: f.field_id(:body, :hint) } %>
+  <%= render "application/markdown_editor", f:, method: :body, rows:, describedby: f.field_id(:body, :hint) %>
   <%= f.invalid_feedback :body %>
   <div id="<%= f.field_id(:body, :hint) %>" class="form-text">
     <%= t("notes.hint", max: number_with_delimiter(NoteProvider::MAX_BODY)) %>

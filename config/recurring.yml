@@ -5,6 +5,10 @@ development: &defaults
   render_all:
     class: RenderAllDevicesJob
     schedule: every 30 minutes
+  # Images uploaded through the Markdown editor that no text uses any more.
+  purge_unused_images:
+    class: PurgeUnusedImagesJob
+    schedule: every day at 3am
 
 production:
   <<: *defaults

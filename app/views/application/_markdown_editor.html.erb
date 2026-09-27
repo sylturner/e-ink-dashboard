@@ -1,0 +1,59 @@
+<%# A Markdown textarea with a toolbar that types the Markdown for you, and
+    images uploaded as they're pasted, dropped or chosen
+    (markdown_editor_controller.js). On a text tile's inspector and a
+    note's pages. `value` is only for a form without a model to read it
+    from; `describedby` names hints of the caller's to add to the
+    editor's own. %>
+<% rows = local_assigns.fetch(:rows, 6) %>
+<% describedby = local_assigns[:describedby] %>
+<% value = local_assigns.key?(:value) ? { value: } : {} %>
+<% id   = f.field_id(method) %>
+<%# The controller fills in each file's name. %>
+<% name = { name: "%{name}" } %>
+<% hint = f.field_id(method, :editor_hint) %>
+<%= tag.div class: "markdown-editor",
+            data: { controller: "markdown-editor",
+                    markdown_editor_upload_url_value: rails_direct_uploads_path,
+                    markdown_editor_max_bytes_value: MarkdownImages::MAX_BYTES,
+                    markdown_editor_uploading_value: t("markdown_editor.uploading", **name),
+                    markdown_editor_uploaded_value: t("markdown_editor.uploaded", **name),
+                    markdown_editor_failed_value: t("markdown_editor.failed", **name),
+                    markdown_editor_not_image_value: t("markdown_editor.not_image", **name),
+                    markdown_editor_too_big_value: t("markdown_editor.too_big", **name,
+                                                     max: number_to_human_size(MarkdownImages::MAX_BYTES)) } do %>
+  <div class="markdown-toolbar" role="toolbar" aria-label="<%= t("markdown_editor.toolbar") %>" aria-controls="<%= id %>">
+    <% MarkdownEditorHelper::BUTTONS.each do |group| %>
+      <div class="btn-group" role="group">
+        <% group.each do |button| %><%= markdown_editor_button(*button) %><% end %>
+      </div>
+    <% end %>
+    <%# Type markers (MarkdownHelper): each menu wraps the selection, then
+        goes back to its heading. %>
+    <div class="markdown-toolbar-type" role="group">
+      <%= font_select_tag nil, [ [ t("markdown_editor.font"), "" ], *NewspaperFont.options ], menu: true,
+                          id: "#{id}_font", class: "form-select-sm", aria: { label: t("markdown_editor.font") },
+                          data: { action: "markdown-editor#font" } %>
+      <%= select_tag nil, options_for_select([ [ t("markdown_editor.size"), "" ],
+                                               *MarkdownHelper::SIZES.map { [ t("markdown_editor.sizes.#{it}"), it ] } ]),
+                     id: "#{id}_size", class: "form-select form-select-sm w-auto", aria: { label: t("markdown_editor.size") },
+                     data: { action: "markdown-editor#size" } %>
+    </div>
+    <div class="btn-group" role="group">
+      <%= tag.button ui_icon("cil-image-plus"), type: "button", class: "btn btn-sm btn-app-outline",
+                     title: t("markdown_editor.buttons.image"), aria: { label: t("markdown_editor.buttons.image") },
+                     data: { action: "markdown-editor#choose" } %>
+    </div>
+    <%= file_field_tag nil, id: nil, accept: "image/*", multiple: true, hidden: true, tabindex: -1,
+                       data: { markdown_editor_target: "file", action: "markdown-editor#chosen" } %>
+  </div>
+
+  <%= f.textarea method, **value, rows:, spellcheck: true,
+                 aria: { describedby: [ hint, describedby ].compact.join(" ") },
+                 data: { markdown_editor_target: "input",
+                         action: [ markdown_editor_shortcuts,
+                                   "paste->markdown-editor#paste",
+                                   "dragover->markdown-editor#dragover",
+                                   "drop->markdown-editor#drop" ].join(" ") } %>
+  <div id="<%= hint %>" class="form-text"><%= t("markdown_editor.hint") %></div>
+  <div class="form-text" role="status" data-markdown-editor-target="status"></div>
+<% end %>

@@ -93,10 +93,19 @@
             <% when :integer %>
               <%= s.label setting.key, setting.label %>
               <%= s.number_field setting.key, value:, min: 1 %>
-            <% when :select %>
+            <% when :select, :font %>
               <% options = setting.options.respond_to?(:call) ? setting.options.call : setting.options %>
               <%= s.label setting.key, setting.label %>
-              <%= s.select setting.key, options, selected: value %>
+              <% if setting.type == :font %>
+                <%= s.font_select setting.key, options, selected: value %>
+              <% else %>
+                <%= s.select setting.key, options, selected: value %>
+              <% end %>
+            <% when :markdown %>
+              <%= s.label setting.key, setting.label %>
+              <%= render "application/markdown_editor", f: s, method: setting.key, value:,
+                                                        describedby: s.field_id(setting.key, :tokens) %>
+              <%= render "dashboard_items/tokens", id: s.field_id(setting.key, :tokens) %>
             <% when :text %>
               <%= s.label setting.key, setting.label %>
               <%= s.textarea setting.key, value:, rows: 3 %>

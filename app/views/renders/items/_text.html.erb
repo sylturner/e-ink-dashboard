@@ -1,1 +1,7 @@
-<div class="t-sm"><%= item.setting("body") %></div>
+<%# Text written in the inspector, with its tokens filled. The formatted
+    layout is Markdown, drawn as a note is (.note in render.css). %>
+<% if item.view == "formatted" %>
+  <div class="note"><%= with_panel_tokens(markdown(item.setting("body")), now:) %></div>
+<% else %>
+  <div class="t-sm"><%= with_panel_tokens(item.setting("body"), now:) %></div>
+<% end %>

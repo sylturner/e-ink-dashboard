@@ -14,8 +14,11 @@ class NotesControllerTest < ActionDispatch::IntegrationTest
     assert_select "main#main-content h1", @source.name
     assert_select "form[action=?]", note_path(@note) do
       assert_select "label[for=note_body]", "Note"
-      assert_select "textarea.form-control#note_body[name=?][aria-describedby=note_body_hint]", "note[body]", text: /Groceries/
-      assert_select ".form-text#note_body_hint", /Markdown works/
+      assert_select "textarea.form-control#note_body[name=?][aria-describedby~=note_body_hint]", "note[body]", text: /Groceries/
+      assert_select ".form-text#note_body_hint", /characters/
+      assert_select ".form-text#note_body_editor_hint", /Paste, drop or choose an image/
+      assert_select "[role=toolbar] button[aria-label=?]", "Add an image"
+      assert_select "input[type=file][accept='image/*'][hidden]"
       assert_select "details summary", "Formatting help"
       assert_select "details table th[scope=col]", 2
       assert_select "input[type=submit][value=?]", "Save note"

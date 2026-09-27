@@ -193,7 +193,9 @@ class DashboardItemsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "details:not([open]) summary", "Look"
     assert_select "select[name=?] option[value='']", "dashboard_item[settings][look][border]", "From the theme"
-    assert_select "select[name=?] option[value=jersey]", "dashboard_item[settings][look][font]"
+    assert_select ".font-picker select[name=?] option[value=jersey][data-font-class=font-preview--jersey]",
+                  "dashboard_item[settings][look][font]"
+    assert_select ".font-picker select[name=?]", "dashboard_item[settings][look][header_font]"
     assert_select "input[type=hidden][name=?][value='0']", "dashboard_item[settings][look][invert]"
 
     @dashboard_item.update!(settings: { "look" => { "border" => "thick" } })
@@ -201,6 +203,34 @@ class DashboardItemsControllerTest < ActionDispatch::IntegrationTest
 
     assert_select "details[open]"
     assert_select "select[name=?] option[selected][value=thick]", "dashboard_item[settings][look][border]"
+  end
+
+  test "a text tile is formatted by default, in the Markdown editor with the tokens listed" do
+    get edit_dashboard_item_url(@dashboard_item, kind: "text")
+
+    assert_response :success
+    assert_select "select[name=?] option[selected][value=formatted]", "dashboard_item[view]"
+    assert_select "[data-controller=markdown-editor][data-markdown-editor-upload-url-value=?]",
+                  "/rails/active_storage/direct_uploads"
+    assert_select "[role=toolbar][aria-controls=dashboard_item_settings_body] button[aria-label=Bold][aria-keyshortcuts]"
+    assert_select "textarea#dashboard_item_settings_body[name=?][aria-describedby=?]", "dashboard_item[settings][body]",
+                  "dashboard_item_settings_body_editor_hint dashboard_item_settings_body_tokens"
+    assert_select "textarea[data-action*='keydown.meta+b->markdown-editor#bold:prevent']"
+    assert_select "label[for=dashboard_item_settings_body]", "Text"
+    assert_select "#dashboard_item_settings_body_tokens", /\{\{CURRENT_TIME\}\}/
+    assert_select ".token-list dt code", "{{DAYS_UNTIL:2026-12-25}}"
+    assert_select "[role=toolbar] .font-picker[data-font-picker-menu-value=true] select[aria-label=Font][data-action~='markdown-editor#font']" do
+      assert_select "option:first-child[value='']", "Font"
+    end
+    assert_select "[role=toolbar] select[aria-label=Size][data-action~='markdown-editor#size'] option[value=huge]", "Huge"
+  end
+
+  test "a custom newspaper's font settings are font pickers" do
+    get edit_dashboard_item_url(@dashboard_item, kind: "newspaper")
+
+    assert_select ".font-picker select[name=?] option[value=ransom]", "dashboard_item[settings][masthead_font]"
+    assert_select ".font-picker select[name=?] option[selected][value=jersey]", "dashboard_item[settings][headline_font]"
+    assert_select ".font-picker select[name=?]", "dashboard_item[settings][layout]", 0
   end
 
   test "a kind with no sources renders no source select" do

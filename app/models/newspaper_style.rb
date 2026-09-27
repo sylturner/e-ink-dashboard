@@ -167,7 +167,7 @@ class NewspaperStyle
     steps += ladder(:name) unless ransom?
 
     rules = [
-      *used_cuts.reject(&:shared?).map { font_face(it) },
+      *used_cuts.reject(&:shared?).map(&:face),
       *steps.uniq.map { "#{step_class(it)} { #{font(*step_cut(it))} }" },
       "##{id} { #{font(*body(:text, 12))} }",
       "##{id} :is(.paper-small, .paper-dateline, .paper-byline, .paper-events-title, .paper-kicker, .tag) { #{font(*body(:label, 8))} }",
@@ -236,10 +236,6 @@ class NewspaperStyle
 
     def font_value(cut, size)
       %(#{cut.weight} #{size}px/#{size + cut.leading}px "#{cut.family}", monospace)
-    end
-
-    def font_face(cut)
-      %(@font-face { font-family: "#{cut.family}"; src: url(#{InlineAssets.font(cut.file)}); font-weight: #{cut.weight}; font-display: block; })
     end
 
     def letter_rules
