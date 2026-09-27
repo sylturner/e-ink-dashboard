@@ -5,6 +5,6 @@
 <div class="note-tile">
   <div class="note"><%= with_panel_tokens(markdown(data["body"]), now:) %></div>
   <% if note && item.shows?("qr_code") && AppSetting.current.server_url? %>
-    <div class="note-qr"><%= note_qr_code(note, module_px: item.size_of("qr_code")) %></div>
+    <div class="note-qr"><%= phone_page_qr_code(note, module_px: item.size_of("qr_code")) %></div>
   <% end %>
 </div>

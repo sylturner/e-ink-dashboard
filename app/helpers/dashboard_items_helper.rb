@@ -11,12 +11,12 @@ module DashboardItemsHelper
   # nil when it will.
   def part_hint(item, part)
     case [ item.kind, part.key ]
-    when [ "note", "qr_code" ]
+    when [ "note", "qr_code" ], [ "checklist", "qr_code" ]
       return if AppSetting.current.server_url?
 
       # The inspector sits in a turbo frame; Settings is a whole page.
-      t("components.part_hints.note.qr_code_html",
-        settings: link_to(t("notes.settings"), edit_settings_path, data: { turbo_frame: "_top" }))
+      t("components.part_hints.qr_code_html",
+        settings: link_to(t("phone_pages.settings"), edit_settings_path, data: { turbo_frame: "_top" }))
     end
   end
 

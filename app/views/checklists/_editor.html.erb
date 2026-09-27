@@ -1,0 +1,77 @@
+<%# A checklist's items, each a form of its own: toggle, move, remove, and
+    add one, then clear the done ones. On its phone page (checklists/edit)
+    and its source's edit page (back: "source"), which each change comes
+    back to. Turbo morphs the page in place, keeping the scroll, and
+    checklist-focus keeps the keyboard focus. %>
+<% turbo_refreshes_with method: :morph, scroll: :preserve %>
+<% back = local_assigns[:back] %>
+
+<div data-controller="checklist-focus"
+     data-action="turbo:submit-start@document->checklist-focus#remember turbo:morph@document->checklist-focus#restore">
+  <% entries = checklist.entries %>
+  <% done = entries.count { it.done?(reset: checklist.reset, now: Time.current) } %>
+  <p class="text-body-secondary mb-3">
+    <%= t("checklists.progress", done:, count: entries.size) %>
+    <%= t("checklists.resets.#{checklist.reset}") %>
+  </p>
+
+  <% if entries.any? %>
+    <ul class="list-group checklist mb-3" aria-label="<%= t("checklists.items") %>">
+      <% entries.each_with_index do |entry, index| %>
+        <% checked = entry.done?(reset: checklist.reset, now: Time.current) %>
+        <li class="list-group-item checklist-item" data-focus-item="<%= entry.id %>">
+          <%# A toggle button for each item: pressed when it's done. %>
+          <%= button_to checklist_item_path(checklist, entry.id), method: :patch,
+                        params: { item: { done: checked ? 0 : 1 }, back: }.compact,
+                        form_class: "checklist-toggle-form",
+                        class: class_names("checklist-toggle", "checklist-toggle--done": checked),
+                        aria: { pressed: checked }, data: { focus_key: "toggle-#{entry.id}" } do %>
+            <span class="checklist-box" aria-hidden="true"><%= ui_icon "cil-check" if checked %></span>
+            <span class="checklist-text"><%= entry.text %></span>
+          <% end %>
+
+          <div class="checklist-actions">
+            <%= button_to move_checklist_item_path(checklist, entry.id), method: :patch, params: { by: -1, back: }.compact,
+                          class: "btn btn-sm btn-app-outline", disabled: index.zero?, data: { focus_key: "up-#{entry.id}" },
+                          aria: { label: t("checklists.move_up", text: entry.text) } do %>
+              <%= ui_icon "cil-arrow-top" %>
+            <% end %>
+            <%= button_to move_checklist_item_path(checklist, entry.id), method: :patch, params: { by: 1, back: }.compact,
+                          class: "btn btn-sm btn-app-outline", disabled: index == entries.size - 1,
+                          data: { focus_key: "down-#{entry.id}" },
+                          aria: { label: t("checklists.move_down", text: entry.text) } do %>
+              <%= ui_icon "cil-arrow-bottom" %>
+            <% end %>
+            <%= button_to checklist_item_path(checklist, entry.id), method: :delete, params: { back: }.compact,
+                          class: "btn btn-sm btn-app-outline", data: { focus_key: "remove-#{entry.id}" },
+                          aria: { label: t("checklists.remove", text: entry.text) } do %>
+              <%= ui_icon "cil-trash" %>
+            <% end %>
+          </div>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p class="mb-3"><%= t("checklists.empty") %></p>
+  <% end %>
+
+  <%= form_with model: item, scope: :item, url: checklist_items_path(checklist), class: "mb-3" do |f| %>
+    <%= hidden_field_tag :back, back, id: nil if back %>
+    <%= f.error_messages %>
+    <%= f.label :text, t("checklists.add_label") %>
+    <div class="input-group has-validation">
+      <%= f.text_field :text, maxlength: ChecklistItem::MAX_TEXT, required: true,
+                       aria: { describedby: f.field_id(:text, :hint) }, data: { checklist_focus_target: "fallback", focus_key: "add" } %>
+      <%= f.submit t("checklists.add"), data: { focus_key: "add" } %>
+      <%= f.invalid_feedback :text %>
+    </div>
+    <div id="<%= f.field_id(:text, :hint) %>" class="form-text">
+      <%= t("checklists.add_hint", max: ChecklistProvider::MAX_ITEMS) %>
+    </div>
+  <% end %>
+
+  <% if done.positive? %>
+    <%= button_to t("checklists.clear_done"), checklist_done_items_path(checklist), method: :delete, params: { back: }.compact,
+                  class: "btn btn-app-outline w-100", data: { focus_key: "clear" } %>
+  <% end %>
+</div>

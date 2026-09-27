@@ -410,6 +410,70 @@ class RendersControllerTest < ActionDispatch::IntegrationTest
     assert_select ".note-qr", 0
   end
 
+  # The groceries checklist beside the calendar on the office dashboard.
+  def render_checklist(view = "list", settings = {})
+    @dashboard.dashboard_items.create!(kind: "checklist", view:, col: 7, row: 1, col_span: 6, row_span: 4,
+                                       sources: [ sources(:five) ], settings:)
+    render_view("today")
+  end
+
+  test "a checklist tile draws its items with boxes, the done ones filled and struck through" do
+    render_checklist
+
+    assert_select ".checklist-tile ul.checklist:not(.checklist--columns) > li.checklist-row", 3 do |rows|
+      assert_select rows.first, ".checklist-box:not(.checklist-box--done)[style=?]", "width: 12px; height: 12px"
+      assert_select rows.first, ".checklist-text", "Milk"
+      assert_select rows[1], ".checklist-box--done"
+      assert_select rows[1], ".checklist-text", "Eggs"
+    end
+    assert_select "li.checklist-row--done", 1
+    assert_select ".checklist-progress, .note-qr", 0
+  end
+
+  test "a checklist tile's parts: box size, no boxes, and how many are done" do
+    render_checklist("list", { "parts" => { "list" => { "progress" => "1" } }, "sizes" => { "list" => { "checkboxes" => "large" } } })
+    assert_select ".checklist-box[style=?]", "width: 16px; height: 16px"
+    assert_select ".checklist-progress", "1 of 3 done"
+
+    @dashboard.dashboard_items.where(kind: "checklist").destroy_all
+    render_checklist("list", { "parts" => { "list" => { "checkboxes" => "0" } } })
+    assert_select ".checklist-box", 0
+    assert_select ".checklist-text", 3
+  end
+
+  test "a checklist tile can move its done items to the bottom, or hide them" do
+    render_checklist("list", { "done_items" => "bottom" })
+    assert_equal %w[Milk Bread Eggs], css_select(".checklist-text").map(&:text)
+
+    @dashboard.dashboard_items.where(kind: "checklist").destroy_all
+    render_checklist("list", { "done_items" => "hide" })
+    assert_equal %w[Milk Bread], css_select(".checklist-text").map(&:text)
+  end
+
+  test "a checklist tile with everything hidden says it's all done" do
+    sources(:five).update!(payload: { "reset" => "never", "items" => [ { "id" => "a", "text" => "Milk", "done_at" => "2026-09-01T00:00:00Z" } ] })
+
+    render_checklist("list", { "done_items" => "hide" })
+
+    assert_select ".checklist-empty", "All done"
+  end
+
+  test "a checklist tile flows into columns" do
+    render_checklist("columns", { "column_count" => "3" })
+
+    assert_select "ul.checklist.checklist--columns[style=?]", "column-count: 3"
+  end
+
+  test "a checklist tile's QR code opens its phone page" do
+    AppSetting.current.update!(server_url: "http://192.168.1.10:3000")
+
+    render_checklist("list", { "parts" => { "list" => { "qr_code" => "1" } } })
+
+    url  = "http://192.168.1.10:3000/checklists/#{sources(:five).providable_id}/edit"
+    edge = (RQRCode::QRCode.new(url, level: :m).modules.size + 8) * 3
+    assert_select ".checklist-tile > .note-qr svg[width=?][aria-label=?]", edge.to_s, "QR code to check off this list"
+  end
+
   def news_source(name, items)
     Source.create!(name: name, refresh_seconds: 1800, fetched_at: NOW,
                    providable: RssProvider.new(feed_url: "https://example.com/#{name.parameterize}.xml"),

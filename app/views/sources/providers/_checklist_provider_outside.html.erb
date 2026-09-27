@@ -1,0 +1,11 @@
+<%# A saved checklist's items, as its phone page edits them. Each change
+    saves on its own, so it sits apart from the source form. %>
+<% if source.persisted? %>
+  <section class="card mt-3" aria-labelledby="checklist_items_heading">
+    <div class="card-body">
+      <h2 id="checklist_items_heading" class="h5 mb-1"><%= t("checklists.items") %></h2>
+      <p class="form-text mt-0"><%= t("checklists.saved_as_changed") %></p>
+      <%= render "checklists/editor", checklist: source.providable, item: @item || ChecklistItem.new, back: "source" %>
+    </div>
+  </section>
+<% end %>

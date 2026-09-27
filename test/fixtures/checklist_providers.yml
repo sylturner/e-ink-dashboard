@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+# Milk is still to get; eggs were checked on 2026-09-10.
+one:
+  reset: never
+  items:
+    - id: milk
+      text: Milk
+      done_at:
+    - id: eggs
+      text: Eggs
+      done_at: "2026-09-10T08:00:00Z"
+    - id: bread
+      text: Bread
+      done_at:

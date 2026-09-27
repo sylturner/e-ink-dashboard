@@ -218,8 +218,53 @@ html { scroll-padding-top: calc(var(--app-header-height) + 1rem); }
 /* The last fetched payload scrolls inside its own box. */
 .source-payload { max-height: 32rem; overflow: auto; }
 
-/* A note's phone page: one column, readable on a tablet or desktop too. */
-.note-page { max-width: 40rem; }
+/* A note's or checklist's phone page: one column, readable on a tablet or desktop too. */
+.phone-page { max-width: 40rem; }
+
+/* A checklist's items (checklists/edit): each a toggle button drawn as a
+   checkbox and its text, then its move and remove buttons. */
+.checklist-item {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+
+.checklist-toggle-form { flex: 1 1 auto; min-width: 0; }
+.checklist-actions { display: flex; flex: none; gap: .25rem; }
+
+.checklist-toggle {
+  display: flex;
+  width: 100%;
+  align-items: flex-start;
+  gap: .75rem;
+  padding: .25rem 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: start;
+  overflow-wrap: anywhere;
+}
+.checklist-toggle:focus-visible {
+  outline: 2px solid var(--app-focus-ring);
+  outline-offset: 2px;
+}
+
+.checklist-box {
+  display: inline-flex;
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--app-control-border);
+  border-radius: .25rem;
+}
+.checklist-toggle--done .checklist-box {
+  border-color: var(--cui-emphasis-color);
+  background: var(--cui-emphasis-color);
+  color: var(--cui-body-bg);
+}
+.checklist-toggle--done .checklist-text { text-decoration: line-through; }
 
 /* The Markdown editor's toolbar (application/_markdown_editor): its
    groups spaced apart, wrapping in a narrow inspector or on a phone. */

@@ -32,6 +32,8 @@ en:
     attributes:
       app_setting:
         server_url: "Server address"
+      checklist_provider:
+        items: "Checklist"
       device:
         image_format: "Format"
     errors:
@@ -40,10 +42,20 @@ en:
           attributes:
             server_url:
               not_an_address: "must be a scheme, host and port, like http://192.168.1.10:3000"
+        checklist_provider:
+          attributes:
+            items:
+              too_many: "can have at most %{count} items"
+              blank_item: "can't have a blank item"
+              long_item: "items can be at most %{count} characters"
         device:
           attributes:
             image_format:
               bmp_size: "can only be BMP at %{size}; use PNG for other sizes"
+  activemodel:
+    attributes:
+      checklist_item:
+        text: "Item"
   # The panels' API (app/controllers/api).
   api:
     setup:
@@ -110,6 +122,12 @@ en:
         days_until: "Days until a date (year-month-day): %{example}"
         days_since: "Days since a date: %{example}"
         server_url: "This server's address, from Settings: %{example}"
+    # A checklist tile's Done items setting (Component::CHECKLIST_DONE_ITEMS).
+    checklist:
+      done_items:
+        strike: "Struck through"
+        bottom: "Struck through, at the bottom"
+        hide: "Hidden"
     # Beside a part that comes in sizes. The part's name is read out
     # before it, visually hidden.
     size: "Size"
@@ -126,6 +144,10 @@ en:
         tags: "Calendar markers"
         times: "Event times"
         weekday_header: "Weekday initials"
+      checklist:
+        checkboxes: "Checkboxes"
+        progress: "How many are done"
+        qr_code: "QR code to check off"
       clock:
         date: "Date"
         time: "Time"
@@ -150,8 +172,7 @@ en:
     # Under a part in the inspector, while it can't draw
     # (DashboardItemsHelper#part_hint).
     part_hints:
-      note:
-        qr_code_html: "Needs the server address, set in %{settings}."
+      qr_code_html: "Needs the server address, set in %{settings}."
   dashboards:
     edit:
       # The builder's preview status, once it draws changes not yet saved.
@@ -250,12 +271,6 @@ en:
     save: "Save note"
     saved: "Note saved. Panels showing it pick it up at their next check-in."
     last_edited: "Last edited"
-    phone_link: "Phone link"
-    phone_link_hint: "Open it on a phone, or write it to an NFC tag. A note tile can also draw it as a QR code."
-    needs_server_address_html: "Set the server address in %{settings} so it works from a phone."
-    open_phone_page: "Open phone page"
-    qr_code_label: "QR code to edit this note"
-    settings: "Settings"
     formatting:
       summary: "Formatting help"
       type: "Type"
@@ -287,12 +302,63 @@ en:
           result: "Hello in the Jersey font (the Font menu lists them)"
         - type: "{size:large}Hello{/size}"
           result: "Hello larger: small, medium, large or huge"
+  # A checklist's phone page (ChecklistsController).
+  checklists:
+    items: "Items"
+    saved_as_changed: "Each change to the items is saved as you make it."
+    progress: "%{done} of %{count} done."
+    resets:
+      never: ""
+      daily: "Starts over each day."
+      weekly: "Starts over each week."
+    empty: "Nothing on the list yet."
+    move_up: "Move “%{text}” up"
+    move_down: "Move “%{text}” down"
+    remove: "Remove “%{text}”"
+    add_label: "Add an item"
+    add: "Add"
+    add_hint: "Up to %{max} items."
+    added: "Added “%{text}”."
+    removed: "Removed “%{text}”."
+    clear_done: "Clear done items"
+    cleared:
+      zero: "Nothing was done yet."
+      one: "Cleared 1 done item."
+      other: "Cleared %{count} done items."
+    last_edited: "Last edited"
+    # The source form (sources/providers/_checklist_provider).
+    reset: "Start over"
+    reset_hint: "Unchecks everything at the start of each day or week, for a routine or a chore list."
+    reset_options:
+      never: "Never"
+      daily: "Each day"
+      weekly: "Each week"
+    new_items: "Add items"
+    new_items_hint: "One per line."
+  # What a note and a checklist share: a page to edit it from a phone, and
+  # a QR code of it on its tile (PhonePageHelper).
+  phone_pages:
+    link: "Phone link"
+    link_hint:
+      note_provider: "Open it on a phone, or write it to an NFC tag. A note tile can also draw it as a QR code."
+      checklist_provider: "Check items off on a phone, or write the link to an NFC tag. A checklist tile can also draw it as a QR code."
+    needs_server_address_html: "Set the server address in %{settings} so it works from a phone."
+    open: "Open phone page"
+    settings: "Settings"
+    qr_code_label:
+      note_provider: "QR code to edit this note"
+      checklist_provider: "QR code to check off this list"
   # Text drawn on a panel.
   renders:
     # The builder's preview of changes that couldn't be saved.
     invalid:
       heading: "These changes can't be saved"
     # What PanelTokensHelper fills a token with, where it's words.
+    # A checklist tile.
+    checklist:
+      progress: "%{done} of %{count} done"
+      empty: "Nothing on the list"
+      all_done: "All done"
     tokens:
       greeting:
         morning: "Good morning"

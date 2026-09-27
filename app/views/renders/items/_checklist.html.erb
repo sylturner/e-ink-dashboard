@@ -1,0 +1,42 @@
+<%# A checklist's items at the panel's time, with a box each that's filled
+    when it's done, and optionally how many are done and a QR code of its
+    phone page. The QR code needs the server address from Settings to link
+    anywhere. %>
+<% checklist = item.sources.first&.providable %>
+<% all_rows  = checklist_rows(data, done_items: "strike", now:) %>
+<% rows      = checklist_rows(data, done_items: item.setting("done_items"), now:) %>
+<% box       = item.size_of("checkboxes") if item.shows?("checkboxes") %>
+<div class="checklist-tile">
+  <div class="checklist-main">
+    <% if item.shows?("progress") %>
+      <div class="checklist-progress t-sm">
+        <%= t("renders.checklist.progress", done: all_rows.count(&:last), count: all_rows.size) %>
+      </div>
+    <% end %>
+
+    <% if rows.any? %>
+      <%= tag.ul class: [ "checklist", ("checklist--columns" if item.view == "columns") ],
+                 style: ("column-count: #{item.setting("column_count").clamp(1, 6)}" if item.view == "columns") do %>
+        <% rows.each do |entry, done| %>
+          <%= tag.li class: [ "checklist-row", ("checklist-row--done" if done) ] do %>
+            <% if box %>
+              <span class="checklist-mark">
+                <%= tag.span class: [ "checklist-box", ("checklist-box--done" if done) ],
+                             style: "width: #{box}px; height: #{box}px" %>
+              </span>
+            <% end %>
+            <span class="checklist-text"><%= entry.text %></span>
+          <% end %>
+        <% end %>
+      <% end %>
+    <% else %>
+      <p class="checklist-empty t-sm">
+        <%= t(all_rows.any? ? "renders.checklist.all_done" : "renders.checklist.empty") %>
+      </p>
+    <% end %>
+  </div>
+
+  <% if checklist && item.shows?("qr_code") && AppSetting.current.server_url? %>
+    <div class="note-qr"><%= phone_page_qr_code(checklist, module_px: item.size_of("qr_code")) %></div>
+  <% end %>
+</div>

@@ -2,7 +2,7 @@
 # opens. Unauthenticated like the rest of the app, and laid out for a phone
 # rather than the admin.
 class NotesController < ApplicationController
-  layout "note"
+  layout "phone"
 
   before_action :set_note
 
