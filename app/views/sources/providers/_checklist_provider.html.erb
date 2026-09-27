@@ -1,0 +1,25 @@
+<div class="mb-3">
+  <%= f.label :reset, t("checklists.reset") %>
+  <%= f.select :reset, ChecklistProvider::RESETS.map { [ t("checklists.reset_options.#{it}"), it ] }, {},
+               aria: { describedby: f.field_id(:reset, :hint) } %>
+  <%= f.invalid_feedback :reset %>
+  <div id="<%= f.field_id(:reset, :hint) %>" class="form-text"><%= t("checklists.reset_hint") %></div>
+</div>
+
+<%# A new list starts from lines typed here. Once it's saved, its items are
+    edited one by one under this form (_checklist_provider_outside). %>
+<% if f.object.new_record? %>
+  <div class="mb-3">
+    <%= f.label :new_items, t("checklists.new_items") %>
+    <%# The errors are on the list the lines go into. %>
+    <%= f.textarea :new_items, rows: 5, class: ("is-invalid" if f.object.errors[:items].any?),
+                   aria: { describedby: f.field_id(:new_items, :hint) } %>
+    <%= f.invalid_feedback :items %>
+    <div id="<%= f.field_id(:new_items, :hint) %>" class="form-text">
+      <%= t("checklists.new_items_hint") %>
+      <%= t("checklists.add_hint", max: ChecklistProvider::MAX_ITEMS) %>
+    </div>
+  </div>
+<% end %>
+
+<%= render "sources/phone_link", provider: f.object %>

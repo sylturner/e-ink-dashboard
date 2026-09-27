@@ -42,3 +42,25 @@ four:
   attempted_at: 2026-09-05 20:01:01
   last_error:
   failure_count: 0
+
+# A checklist, on no dashboard.
+five:
+  name: Groceries
+  providable: one (ChecklistProvider)
+  refresh_seconds: 86400
+  payload:
+    reset: never
+    items:
+      - id: milk
+        text: Milk
+        done_at:
+      - id: eggs
+        text: Eggs
+        done_at: "2026-09-10T08:00:00Z"
+      - id: bread
+        text: Bread
+        done_at:
+  fetched_at: 2026-09-05 20:01:01
+  attempted_at: 2026-09-05 20:01:01
+  last_error:
+  failure_count: 0

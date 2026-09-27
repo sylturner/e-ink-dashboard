@@ -13,6 +13,18 @@ Rails.application.routes.draw do
   resources :notes, only: %i[edit update]
   get "notes/:id", to: redirect("/notes/%{id}/edit"), constraints: { id: /\d+/ }
 
+  # A checklist's phone page, the same way. Each change to the list is a
+  # form of its own, so it works without JavaScript.
+  resources :checklists, only: :edit do
+    scope module: :checklists do
+      resources :items, only: %i[create update destroy] do
+        member { patch :move }
+      end
+      resource :done_items, only: :destroy
+    end
+  end
+  get "checklists/:id", to: redirect("/checklists/%{id}/edit"), constraints: { id: /\d+/ }
+
   resources :dashboard_items do
     member do
       patch :reposition

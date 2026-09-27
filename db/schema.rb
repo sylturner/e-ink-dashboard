@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_27_150454) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_27_182100) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -52,6 +52,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_27_150454) do
     t.string "units", default: "imperial", null: false
     t.datetime "updated_at", null: false
     t.string "week_start", default: "sunday", null: false
+  end
+
+  create_table "checklist_providers", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.json "items", default: [], null: false
+    t.string "reset", default: "never", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "dashboard_item_sources", force: :cascade do |t|

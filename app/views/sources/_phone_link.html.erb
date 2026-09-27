@@ -1,0 +1,20 @@
+<%# A saved note's or checklist's phone page, on its source form. The field
+    only shows the link for copying: it has no name, so it is never
+    submitted. %>
+<% if provider.persisted? %>
+  <% url = phone_page_url(provider) %>
+  <div class="mb-3">
+    <label class="form-label" for="phone_page_link"><%= t("phone_pages.link") %></label>
+    <div class="input-group">
+      <input type="url" id="phone_page_link" class="form-control" value="<%= url %>"
+             readonly aria-describedby="phone_page_link_hint">
+      <%= link_to t("phone_pages.open"), url, class: "btn btn-app-outline" %>
+    </div>
+    <div id="phone_page_link_hint" class="form-text">
+      <%= t("phone_pages.link_hint.#{provider.class.name.underscore}") %>
+      <% unless AppSetting.current.server_url? %>
+        <%= t("phone_pages.needs_server_address_html", settings: link_to(t("phone_pages.settings"), edit_settings_path)) %>
+      <% end %>
+    </div>
+  </div>
+<% end %>

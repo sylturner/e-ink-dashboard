@@ -373,6 +373,18 @@ class DashboardItemsControllerTest < ActionDispatch::IntegrationTest
     assert_select "##{hint}", 0
   end
 
+  test "a checklist's inspector offers what to do with done items, and its parts" do
+    get edit_dashboard_item_url(@dashboard_item, kind: "checklist", view: "columns")
+
+    assert_response :success
+    assert_select "select[name=?] option", "dashboard_item[settings][done_items]", 3
+    assert_select "input[name=?]", "dashboard_item[settings][column_count]"
+    %w[checkboxes progress qr_code].each do |part|
+      assert_select "input[type=checkbox][name=?]", "dashboard_item[settings][parts][columns][#{part}]"
+    end
+    assert_select ".form-text#dashboard_item_settings_parts_columns_qr_code_hint a[href=?]", edit_settings_path
+  end
+
   test "a news tile's inspector edits its headline template, and lists its feeds' fields" do
     sources(:three).update!(payload: { "items" => [ { "title" => "A", "fields" => { "title" => "A", "dc:creator" => "Ada" } } ] })
     get edit_dashboard_item_url(@dashboard_item, kind: "news")

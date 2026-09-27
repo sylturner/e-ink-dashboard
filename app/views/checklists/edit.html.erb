@@ -1,0 +1,8 @@
+<% content_for :title, @checklist.source.name %>
+
+<h1 class="h3 mb-1"><%= @checklist.source.name %></h1>
+<%= render "checklists/editor", checklist: @checklist, item: @item %>
+
+<p class="form-text mt-3 mb-0">
+  <%= t("checklists.last_edited") %> <%= relative_time_tag(@checklist.updated_at) %>
+</p>

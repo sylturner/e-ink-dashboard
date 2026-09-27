@@ -70,6 +70,11 @@ class Component
   # The calendar layouts that list events, as opposed to the month grid.
   CALENDAR_LISTS = %w[today tomorrow next_days week next_events].freeze
 
+  # What a checklist tile does with the items that are done: strikes them
+  # through where they are, strikes them and moves them to the bottom, or
+  # leaves them off.
+  CHECKLIST_DONE_ITEMS = %w[strike bottom hide].freeze
+
   REGISTRY = {
     "clock" => {
       label: "Clock",
@@ -225,6 +230,28 @@ class Component
           Part.new(key: "qr_code", default: false, sizes: { "small" => 2, "medium" => 3, "large" => 4 })
         ]
       }
+    },
+
+    # A list checked off from its phone page (ChecklistProvider). Either
+    # layout lists every item; columns flows them into several.
+    "checklist" => {
+      label: "Checklist",
+      views: { "list" => "List", "columns" => "Columns" },
+      source_types: %w[ChecklistProvider],
+      multi_source: false,
+      settings: [
+        Setting.new(key: "done_items", type: :select, label: "Done items", default: "strike",
+                    options: -> { CHECKLIST_DONE_ITEMS.map { [ I18n.t("components.checklist.done_items.#{it}"), it ] } }),
+        Setting.new(key: "column_count", type: :integer, label: "Columns", default: 2, views: %w[columns])
+      ],
+      # A checkbox's edge in px, and the QR code's px per module (see note).
+      parts: %w[list columns].index_with do
+        [
+          Part.new(key: "checkboxes", sizes: { "small" => 8, "medium" => 12, "large" => 16 }),
+          Part.new(key: "progress", default: false),
+          Part.new(key: "qr_code", default: false, sizes: { "small" => 2, "medium" => 3, "large" => 4 })
+        ]
+      end
     },
 
     # Text written in the inspector: Markdown, drawn as a note is, or

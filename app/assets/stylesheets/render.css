@@ -916,6 +916,57 @@ body {
 }
 
 /* ============================================================
+   Checklists (renders/items/_checklist)
+   ============================================================ */
+
+.checklist-tile {
+  display: flex;
+  gap: var(--pad);
+  height: 100%;
+}
+
+.checklist-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.checklist-progress { margin-bottom: var(--pad-tight); }
+
+.checklist { list-style: none; }
+.checklist--columns { column-gap: var(--pad-loose); }
+
+.checklist-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--pad-tight);
+  break-inside: avoid;
+}
+.checklist-row + .checklist-row { margin-top: var(--pad-tight); }
+.checklist-row--done .checklist-text { text-decoration: line-through; }
+
+/* A plain box, as a note's task list draws: its edge (a part size) is
+   set on it, and it fills with ink when the item's done. Its mark is one
+   line high, so the box sits in the middle of the item's first line. */
+.checklist-mark {
+  display: flex;
+  flex: none;
+  height: 1lh;
+  align-items: center;
+}
+
+.checklist-box {
+  border: var(--rule) solid var(--ink);
+  background: var(--paper);
+}
+.checklist-box--done { background: var(--ink); }
+
+.checklist-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* ============================================================
    Setup screen for a panel that has not been claimed yet
    ============================================================ */
 

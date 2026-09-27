@@ -367,7 +367,7 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-controller=markdown-editor] [role=toolbar]"
     assert_select "input[type=hidden][name=?][value=?]", "source[refresh_seconds]", 1.day.to_i.to_s
     assert_select "input[type=number][name=?]", "source[refresh_seconds]", 0
-    assert_select "#note_phone_link", 0, "an unsaved note has no phone page yet"
+    assert_select "#phone_page_link", 0, "an unsaved note has no phone page yet"
   end
 
   test "creates a note" do
@@ -389,9 +389,9 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
 
     get edit_source_url(note)
 
-    assert_select "input#note_phone_link[readonly][value=?]:not([name])", edit_note_url(note.providable)
+    assert_select "input#phone_page_link[readonly][value=?]:not([name])", edit_note_url(note.providable)
     assert_select "a[href=?]", edit_note_url(note.providable), "Open phone page"
-    assert_select "#note_phone_link_hint a[href=?]", edit_settings_path
+    assert_select "#phone_page_link_hint a[href=?]", edit_settings_path
   end
 
   test "with a server address, a note's phone link uses it" do
@@ -400,8 +400,49 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
 
     get edit_source_url(note)
 
-    assert_select "input#note_phone_link[value=?]", "http://192.168.1.10:3000/notes/#{note.providable_id}/edit"
-    assert_select "#note_phone_link_hint a", 0
+    assert_select "input#phone_page_link[value=?]", "http://192.168.1.10:3000/notes/#{note.providable_id}/edit"
+    assert_select "#phone_page_link_hint a", 0
+  end
+
+  test "a checklist's form takes how it resets and items to add" do
+    get new_source_url(type: "ChecklistProvider")
+
+    assert_response :success
+    assert_select "select[name=?][aria-describedby~=source_provider_reset_hint] option", "source[provider][reset]", 3
+    assert_select "textarea[name=?][aria-describedby~=source_provider_new_items_hint]", "source[provider][new_items]"
+    assert_select "input[type=number][name=?]", "source[refresh_seconds]", 0
+    assert_select "#phone_page_link", 0
+  end
+
+  test "creates a checklist from lines" do
+    assert_difference [ "Source.count", "ChecklistProvider.count" ], 1 do
+      post sources_url(type: "ChecklistProvider"), params: {
+        source: { name: "Chores", refresh_seconds: 1.day.to_i, provider: { reset: "daily", new_items: "Feed the cat\nWater plants" } }
+      }
+    end
+
+    source = Source.order(:id).last
+    assert_equal "daily", source.providable.reset
+    assert_equal [ "Feed the cat", "Water plants" ], source.payload["items"].map { it["text"] }
+  end
+
+  test "a checklist's edit page edits its items as its phone page does, and links to that page" do
+    checklist = sources(:five)
+
+    get edit_source_url(checklist)
+
+    assert_select "input#phone_page_link[value=?]", edit_checklist_url(checklist.providable)
+    assert_select "#phone_page_link_hint", /Check items off on a phone/
+    assert_select "textarea[name=?]", "source[provider][new_items]", 0
+    assert_select "form[action=?] [name=?]", source_path(checklist), "source[provider][reset]"
+    assert_select "section[aria-labelledby=checklist_items_heading]" do
+      assert_select "h2#checklist_items_heading", "Items"
+      assert_select "form[action=?]", source_path(checklist), 0, "outside the source form"
+      assert_select "[data-controller=checklist-focus] ul.checklist > li", 3
+      assert_select "form[action=?] input[name=back][value=source]", checklist_item_path(checklist.providable, "milk")
+      assert_select "form[action=?] input[name=back][value=source]", checklist_items_path(checklist.providable)
+      assert_select "form[action=?] input[name=back][value=source]", checklist_done_items_path(checklist.providable)
+    end
   end
 
   test "a note has nothing to test or refresh on a schedule" do

@@ -46,5 +46,12 @@
         <% end %>
       </div>
     </div>
+
+    <%# Anything a provider edits outside this form, whose own forms can't
+        nest in it: a checklist's items. %>
+    <% outside = "sources/providers/#{type.underscore}_outside" %>
+    <% if lookup_context.exists?(outside, [], true) %>
+      <%= render outside, source: %>
+    <% end %>
   </div>
 </div>
