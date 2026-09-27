@@ -225,6 +225,32 @@ class RendersControllerTest < ActionDispatch::IntegrationTest
     assert_select "#sidebar", 0
   end
 
+  test "a tile's look is drawn as classes on its card" do
+    @item.update!(settings: { "look" => { "border" => "double", "invert" => "1", "font" => "tiny5" } })
+    body = render_view("today")
+
+    assert_select ".card.card--calendar.look--border-double.look--invert.look--body-tiny5-16"
+    assert_match %(.card.look--body-tiny5-16 {), body
+    assert_equal 1, body.scan(%(font-family: "np-tiny5")).size
+  end
+
+  test "a tile nobody restyled draws no look" do
+    render_view("today")
+
+    assert_select ".card.card--calendar"
+    assert_select "[class*='look--']", 0
+    assert_select "body style", 0
+  end
+
+  test "the preview draws the inspector's unsaved look" do
+    assert_no_changes -> { @item.reload.settings } do
+      post_preview item_id: @item.id, dashboard_item: { settings: { look: { header: "plain" } } }
+    end
+
+    assert_response :success
+    assert_select ".card.look--header-plain"
+  end
+
   test "markers show in the agenda layouts too" do
     merge_a_second_calendar(starts_at: "2026-09-07T14:00:00Z")
     @item.update!(settings: { "day_count" => "5" })

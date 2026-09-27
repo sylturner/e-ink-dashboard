@@ -314,6 +314,61 @@ body {
   --rule: 2px;
 }
 
+/* ---------- Tile looks ----------
+   A tile's own choices over its theme (TileLook), from the inspector's
+   Look group. A theme's border is resolved where the theme sets it, so
+   these set --card-border itself rather than --rule. */
+
+.card.look--border-none    { --card-border: none; }
+.card.look--border-thin    { --card-border: 1px solid var(--ink); }
+.card.look--border-thick   { --card-border: 2px solid var(--ink); }
+.card.look--border-double  { --card-border: 4px double var(--ink); }
+.card.look--border-rounded { --card-border: 2px solid var(--ink); border-radius: 8px; }
+
+.card.look--header-inverted { --header-fill: var(--ink); --header-text: var(--paper); --header-rule: none; }
+.card.look--header-rule     { --header-fill: var(--paper); --header-text: var(--ink); --header-rule: var(--rule) solid var(--ink); }
+.card.look--header-plain    { --header-fill: var(--paper); --header-text: var(--ink); --header-rule: none; }
+
+.card.look--padding-none     { --body-pad: 0; }
+.card.look--padding-roomy    { --body-pad: var(--pad); }
+.card.look--padding-spacious { --body-pad: var(--pad-loose); }
+
+.card.look--align-left   :is(.card-header, .card-body) { text-align: left; }
+.card.look--align-center :is(.card-header, .card-body) { text-align: center; }
+.card.look--align-right  :is(.card-header, .card-body) { text-align: right; }
+.card.look--align-middle .card-header { text-align: center; }
+.card.look--align-middle .card-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.card.look--scale-small { --body-fs: var(--fs-xs); --body-lh: var(--lh-xs); }
+.card.look--scale-large { --body-fs: var(--fs-md); --body-lh: var(--lh-md); }
+
+/* White on black, whatever the theme's ink: the card fills with its
+   ink, and everything in it swaps ink and paper. They can't swap on the
+   card itself (each would refer to the other), so the card passes the
+   inherited pair down under other names. */
+.card.look--invert {
+  --inverse-ink: var(--paper);
+  --inverse-paper: var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.card.look--invert > * {
+  --ink: var(--inverse-ink);
+  --paper: var(--inverse-paper);
+  --header-fill: var(--ink);
+  --header-text: var(--paper);
+  --footer-fill: var(--paper);
+  --footer-text: var(--ink);
+  --footer-rule: var(--rule) solid var(--ink);
+}
+
 /* ---------- Fills ----------
    Horizontal hairlines only. Diagonal and radial patterns
    antialias and threshold into mush. Never put body text

@@ -20,6 +20,11 @@ module DashboardItemsHelper
     end
   end
 
+  # Choices for one of a tile's look selects (TileLook::CHOICES).
+  def look_options(key)
+    TileLook::CHOICES.fetch(key.to_s).map { [ t("components.look.#{key}.#{it}"), it ] }
+  end
+
   # Choices for a sized part's select.
   def part_size_options
     Component::SIZE_NAMES.map { [ t("components.sizes.#{it}"), it ] }

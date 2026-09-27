@@ -110,6 +110,8 @@
     </fieldset>
   <% end %>
 
+  <%= render "dashboard_items/look", f:, item: %>
+
   <div class="form-check mb-3">
     <%= f.checkbox :visible %>
     <%= f.label :visible, "Show on dashboard", class: "form-check-label" %>

@@ -187,6 +187,22 @@ class DashboardItemsControllerTest < ActionDispatch::IntegrationTest
     assert_select "legend", text: "Show", count: 0
   end
 
+  test "every kind gets a Look group, folded until the tile has a look" do
+    get edit_dashboard_item_url(@dashboard_item, kind: "clock")
+
+    assert_response :success
+    assert_select "details:not([open]) summary", "Look"
+    assert_select "select[name=?] option[value='']", "dashboard_item[settings][look][border]", "From the theme"
+    assert_select "select[name=?] option[value=jersey]", "dashboard_item[settings][look][font]"
+    assert_select "input[type=hidden][name=?][value='0']", "dashboard_item[settings][look][invert]"
+
+    @dashboard_item.update!(settings: { "look" => { "border" => "thick" } })
+    get edit_dashboard_item_url(@dashboard_item)
+
+    assert_select "details[open]"
+    assert_select "select[name=?] option[selected][value=thick]", "dashboard_item[settings][look][border]"
+  end
+
   test "a kind with no sources renders no source select" do
     get edit_dashboard_item_url(@dashboard_item, kind: "clock")
 

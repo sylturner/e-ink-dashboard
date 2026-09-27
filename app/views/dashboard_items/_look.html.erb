@@ -1,0 +1,33 @@
+<%# How the tile's card looks, the same for every component (TileLook).
+    Blank leaves a choice to the dashboard's theme. Folded away, since most
+    tiles keep their theme's look. %>
+<% look = item.look %>
+<% fields = nested_fields(f, :settings, :look) %>
+<details class="mb-3" <%= "open" unless look.default? %>>
+  <summary class="fs-6 fw-semibold mb-2"><%= t("components.look.legend") %></summary>
+
+  <fieldset>
+    <legend class="visually-hidden"><%= t("components.look.legend") %></legend>
+
+    <% TileLook::CHOICES.each_key do |key| %>
+      <div class="mb-3">
+        <%= fields.label key, t("components.look.#{key}.label") %>
+        <%= fields.select key, look_options(key), { selected: look[key], include_blank: t("components.look.theme") } %>
+      </div>
+    <% end %>
+
+    <% TileLook::FONTS.each do |key| %>
+      <div class="mb-3">
+        <%= fields.label key, t("components.look.#{key}") %>
+        <%= fields.select key, NewspaperFont.options, { selected: look[key], include_blank: t("components.look.theme") } %>
+      </div>
+    <% end %>
+
+    <div class="form-check mb-0">
+      <%# The hidden "0" partner turns it back off: settings are assigned
+          as a whole hash. %>
+      <%= fields.checkbox :invert, checked: look.invert? %>
+      <%= fields.label :invert, t("components.look.invert"), class: "form-check-label" %>
+    </div>
+  </fieldset>
+</details>
