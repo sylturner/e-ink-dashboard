@@ -59,6 +59,11 @@ class DashboardItem < ApplicationRecord
     NewsTemplate.from(settings["template"].presence || AppSetting.current.news_template.to_h)
   end
 
+  # How the tile's card looks (TileLook): its border, header and type.
+  def look
+    TileLook.new(settings["look"])
+  end
+
   # An unsaved copy with the inspector's changes, for the builder's
   # preview. It shares this tile's id and dashboard, and assigning sources
   # to a new record stays in memory, so nothing is written.

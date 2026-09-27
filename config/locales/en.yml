@@ -57,6 +57,41 @@ en:
     # The tile inspector's group of parts a layout can show or hide
     # (Component::Part).
     show: "Show"
+    # The inspector's Look group (TileLook), which every component has.
+    # A blank choice leaves it to the dashboard's theme.
+    look:
+      legend: "Look"
+      theme: "From the theme"
+      font: "Text font"
+      header_font: "Header font"
+      invert: "White on black"
+      border:
+        label: "Border"
+        none: "None"
+        thin: "Thin"
+        thick: "Thick"
+        double: "Double"
+        rounded: "Rounded"
+      header:
+        label: "Header"
+        inverted: "White on black"
+        rule: "Underlined"
+        plain: "Plain"
+      padding:
+        label: "Padding"
+        none: "None"
+        roomy: "Roomy"
+        spacious: "Spacious"
+      align:
+        label: "Alignment"
+        left: "Left"
+        center: "Center"
+        right: "Right"
+        middle: "Centered both ways"
+      scale:
+        label: "Text size"
+        small: "Small"
+        large: "Large"
     # Beside a part that comes in sizes. The part's name is read out
     # before it, visually hidden.
     size: "Size"

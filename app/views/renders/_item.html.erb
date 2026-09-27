@@ -1,4 +1,4 @@
-<div class="card card--<%= item.kind %>" style="<%= item.grid_style %>">
+<%= tag.div class: [ "card", "card--#{item.kind}", *item.look.classes ], style: item.grid_style do %>
   <% if item.title.present? %>
     <div class="card-header"><%= item.title %></div>
   <% end %>
@@ -11,4 +11,4 @@
   <% if item.sources.any? %>
     <%= render "renders/staleness", item: item, now: now %>
   <% end %>
-</div>
+<% end %>

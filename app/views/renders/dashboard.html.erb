@@ -1,3 +1,8 @@
+<%# The pixel fonts tiles chose for their own look (TileLook), each once. %>
+<% if (look_css = TileLook.css(@items.map(&:look))).present? %>
+  <style><%= raw look_css %></style>
+<% end %>
+
 <div class="grid"
      style="--grid-cols: <%= @dashboard.grid_columns %>;
             --grid-rows: <%= @dashboard.grid_rows %>;">
