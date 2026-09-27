@@ -1,0 +1,15 @@
+<%# Under a tile's text: the tokens it can carry (PanelTokensHelper), each
+    with what it would draw right now. `id` names the hint line, which the
+    text field is described by. %>
+<% now = Time.current %>
+<div id="<%= id %>" class="form-text"><%= t("components.tokens.hint") %></div>
+<details class="form-text">
+  <summary><%= t("components.tokens.summary") %></summary>
+  <dl class="token-list mb-0 mt-1">
+    <% PanelTokensHelper::TOKENS.each do |name, example| %>
+      <dt><code><%= example ? "{{#{name}:#{example}}}" : "{{#{name}}}" %></code></dt>
+      <dd><%= t("components.tokens.names.#{name.downcase}",
+                example: panel_token(name, example, now).presence || t("components.tokens.unset")) %></dd>
+    <% end %>
+  </dl>
+</details>

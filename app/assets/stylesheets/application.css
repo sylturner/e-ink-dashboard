@@ -220,3 +220,64 @@ html { scroll-padding-top: calc(var(--app-header-height) + 1rem); }
 
 /* A note's phone page: one column, readable on a tablet or desktop too. */
 .note-page { max-width: 40rem; }
+
+/* The Markdown editor's toolbar (application/_markdown_editor): its
+   groups spaced apart, wrapping in a narrow inspector or on a phone. */
+.markdown-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .25rem .5rem;
+  margin-bottom: .25rem;
+}
+
+/* ---------- Font picker ----------
+   A font select whose choices show in their own fonts (FontPickerHelper,
+   font_picker_controller.js; the fonts are in font_previews.css). The
+   button is a .form-select; the list opens under it. */
+
+.font-picker { position: relative; }
+
+/* In the Markdown editor's toolbar, a menu as wide as its heading, whose
+   list is wide enough to read. */
+.markdown-toolbar-type { display: flex; gap: .25rem; }
+.markdown-toolbar .font-picker-button { width: auto; }
+.markdown-toolbar .font-picker-list { min-width: 16rem; }
+
+.font-picker-button {
+  overflow: hidden;
+  text-align: start;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.font-picker-list {
+  position: absolute;
+  z-index: 1000;
+  inset-inline: 0;
+  top: 100%;
+  max-height: 18rem;
+  margin: .125rem 0 0;
+  padding: .25rem 0;
+  overflow-y: auto;
+  list-style: none;
+  color: var(--cui-body-color);
+  background: var(--cui-body-bg);
+  border: 1px solid var(--app-control-border);
+  border-radius: var(--cui-border-radius);
+  box-shadow: var(--cui-box-shadow);
+}
+
+.font-picker-list [role=option] {
+  padding: .25rem .75rem;
+  cursor: pointer;
+}
+.font-picker-list [role=option]:hover { background: var(--cui-tertiary-bg); }
+
+/* The option the arrow keys are on draws the focus ring, since focus
+   stays on the button (aria-activedescendant); the chosen one has a bar. */
+.font-picker-list [role=option].active { outline: 2px solid var(--app-focus-ring); outline-offset: -2px; }
+.font-picker-list [role=option][aria-selected=true] { box-shadow: inset 4px 0 0 var(--app-focus-ring); }
+
+/* Under a tile's text, the tokens it can carry. */
+.token-list dt { font-weight: normal; }
+.token-list dd { margin: 0 0 .25rem 1rem; }

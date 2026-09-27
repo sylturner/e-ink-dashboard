@@ -19,7 +19,7 @@
     <% TileLook::FONTS.each do |key| %>
       <div class="mb-3">
         <%= fields.label key, t("components.look.#{key}") %>
-        <%= fields.select key, NewspaperFont.options, { selected: look[key], include_blank: t("components.look.theme") } %>
+        <%= fields.font_select key, NewspaperFont.options, { selected: look[key], include_blank: t("components.look.theme") } %>
       </div>
     <% end %>
 

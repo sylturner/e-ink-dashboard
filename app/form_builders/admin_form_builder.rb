@@ -36,6 +36,13 @@ class AdminFormBuilder < ActionView::Helpers::FormBuilder
     super(method, collection, value_method, text_method, options, control_options(html_options, method, "form-select"))
   end
 
+  # A select of font families that previews each in its own font
+  # (FontPickerHelper). Choices default to every NewspaperFont.
+  def font_select(method, choices = NewspaperFont.options, options = {}, html_options = {})
+    html_options = html_options.merge(data: { font_picker_target: "select", **html_options.fetch(:data, {}) })
+    @template.font_picker { select(method, @template.font_choices(choices), options, html_options) }
+  end
+
   def time_zone_select(method, priority_zones = nil, options = {}, html_options = {})
     super(method, priority_zones, options, control_options(html_options, method, "form-select"))
   end

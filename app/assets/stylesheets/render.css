@@ -879,6 +879,34 @@ body {
 .note pre { font-family: "Spleen", monospace; }
 .note pre { white-space: pre-wrap; }
 
+/* Markdown's type markers (MarkdownHelper): {size:…} sets text at a whole
+   multiple of its font's pixel grid, so it stays crisp. A {font:…} span
+   sets --md-grid for its font (NewspaperFont#markdown_css); outside one
+   it's the theme's Silkscreen, or a tile look's font (TileLook.css sets
+   it on the card, so the default is on :root). */
+:root {
+  --md-grid: 8px;
+  --md-leading: 2px;
+}
+
+.md-size--small  { --md-scale: 1; }
+.md-size--medium { --md-scale: 2; }
+.md-size--large  { --md-scale: 3; }
+.md-size--huge   { --md-scale: 4; }
+
+[class*="md-size--"] {
+  font-size: calc(var(--md-grid) * var(--md-scale));
+  line-height: calc(var(--md-grid) * var(--md-scale) + var(--md-leading));
+}
+
+/* A picture in a note or text tile: as wide as the tile allows, in its
+   own proportions. The panel's dithering takes it to 1-bit. */
+.note img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
 .note table { border-collapse: collapse; }
 .note th,
 .note td {

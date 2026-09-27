@@ -194,15 +194,15 @@ class Component
         Setting.new(key: "layout", type: :select, label: "Arrangement", default: "broadsheet", views: %w[custom],
                     options: -> { NewspaperStyle::LAYOUTS.map { [ it.titleize, it ] } }),
         Setting.new(key: "caps", type: :boolean, label: "Headlines in capitals", default: false, views: %w[custom]),
-        Setting.new(key: "masthead_font", type: :select, label: "Name font", default: "jacquard", views: %w[custom],
+        Setting.new(key: "masthead_font", type: :font, label: "Name font", default: "jacquard", views: %w[custom],
                     options: -> { NewspaperStyle.masthead_options }),
-        Setting.new(key: "headline_font", type: :select, label: "Headline font", default: "jersey", views: %w[custom],
+        Setting.new(key: "headline_font", type: :font, label: "Headline font", default: "jersey", views: %w[custom],
                     options: -> { NewspaperFont.options }),
-        Setting.new(key: "subhead_font", type: :select, label: "Small headline font", default: "pixel_operator_bold",
+        Setting.new(key: "subhead_font", type: :font, label: "Small headline font", default: "pixel_operator_bold",
                     views: %w[custom], options: -> { NewspaperFont.options }),
-        Setting.new(key: "text_font", type: :select, label: "Text font", default: "pixantiqua", views: %w[custom],
+        Setting.new(key: "text_font", type: :font, label: "Text font", default: "pixantiqua", views: %w[custom],
                     options: -> { NewspaperFont.options }),
-        Setting.new(key: "label_font", type: :select, label: "Label font", default: "pixeloid_sans", views: %w[custom],
+        Setting.new(key: "label_font", type: :font, label: "Label font", default: "pixeloid_sans", views: %w[custom],
                     options: -> { NewspaperFont.options })
       ],
       parts: NewspaperStyle::KEYS.index_with do
@@ -227,12 +227,14 @@ class Component
       }
     },
 
+    # Text written in the inspector: Markdown, drawn as a note is, or
+    # plain. Both fill PanelTokensHelper's tokens, such as {{CURRENT_TIME}}.
     "text" => {
       label: "Text",
-      views: { "plain" => "Plain text" },
+      views: { "formatted" => "Formatted", "plain" => "Plain text" },
       source_types: [],
       settings: [
-        Setting.new(key: "body", type: :text, label: "Text", default: "")
+        Setting.new(key: "body", type: :markdown, label: "Text", default: "")
       ]
     }
   }.freeze
@@ -286,6 +288,12 @@ class Component
     # The layouts drawn from a NewsTemplate.
     def templates(kind)
       find(kind)&.fetch(:templates, []) || []
+    end
+
+    # The kinds whose settings hold Markdown, in a :markdown setting keyed
+    # "body" (MarkdownImages looks there for uploaded images).
+    def markdown_kinds
+      KINDS.select { |kind| settings(kind).any? { it.type == :markdown } }
     end
 
     def source_types(kind)

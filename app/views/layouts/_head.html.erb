@@ -22,7 +22,7 @@
     800x480 with overflow hidden -- including it here would break
     every admin page. CoreUI (vendored) comes first so the app's own
     sheets can override it. %>
-<%= stylesheet_link_tag "coreui.min", "application", "builder", "data-turbo-track": "reload" %>
+<%= stylesheet_link_tag "coreui.min", "application", "builder", "font_previews", "data-turbo-track": "reload" %>
 
 <%# Applies the saved light/dark choice before first paint, so a dark
     page never flashes white. It repeats theme_controller.js's logic

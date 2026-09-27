@@ -1,6 +1,8 @@
 require "test_helper"
 
 class AdminFormBuilderTest < ActionView::TestCase
+  include FontPickerHelper
+
   setup do
     @dashboard = Dashboard.new
   end
@@ -22,6 +24,16 @@ class AdminFormBuilderTest < ActionView::TestCase
 
     assert_select "textarea.form-control", 2
     assert_select "input[type=tel].form-control", 2
+  end
+
+  test "a font select is a picker whose choices name their preview class" do
+    render_form { |f| f.font_select :theme, [ [ "Jersey", "jersey" ], [ "Ransom", "ransom" ] ], { include_blank: "Theme's" } }
+
+    assert_select ".font-picker[data-controller=font-picker] select.form-select[name=?][data-font-picker-target=select]", "dashboard[theme]" do
+      assert_select "option[value='']:not([data-font-class])", "Theme's"
+      assert_select "option[value=jersey][data-font-class=font-preview--jersey]", "Jersey"
+      assert_select "option[value=ransom]:not([data-font-class])", "Ransom"
+    end
   end
 
   test "selects get form-select" do

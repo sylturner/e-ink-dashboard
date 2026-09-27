@@ -363,7 +363,8 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
     get new_source_url(type: "NoteProvider")
 
     assert_response :success
-    assert_select "textarea[name=?][aria-describedby=?]", "source[provider][body]", "source_provider_body_hint"
+    assert_select "textarea[name=?][aria-describedby~=source_provider_body_hint]", "source[provider][body]"
+    assert_select "[data-controller=markdown-editor] [role=toolbar]"
     assert_select "input[type=hidden][name=?][value=?]", "source[refresh_seconds]", 1.day.to_i.to_s
     assert_select "input[type=number][name=?]", "source[refresh_seconds]", 0
     assert_select "#note_phone_link", 0, "an unsaved note has no phone page yet"

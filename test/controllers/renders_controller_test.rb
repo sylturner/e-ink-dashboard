@@ -251,6 +251,34 @@ class RendersControllerTest < ActionDispatch::IntegrationTest
     assert_select ".card.look--header-plain"
   end
 
+  test "a formatted text tile draws its Markdown with its tokens filled" do
+    @item.update!(kind: "text", view: "formatted", sources: [], settings: { "body" =>
+      "# {{GREETING}}\n\nIt's **{{CURRENT_TIME}}** <script>x()</script> {{NOPE}}" })
+    render_view("formatted")
+
+    assert_select ".card--text .note h1", "Good morning"
+    assert_select ".card--text .note p strong", "9:00 AM"
+    assert_select ".card--text .note p", /\{\{NOPE\}\}/
+    assert_select ".card--text script", 0
+  end
+
+  test "a plain text tile fills its tokens and escapes the rest" do
+    @item.update!(kind: "text", view: "plain", sources: [], settings: { "body" => "<b>{{WEEKDAY}}</b>" })
+    body = render_view("plain")
+
+    assert_select ".card--text .t-sm", "<b>Sunday</b>"
+    assert_includes body, "&lt;b&gt;Sunday&lt;/b&gt;"
+  end
+
+  test "a note fills its tokens" do
+    note = Source.create!(name: "Fridge", refresh_seconds: 86_400,
+                          providable: NoteProvider.new(body: "**{{DAYS_UNTIL:2026-09-10}}** days"))
+    @item.update!(kind: "note", view: "formatted", sources: [ note ])
+    render_view("formatted")
+
+    assert_select ".note p strong", "4"
+  end
+
   test "markers show in the agenda layouts too" do
     merge_a_second_calendar(starts_at: "2026-09-07T14:00:00Z")
     @item.update!(settings: { "day_count" => "5" })
