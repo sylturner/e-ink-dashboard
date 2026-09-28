@@ -36,6 +36,12 @@ class DashboardItem < ApplicationRecord
     definition.cast(settings[key.to_s])
   end
 
+  # The uploaded image an :image setting names by its signed id, or nil.
+  def image_blob(key)
+    signed_id = setting(key).presence
+    ActiveStorage::Blob.find_signed(signed_id) if signed_id
+  end
+
   # Whether a layout draws one of its parts (Component::Part). Each layout
   # keeps its own choices under settings["parts"][view], so switching
   # layouts and back restores them.

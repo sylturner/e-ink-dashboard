@@ -93,6 +93,7 @@
   --fs-md: 24px;   --lh-md: 32px;
   --fs-lg: 32px;   --lh-lg: 40px;
   --fs-xl: 64px;   --lh-xl: 64px;
+  --fs-xxl: 128px; --lh-xxl: 128px;
 
   /* Spacing — multiples of 4 keep baselines on pixel boundaries */
   --pad-tight: 4px;
@@ -302,7 +303,12 @@ body {
   --footer-rule: var(--rule) solid var(--paper);
 }
 
-.card--center .card-body {
+/* Tiles with one thing to show put it in the middle. A tile's alignment
+   (look--align-*) still sets its text's. */
+.card--center .card-body,
+.card--countdown .card-body,
+.card--qr_code .card-body,
+.card--rotation:has(.rotation-entry) .card-body {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -399,6 +405,7 @@ body {
 .t-md { font-size: var(--fs-md); line-height: var(--lh-md); }
 .t-lg { font-size: var(--fs-lg); line-height: var(--lh-lg); }
 .t-xl { font-size: var(--fs-xl); line-height: var(--lh-xl); }
+.t-xxl { font-size: var(--fs-xxl); line-height: var(--lh-xxl); }
 
 .t-left   { text-align: left; }
 .t-center { text-align: center; }
@@ -963,6 +970,44 @@ body {
 
 .checklist-text {
   min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* ============================================================
+   Countdowns, rotations, QR codes and photos
+   ============================================================ */
+
+.rotation-list { list-style: none; }
+.rotation-list li { padding: 0 var(--pad-tight); }
+.rotation-list li + li { margin-top: var(--pad-tight); }
+/* The entry whose turn it is, white on black. */
+.rotation-list .rotation-list-current {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.qr-tile svg { display: block; margin: 0 auto; }
+.qr-tile-text { overflow-wrap: anywhere; }
+.qr-tile > * + * { margin-top: var(--pad-tight); }
+
+/* The photo fills what's left of the tile over its caption: cropped to
+   fill it, or whole inside it. */
+.photo-tile {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.photo-tile img {
+  display: block;
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+  object-fit: cover;
+}
+.photo-tile--fit img { object-fit: contain; }
+.photo-caption {
+  flex: none;
+  padding-top: var(--pad-tight);
   overflow-wrap: anywhere;
 }
 

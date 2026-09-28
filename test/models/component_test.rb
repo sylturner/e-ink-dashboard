@@ -128,4 +128,11 @@ class ComponentTest < ActiveSupport::TestCase
     assert Component.part!("weather", "current", "humidity")
     assert_raises(ArgumentError) { Component.part!("weather", "forecast", "humidity") }
   end
+
+  test "a setting's default can be worked out when it's read" do
+    travel_to Time.zone.parse("2026-09-06 12:00") do
+      assert_equal "2026-09-06", Component.setting("rotation", "start").cast(nil)
+    end
+    assert_equal "2026-01-01", Component.setting("rotation", "start").cast("2026-01-01")
+  end
 end

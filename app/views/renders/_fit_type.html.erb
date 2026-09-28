@@ -1,0 +1,25 @@
+<%# Steps each [data-fit-type] element down its sizes (FitTypeHelper) while
+    it or its tile's body overflows: a word too long for the line, or more
+    lines than the tile has room for. Runs once the fonts load, which the capture waits for. %>
+<%= javascript_tag nonce: true do %>
+  (() => {
+    const fit = () => {
+      document.querySelectorAll("[data-fit-type]").forEach((element) => {
+        const sizes = element.dataset.fitType.split(" ")
+        const body = element.closest(".card-body") || element
+        // Not the element's own height: a pixel font's glyphs reach past
+        // their line box, so it always looks taller than it is.
+        const over = () => element.scrollWidth > element.clientWidth ||
+          body.scrollWidth > body.clientWidth || body.scrollHeight > body.clientHeight
+        let at = sizes.findIndex((size) => element.classList.contains(size))
+
+        while (at >= 0 && at < sizes.length - 1 && over()) {
+          element.classList.replace(sizes[at], sizes[at + 1])
+          at += 1
+        }
+      })
+    }
+
+    document.fonts.ready.then(fit)
+  })()
+<% end %>

@@ -1,6 +1,8 @@
 # Markdown drawn on a 1-bit panel: a note (renders/items/_note) or a text
 # tile's formatted layout (renders/items/_text).
 module MarkdownHelper
+  include PanelImagesHelper
+
   # What Markdown can draw. A link keeps only its text, since a panel can't
   # follow it; raw HTML and everything else are dropped.
   MARKDOWN_TAGS = %w[p br h1 h2 h3 h4 h5 h6 strong em del ul ol li blockquote hr
@@ -94,14 +96,7 @@ module MarkdownHelper
       end
     end
 
-    # A panel-sized gray copy of an uploaded image, as a data: URI. The
-    # panel's own dithering takes it to 1-bit. An image that can't be read
-    # is left out rather than stopping the whole frame.
     def inline_image(blob)
-      variant = blob.variant(resize_to_limit: IMAGE_LIMIT, colourspace: "b-w", format: :png).processed
-      "data:image/png;base64,#{Base64.strict_encode64(variant.download)}"
-    rescue StandardError => error
-      Rails.logger.warn("Couldn't draw image #{blob.id}: #{error.class}: #{error.message}")
-      nil
+      panel_image_data_uri(blob, limit: IMAGE_LIMIT)
     end
 end

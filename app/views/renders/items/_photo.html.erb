@@ -1,0 +1,16 @@
+<%# The tile's uploaded photo (PanelImagesHelper), which the panel
+    dithers: cropped to fill the tile, or whole inside it, over its
+    caption. %>
+<% blob    = item.image_blob("image") %>
+<% source  = panel_image_data_uri(blob, limit: PanelImagesHelper::PHOTO_LIMIT, format: :jpeg) if blob&.variable? %>
+<% caption = item.setting("caption") %>
+<% if source %>
+  <%= tag.figure class: [ "photo-tile", "photo-tile--#{item.view}" ] do %>
+    <%= image_tag source, alt: caption %>
+    <% if item.shows?("caption") && caption.present? %>
+      <figcaption class="photo-caption t-sm"><%= caption %></figcaption>
+    <% end %>
+  <% end %>
+<% else %>
+  <p class="t-sm"><%= t("renders.photo.missing") %></p>
+<% end %>

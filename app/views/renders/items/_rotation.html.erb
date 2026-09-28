@@ -1,0 +1,22 @@
+<%# A list taking turns (Rotation), at the panel's date: the entry whose
+    turn it is, and optionally the next, or the whole list with the
+    current one white on black. %>
+<% rotation = Rotation.new(entries: item.setting("entries"), period: item.setting("period"),
+                           start: item.setting("start"), today: now.to_date) %>
+<% if !rotation.any? %>
+  <p class="t-sm"><%= t("renders.rotation.empty") %></p>
+<% elsif item.view == "list" %>
+  <ol class="rotation-list">
+    <% rotation.entries.each_with_index do |entry, index| %>
+      <%= tag.li entry, class: ("rotation-list-current" if index == rotation.index),
+                        aria: { current: (index == rotation.index ? "true" : nil) } %>
+    <% end %>
+  </ol>
+<% else %>
+  <% if item.shows?("entry") %>
+    <%= tag.div rotation.current, class: [ "rotation-entry", item.size_of("entry") ], data: fit_type_data %>
+  <% end %>
+  <% if item.shows?("upcoming") && rotation.upcoming %>
+    <div class="rotation-upcoming t-sm"><%= t("renders.rotation.upcoming", entry: rotation.upcoming) %></div>
+  <% end %>
+<% end %>

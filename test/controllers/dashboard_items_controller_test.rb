@@ -424,4 +424,73 @@ class DashboardItemsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ "left", "large" ], [ template.image.placement, template.image.size ]
     assert_equal [ "{title}", "{source} · {age}" ], template.lines.select(&:shown?).map(&:tokens)
   end
+
+  test "a countdown's date and time are date and time fields, with hints" do
+    get edit_dashboard_item_url(@dashboard_item, kind: "countdown")
+
+    assert_select "input[type=date][name=?]", "dashboard_item[settings][date]"
+    assert_select "input[type=time][name=?][aria-describedby=?]", "dashboard_item[settings][time]",
+                  "dashboard_item_settings_time_hint"
+    assert_select ".form-text#dashboard_item_settings_time_hint", /counting in hours/
+    assert_select "select[name=?] option", "dashboard_item[settings][unit]", 2
+  end
+
+  test "a new rotation starts today" do
+    travel_to Time.zone.parse("2026-09-06 12:00") do
+      get edit_dashboard_item_url(@dashboard_item, kind: "rotation")
+    end
+
+    assert_select "textarea[name=?][aria-describedby=?]", "dashboard_item[settings][entries]",
+                  "dashboard_item_settings_entries_hint"
+    assert_select "input[type=date][name=?][value=?]", "dashboard_item[settings][start]", "2026-09-06"
+  end
+
+  test "a Wi-Fi QR code's password is filled in, not remembered, and says where it's kept" do
+    @dashboard_item.update!(kind: "qr_code", view: "wifi", sources: [], settings: { "ssid" => "Home", "password" => "hunter22" })
+
+    get edit_dashboard_item_url(@dashboard_item)
+
+    assert_select "input[type=password][name=?][value=hunter22][autocomplete=off][aria-describedby=?]",
+                  "dashboard_item[settings][password]", "dashboard_item_settings_password_hint"
+    assert_select "#dashboard_item_settings_password_hint", /anyone who can open this app/
+    assert_select "[data-views=link] textarea[name=?]", "dashboard_item[settings][text]"
+  end
+
+  test "a photo tile uploads its photo from the inspector, with no source" do
+    blob = ActiveStorage::Blob.create_and_upload!(io: file_fixture("photo.jpg").open, filename: "photo.jpg")
+    @dashboard_item.update!(kind: "photo", view: "fill", sources: [], settings: { "image" => blob.signed_id })
+
+    get edit_dashboard_item_url(@dashboard_item)
+
+    assert_select "select[name^=?]", "dashboard_item[source_ids]", 0
+    assert_select "[data-controller=image-field][data-image-field-upload-url-value=?]", "/rails/active_storage/direct_uploads" do
+      assert_select "input[type=hidden][name=?][value=?][data-image-field-target=value]",
+                    "dashboard_item[settings][image]", blob.signed_id
+      assert_select "label[for=dashboard_item_settings_image]", "Photo"
+      assert_select "input[type=file]#dashboard_item_settings_image:not([name])[accept='image/*'][aria-describedby=?]",
+                    "dashboard_item_settings_image_hint"
+      assert_select "figure:not([hidden]) img[src*=?][alt=?]", "/rails/active_storage/representations/", "The tile's photo"
+      assert_select "button[data-action='image-field#remove']:not([hidden])", "Remove photo"
+      assert_select "[role=status][data-image-field-target=status]"
+    end
+  end
+
+  test "a photo tile without a photo offers only the upload" do
+    get edit_dashboard_item_url(@dashboard_item, kind: "photo")
+
+    assert_select "input[type=hidden][name=?]:not([value])", "dashboard_item[settings][image]"
+    assert_select "figure[hidden][data-image-field-target=preview]"
+    assert_select "button[hidden][data-image-field-target=remove]"
+  end
+
+  test "a tile with one source sends it as a list, so saving keeps it" do
+    get edit_dashboard_item_url(@dashboard_item) # weather
+    assert_select "select[name=?]:not([multiple])", "dashboard_item[source_ids][]"
+
+    patch dashboard_item_url(@dashboard_item), params: {
+      dashboard_item: { kind: "weather", view: "current", source_ids: [ sources(:one).id.to_s ] }
+    }
+
+    assert_equal [ sources(:one) ], @dashboard_item.reload.sources
+  end
 end

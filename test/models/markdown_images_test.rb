@@ -39,6 +39,17 @@ class MarkdownImagesTest < ActiveSupport::TestCase
     assert_not unused.service.exist?(unused.key)
   end
 
+  test "keeps the photo a photo tile shows" do
+    photo = upload("photo.png")
+    dashboard_items(:one).update!(kind: "photo", view: "fill", sources: [], settings: { "image" => photo.signed_id })
+
+    assert_equal 0, MarkdownImages.purge_unused
+    assert ActiveStorage::Blob.exists?(photo.id)
+
+    dashboard_items(:one).update!(settings: { "image" => "" })
+    assert_equal 1, MarkdownImages.purge_unused
+  end
+
   test "purges an unused image's variants with it" do
     blob = upload
     variant = blob.variant(resize_to_limit: [ 10, 10 ]).processed

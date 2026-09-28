@@ -11,6 +11,10 @@
   <% end %>
 </div>
 
+<% if fits_type? %>
+  <%= render "renders/fit_type" %>
+<% end %>
+
 <%# A panel's navigation strip, which takes the foot of the screen. %>
 <% if (navigation = @device&.navigation(@dashboard)) %>
   <%= render "renders/navigation", navigation: %>

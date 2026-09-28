@@ -45,6 +45,10 @@
                               :id, :name,
                               { include_blank: !multi },
                               { multiple: multi, size: multi ? 4 : 1,
+                                # One source is still sent as a list: a lone
+                                # value isn't permitted for source_ids, and
+                                # was quietly dropped.
+                                name: "#{f.object_name}[source_ids][]",
                                 aria: { describedby: "item_sources_hint" } } %>
       <div id="item_sources_hint" class="form-text">
         <% if multi %>Select several to combine them into one view.<% end %>
@@ -79,6 +83,7 @@
       <%= f.fields_for :settings do |s| %>
         <% settings.each do |setting| %>
           <% value = item.setting(setting.key) %>
+          <% hint  = s.field_id(setting.key, :hint) if setting.hint %>
           <div class="<%= class_names("setting mb-3", "form-check": setting.type == :boolean) %>"
                data-item-form-target="setting"
                data-views="<%= Array(setting.views).join(" ") %>">
@@ -108,10 +113,26 @@
               <%= render "dashboard_items/tokens", id: s.field_id(setting.key, :tokens) %>
             <% when :text %>
               <%= s.label setting.key, setting.label %>
-              <%= s.textarea setting.key, value:, rows: 3 %>
+              <%= s.textarea setting.key, value:, rows: 4, aria: { describedby: hint } %>
+            <% when :image %>
+              <%= render "dashboard_items/image_field", s:, item:, setting: %>
+            <% when :date %>
+              <%= s.label setting.key, setting.label %>
+              <%= s.date_field setting.key, value:, aria: { describedby: hint } %>
+            <% when :time %>
+              <%= s.label setting.key, setting.label %>
+              <%= s.time_field setting.key, value:, aria: { describedby: hint } %>
+            <% when :password %>
+              <%# Filled in, so saving the tile again keeps it. The browser
+                  isn't asked to remember it: it's not this app's. %>
+              <%= s.label setting.key, setting.label %>
+              <%= s.password_field setting.key, value:, autocomplete: "off", aria: { describedby: hint } %>
             <% else %>
               <%= s.label setting.key, setting.label %>
-              <%= s.text_field setting.key, value: %>
+              <%= s.text_field setting.key, value:, aria: { describedby: hint } %>
+            <% end %>
+            <% if hint %>
+              <div id="<%= hint %>" class="form-text"><%= setting.hint %></div>
             <% end %>
           </div>
         <% end %>

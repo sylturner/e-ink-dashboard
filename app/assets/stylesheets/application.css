@@ -326,3 +326,6 @@ html { scroll-padding-top: calc(var(--app-header-height) + 1rem); }
 /* Under a tile's text, the tokens it can carry. */
 .token-list dt { font-weight: normal; }
 .token-list dd { margin: 0 0 .25rem 1rem; }
+
+/* A photo tile's photo in the inspector. */
+.image-field-preview img { max-height: 15rem; }

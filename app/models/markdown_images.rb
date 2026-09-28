@@ -3,7 +3,8 @@
 # each by the path the editor inserts,
 # /rails/active_storage/blobs/redirect/<signed id>/<filename>. So nothing
 # removes one when its text does, and PurgeUnusedImagesJob clears out the
-# ones no text refers to any more.
+# ones no text refers to any more. A photo tile's upload works the same
+# way, kept by its signed id in the tile's settings.
 module MarkdownImages
   # The largest image that can be uploaded. The editor checks before
   # uploading, and a blob larger than this can't be created
@@ -31,10 +32,17 @@ module MarkdownImages
         DashboardItem.where(kind: Component.markdown_kinds).pluck(:settings).map { it.to_h["body"] }
     end
 
-    # The ids of the blobs saved texts refer to.
+    # The signed ids a photo tile's :image settings hold.
+    def image_setting_ids
+      Component.image_settings.flat_map do |kind, keys|
+        DashboardItem.where(kind:).pluck(:settings).flat_map { |settings| settings.to_h.values_at(*keys) }
+      end
+    end
+
+    # The ids of the blobs saved texts and photo tiles refer to.
     def referenced_blob_ids
-      texts.compact.flat_map { it.scan(PATH).flatten }.uniq
-           .filter_map { ActiveStorage::Blob.find_signed(it)&.id }
+      (texts.compact.flat_map { it.scan(PATH).flatten } + image_setting_ids.compact_blank).uniq
+        .filter_map { ActiveStorage::Blob.find_signed(it)&.id }
     end
 
     # Removes the uploads no text refers to, once they're past their grace.
