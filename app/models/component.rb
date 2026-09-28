@@ -6,13 +6,16 @@
 # partials all read from here, so adding a layout, a setting or a part is
 # a one-place change.
 class Component
-  Setting = Struct.new(:key, :type, :label, :default, :options, :views,
+  # `hint` is a line the inspector shows under the field. A `default` can
+  # be a lambda, for one worked out when the tile is first edited (today's
+  # date): the form shows it, and saving keeps it.
+  Setting = Struct.new(:key, :type, :label, :default, :options, :views, :hint,
                        keyword_init: true) do
     # Settings round-trip through a JSON column and an HTML form, so they
     # come back as strings. Cast on the way out so partials can trust the
     # type the registry declared.
     def cast(value)
-      return default if value.nil? || value == ""
+      return (default.respond_to?(:call) ? default.call : default) if value.nil? || value == ""
 
       case type
       when :integer then value.to_i
@@ -74,6 +77,13 @@ class Component
   # through where they are, strikes them and moves them to the bottom, or
   # leaves them off.
   CHECKLIST_DONE_ITEMS = %w[strike bottom hide].freeze
+
+  # A QR code tile's px per module (see note's qr_code part). Larger than a
+  # note's, since the code is the whole tile.
+  QR_SIZES = { "small" => 3, "medium" => 4, "large" => 6 }.freeze
+
+  # A number drawn as the tile's main thing: a countdown's.
+  NUMBER_SIZES = { "small" => "t-lg", "medium" => "t-xl", "large" => "t-xxl" }.freeze
 
   REGISTRY = {
     "clock" => {
@@ -254,6 +264,83 @@ class Component
       end
     },
 
+    # Days until a date, or since it once it's past (Countdown), as a big
+    # number or in a sentence.
+    "countdown" => {
+      label: "Countdown",
+      views: { "big_number" => "Big number", "sentence" => "Sentence" },
+      source_types: [],
+      settings: [
+        Setting.new(key: "label", type: :string, label: "Counting down to", default: "",
+                    hint: "A name, like Christmas: “12 days until Christmas”."),
+        Setting.new(key: "date", type: :date, label: "Date", default: ""),
+        Setting.new(key: "time", type: :time, label: "Time (optional)", default: "",
+                    hint: "Used when counting in hours. Blank is the start of the day."),
+        Setting.new(key: "unit", type: :select, label: "Count in", default: "days",
+                    options: -> { Countdown::UNITS.map { [ I18n.t("components.countdown.units.#{it}"), it ] } })
+      ],
+      parts: {
+        "big_number" => [ Part.new(key: "number", sizes: NUMBER_SIZES, default_size: "large"), Part.new(key: "label") ],
+        "sentence" => [ Part.new(key: "sentence", sizes: TYPE_SIZES) ]
+      }
+    },
+
+    # A list that takes a turn each day or week (Rotation): a chore wheel,
+    # whose turn it is, a quote of the day.
+    "rotation" => {
+      label: "Rotation",
+      views: { "current" => "Current entry", "list" => "Whole list" },
+      source_types: [],
+      settings: [
+        Setting.new(key: "entries", type: :text, label: "Entries", default: "",
+                    hint: "One per line."),
+        Setting.new(key: "period", type: :select, label: "Moves on", default: "daily",
+                    options: -> { Rotation::PERIODS.map { [ I18n.t("components.rotation.periods.#{it}"), it ] } }),
+        Setting.new(key: "start", type: :date, label: "First entry's day", default: -> { Date.current.iso8601 },
+                    hint: "The first entry shows on this day, or in its week, and the list moves on from there.")
+      ],
+      parts: {
+        "current" => [ Part.new(key: "entry", sizes: TYPE_SIZES),
+                       Part.new(key: "upcoming", default: false) ]
+      }
+    },
+
+    # A QR code a phone's camera opens: a Wi-Fi network to join
+    # (WifiNetwork), or any link or text.
+    "qr_code" => {
+      label: "QR code",
+      views: { "wifi" => "Wi-Fi network", "link" => "Link or text" },
+      source_types: [],
+      settings: [
+        Setting.new(key: "ssid", type: :string, label: "Network name", default: "", views: %w[wifi]),
+        Setting.new(key: "password", type: :password, label: "Password", default: "", views: %w[wifi],
+                    hint: "Kept with the tile, where anyone who can open this app can read it."),
+        Setting.new(key: "security", type: :select, label: "Security", default: "WPA", views: %w[wifi],
+                    options: -> { WifiNetwork::SECURITIES.map { [ I18n.t("components.qr_code.security.#{it}"), it ] } }),
+        Setting.new(key: "hidden", type: :boolean, label: "Hidden network", default: false, views: %w[wifi]),
+        Setting.new(key: "text", type: :text, label: "Link or text", default: "", views: %w[link]),
+        Setting.new(key: "caption", type: :string, label: "Caption", default: "")
+      ],
+      parts: {
+        "wifi" => [ Part.new(key: "qr_code", sizes: QR_SIZES), Part.new(key: "network"),
+                    Part.new(key: "password", default: false) ],
+        "link" => [ Part.new(key: "qr_code", sizes: QR_SIZES), Part.new(key: "text", default: false) ]
+      }
+    },
+
+    # A photo uploaded in the inspector (an :image setting), filling the
+    # tile or shown whole.
+    "photo" => {
+      label: "Photo",
+      views: { "fill" => "Fill the tile", "fit" => "Whole photo" },
+      source_types: [],
+      settings: [
+        Setting.new(key: "image", type: :image, label: "Photo", default: ""),
+        Setting.new(key: "caption", type: :string, label: "Caption", default: "")
+      ],
+      parts: %w[fill fit].index_with { [ Part.new(key: "caption") ] }
+    },
+
     # Text written in the inspector: Markdown, drawn as a note is, or
     # plain. Both fill PanelTokensHelper's tokens, such as {{CURRENT_TIME}}.
     "text" => {
@@ -321,6 +408,12 @@ class Component
     # "body" (MarkdownImages looks there for uploaded images).
     def markdown_kinds
       KINDS.select { |kind| settings(kind).any? { it.type == :markdown } }
+    end
+
+    # The kinds whose settings hold an uploaded image, in an :image
+    # setting: the blob's signed id (MarkdownImages keeps those blobs).
+    def image_settings
+      KINDS.to_h { |kind| [ kind, settings(kind).select { it.type == :image }.map(&:key) ] }.compact_blank
     end
 
     def source_types(kind)

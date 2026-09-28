@@ -1,5 +1,5 @@
-# The phone pages a note's or a checklist's tile links to, and the QR code
-# a tile draws of one.
+# The phone pages a note's or a checklist's tile links to, and the QR codes
+# tiles draw: of a phone page, or a QR code tile's own.
 module PhonePageHelper
   # The margin, in modules, that a scanner needs around a QR code.
   QR_QUIET_ZONE = 4
@@ -22,6 +22,13 @@ module PhonePageHelper
   def phone_page_qr_code(provider, module_px:)
     qr_code(phone_page_url(provider), module_px:,
             label: t("phone_pages.qr_code_label.#{provider.class.name.underscore}"))
+  end
+
+  # A QR code tile's own code, or nil when the text is too long for one.
+  def tile_qr_code(text, module_px:, label:)
+    qr_code(text, module_px:, label:)
+  rescue RQRCodeCore::QRCodeRunTimeError
+    nil
   end
 
   # Black modules on white whatever the panel's theme, inside a quiet zone,

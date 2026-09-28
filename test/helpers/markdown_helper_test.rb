@@ -46,7 +46,7 @@ class MarkdownHelperTest < ActionView::TestCase
     assert_select "img[src=?][alt=?]", "https://example.com/cat.png", "a cat"
   end
 
-  test "an uploaded image is drawn inline, gray and no larger than a panel" do
+  test "an uploaded image is drawn inline, in color, no larger than a panel" do
     blob = ActiveStorage::Blob.create_and_upload!(io: StringIO.new(png(1600, 400)), filename: "wide.png")
     @rendered = markdown("![wide](/rails/active_storage/blobs/redirect/#{blob.signed_id}/wide.png)")
 
@@ -54,7 +54,7 @@ class MarkdownHelperTest < ActionView::TestCase
     assert_match %r{\Adata:image/png;base64,}, src
     image = Vips::Image.new_from_buffer(Base64.decode64(src.split(",", 2).last), "")
     assert_equal [ 800, 200 ], [ image.width, image.height ]
-    assert_equal 1, image.bands
+    assert_equal 3, image.bands, "Bitmap grays the whole frame, so the image needn't be"
   end
 
   test "an image that can't be drawn is dropped" do

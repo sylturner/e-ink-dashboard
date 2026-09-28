@@ -474,6 +474,125 @@ class RendersControllerTest < ActionDispatch::IntegrationTest
     assert_select ".checklist-tile > .note-qr svg[width=?][aria-label=?]", edge.to_s, "QR code to check off this list"
   end
 
+  # A tile beside the calendar on the office dashboard, drawn at NOW
+  # (Sunday, September 6, 2026, 9:00 in New York).
+  def render_tile(kind, view, settings = {}, sources: [])
+    @dashboard.dashboard_items.create!(kind:, view:, col: 7, row: 1, col_span: 6, row_span: 4, sources:, settings:)
+    render_view("today")
+  end
+
+  test "a countdown tile draws the days to go as a big number, with its unit and what it counts to" do
+    render_tile("countdown", "big_number", { "date" => "2026-09-10", "label" => "Vacation" })
+
+    assert_select ".card--countdown .countdown-number.t-xxl", "4"
+    assert_select ".countdown-unit", "days"
+    assert_select ".countdown-label", "until Vacation"
+    assert_select ".countdown-number[data-fit-type=?]", "t-xxl t-xl t-lg t-md t-sm"
+    assert_select "script", /data-fit-type/, "steps big type down until it fits"
+  end
+
+  test "a dashboard with no type to fit has no script to fit it" do
+    render_view("today")
+
+    assert_select "script", { text: /data-fit-type/, count: 0 }
+  end
+
+  test "a countdown tile counts days and hours, and says so in a sentence" do
+    render_tile("countdown", "sentence", { "date" => "2026-09-07", "time" => "13:00", "unit" => "hours",
+                                           "label" => "Launch" })
+
+    assert_select ".countdown-sentence.t-lg", "1 day and 4 hours until Launch"
+  end
+
+  test "a countdown tile on the day, after it, and with no date" do
+    render_tile("countdown", "big_number", { "date" => "2026-09-06", "label" => "Moving day" })
+    assert_select ".countdown-number", "Today!"
+    assert_select ".countdown-label", "Moving day"
+
+    @dashboard.dashboard_items.where(kind: "countdown").destroy_all
+    render_tile("countdown", "sentence", { "date" => "2026-09-01", "label" => "Moving day" })
+    assert_select ".countdown-sentence", "Moving day was 5 days ago"
+
+    @dashboard.dashboard_items.where(kind: "countdown").destroy_all
+    render_tile("countdown", "sentence")
+    assert_select ".card--countdown p", "No date set"
+  end
+
+  test "a rotation tile draws the entry whose turn it is, and the next" do
+    render_tile("rotation", "current", { "entries" => "Alice\nBob\nCarol", "start" => "2026-09-05",
+                                         "parts" => { "current" => { "upcoming" => "1" } } })
+
+    assert_select ".rotation-entry.t-lg", "Bob"
+    assert_select ".rotation-upcoming", "Next: Carol"
+  end
+
+  test "a rotation tile's whole list marks the current entry" do
+    render_tile("rotation", "list", { "entries" => "Alice\nBob\nCarol", "start" => "2026-08-31", "period" => "weekly" })
+
+    assert_select "ol.rotation-list li", 3
+    assert_select "ol.rotation-list li.rotation-list-current[aria-current=true]", "Bob"
+  end
+
+  test "a QR code tile joins a Wi-Fi network, naming it under the code" do
+    settings = { "ssid" => "Home", "password" => "hunter22", "security" => "WPA" }
+    render_tile("qr_code", "wifi", settings)
+
+    edge = (RQRCode::QRCode.new("WIFI:T:WPA;S:Home;P:hunter22;;", level: :m).modules.size + 8) * 4
+    assert_select ".qr-tile svg[width=?][aria-label=?]", edge.to_s, "QR code to join Home"
+    assert_select ".qr-tile-text", "Network: Home"
+    assert_no_match "hunter22", response.body, "the password isn't written unless the tile shows it"
+  end
+
+  test "a QR code tile can write the password, and draws a link or text with a caption" do
+    render_tile("qr_code", "wifi", { "ssid" => "Home", "password" => "hunter22",
+                                     "parts" => { "wifi" => { "password" => "1" } } })
+    assert_select ".qr-tile-text", "Password: hunter22"
+
+    @dashboard.dashboard_items.where(kind: "qr_code").destroy_all
+    render_tile("qr_code", "link", { "text" => "https://example.com", "caption" => "Our site",
+                                     "parts" => { "link" => { "text" => "1" } }, "sizes" => { "link" => { "qr_code" => "small" } } })
+    edge = (RQRCode::QRCode.new("https://example.com", level: :m).modules.size + 8) * 3
+    assert_select ".qr-tile svg[width=?]", edge.to_s
+    assert_select ".qr-tile-text", "https://example.com"
+    assert_select ".qr-tile-caption", "Our site"
+  end
+
+  test "a QR code tile with nothing to encode, or too much, says so" do
+    render_tile("qr_code", "wifi")
+    assert_select ".qr-tile p", "Nothing to encode yet"
+
+    @dashboard.dashboard_items.where(kind: "qr_code").destroy_all
+    render_tile("qr_code", "link", { "text" => "x" * 3000 })
+    assert_select ".qr-tile p", "Too long for a QR code"
+  end
+
+  def photo_blob
+    ActiveStorage::Blob.create_and_upload!(io: file_fixture("photo.jpg").open, filename: "photo.jpg")
+  end
+
+  test "a photo tile draws its photo inlined, with its caption" do
+    render_tile("photo", "fit", { "image" => photo_blob.signed_id, "caption" => "The lake" })
+
+    assert_select "figure.photo-tile.photo-tile--fit img[src^=?][alt=?]", "data:image/jpeg;base64,", "The lake"
+    assert_select "figure.photo-tile figcaption", "The lake"
+  end
+
+  test "a photo tile without its photo says so" do
+    render_tile("photo", "fill", { "image" => "not-a-signed-id" })
+
+    assert_select ".card--photo p", "No photo"
+  end
+
+  test "the preview draws a photo just uploaded, before it's saved" do
+    blob = photo_blob
+
+    post_preview item_id: @item.id, dashboard_item: { kind: "photo", view: "fill", source_ids: [ "" ],
+                                                      settings: { image: blob.signed_id } }
+
+    assert_response :success
+    assert_select ".card--photo figure.photo-tile--fill img[src^=?]", "data:image/jpeg;base64,"
+  end
+
   def news_source(name, items)
     Source.create!(name: name, refresh_seconds: 1800, fetched_at: NOW,
                    providable: RssProvider.new(feed_url: "https://example.com/#{name.parameterize}.xml"),

@@ -40,4 +40,9 @@ class PhonePageHelperTest < ActionView::TestCase
 
     assert_select "svg[aria-label=?]", "QR code to check off this list"
   end
+
+  test "a QR code tile's code, or nothing when the text is too long for one" do
+    assert_match "<svg", tile_qr_code("https://example.com", module_px: 3, label: "QR code")
+    assert_nil tile_qr_code("x" * 3000, module_px: 3, label: "QR code")
+  end
 end

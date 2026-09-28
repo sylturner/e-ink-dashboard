@@ -1,0 +1,36 @@
+<%# An :image setting: a photo uploaded as soon as it's chosen, through
+    Active Storage's direct uploads (image_field_controller.js), and kept
+    as the blob's signed id in the hidden field. The file input has no
+    name, so the file itself is never posted with the form. %>
+<% blob  = item.image_blob(setting.key) %>
+<% id    = s.field_id(setting.key) %>
+<% hint  = s.field_id(setting.key, :hint) %>
+<% name  = { name: "%{name}" } %>
+<%= tag.div data: { controller: "image-field",
+                    image_field_upload_url_value: rails_direct_uploads_path,
+                    image_field_max_bytes_value: MarkdownImages::MAX_BYTES,
+                    image_field_uploading_value: t("markdown_editor.uploading", **name),
+                    image_field_uploaded_value: t("image_field.uploaded", **name),
+                    image_field_failed_value: t("markdown_editor.failed", **name),
+                    image_field_not_image_value: t("markdown_editor.not_image", **name),
+                    image_field_too_big_value: t("markdown_editor.too_big", **name,
+                                                 max: number_to_human_size(MarkdownImages::MAX_BYTES)),
+                    image_field_removed_value: t("image_field.removed") } do %>
+  <%= s.hidden_field setting.key, value: blob&.signed_id, id: nil, data: { image_field_target: "value" } %>
+
+  <%= s.label setting.key, setting.label, for: id %>
+  <%= tag.figure class: "image-field-preview mb-2", hidden: blob.nil?, data: { image_field_target: "preview" } do %>
+    <%= tag.img src: (url_for(blob.variant(resize_to_limit: [ 480, 480 ])) if blob&.variable?),
+                alt: t("image_field.preview"), class: "img-fluid rounded border",
+                data: { image_field_target: "image" } %>
+  <% end %>
+  <%= file_field_tag nil, id:, accept: "image/*", class: "form-control",
+                          aria: { describedby: hint },
+                          data: { image_field_target: "file", action: "image-field#chosen" } %>
+  <div id="<%= hint %>" class="form-text">
+    <%= t("image_field.hint", max: number_to_human_size(MarkdownImages::MAX_BYTES)) %>
+  </div>
+  <%= tag.button t("image_field.remove"), type: "button", class: "btn btn-sm btn-app-outline mt-2",
+                 hidden: blob.nil?, data: { image_field_target: "remove", action: "image-field#remove" } %>
+  <div class="form-text" role="status" data-image-field-target="status"></div>
+<% end %>

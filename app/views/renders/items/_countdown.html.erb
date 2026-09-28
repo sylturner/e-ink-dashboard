@@ -1,0 +1,29 @@
+<%# Days until a date, or since it, at the panel's time (CountdownsHelper):
+    a big number with its unit and what it counts to under it, or all of
+    it in a sentence. %>
+<% countdown = countdown_for(item, now:) %>
+<% label     = item.setting("label") %>
+<% if !countdown.valid? %>
+  <p class="t-sm"><%= t("renders.countdown.no_date") %></p>
+<% elsif item.view == "sentence" %>
+  <% if item.shows?("sentence") %>
+    <%= tag.p countdown_sentence(countdown, label:), class: [ "countdown-sentence", item.size_of("sentence") ],
+                                                     data: fit_type_data %>
+  <% end %>
+<% elsif countdown.state == :today %>
+  <% if item.shows?("number") %>
+    <%= tag.div t("renders.countdown.today"), class: [ "countdown-number", item.size_of("number") ], data: fit_type_data %>
+  <% end %>
+  <% if item.shows?("label") && label.present? %>
+    <div class="countdown-label t-md"><%= label %></div>
+  <% end %>
+<% else %>
+  <% counts = countdown.state == :ahead ? countdown.remaining : { days: countdown.days_since } %>
+  <% if item.shows?("number") %>
+    <%= tag.div counts.values.first, class: [ "countdown-number", item.size_of("number") ], data: fit_type_data %>
+  <% end %>
+  <div class="countdown-unit t-md"><%= countdown_unit(counts) %></div>
+  <% if item.shows?("label") %>
+    <div class="countdown-label t-sm"><%= countdown_label(countdown, label:) %></div>
+  <% end %>
+<% end %>

@@ -128,6 +128,22 @@ en:
         strike: "Struck through"
         bottom: "Struck through, at the bottom"
         hide: "Hidden"
+    # A countdown tile's Count in setting (Countdown::UNITS).
+    countdown:
+      units:
+        days: "Days"
+        hours: "Days and hours"
+    # A rotation tile's Moves on setting (Rotation::PERIODS).
+    rotation:
+      periods:
+        daily: "Every day"
+        weekly: "Every week"
+    # A QR code tile's Security setting (WifiNetwork::SECURITIES).
+    qr_code:
+      security:
+        WPA: "WPA, WPA2 or WPA3"
+        WEP: "WEP"
+        nopass: "None (an open network)"
     # Beside a part that comes in sizes. The part's name is read out
     # before it, visually hidden.
     size: "Size"
@@ -151,6 +167,10 @@ en:
       clock:
         date: "Date"
         time: "Time"
+      countdown:
+        label: "What it counts to"
+        number: "Number"
+        sentence: "Sentence"
       newspaper:
         bylines: "Feed and time"
         dateline: "Date line"
@@ -160,6 +180,16 @@ en:
         weather: "Weather"
       note:
         qr_code: "QR code to edit"
+      photo:
+        caption: "Caption"
+      qr_code:
+        network: "Network name, written out"
+        password: "Password, written out"
+        qr_code: "QR code"
+        text: "The link or text, written out"
+      rotation:
+        entry: "Current entry"
+        upcoming: "Next entry"
       weather:
         condition: "Condition"
         feels_like: "Feels like"
@@ -237,6 +267,14 @@ en:
   # The Markdown editor (application/_markdown_editor): a toolbar that
   # types the Markdown, and images uploaded as they're added. %{name} is
   # the image's file name.
+  # A photo tile's photo in the inspector (dashboard_items/_image_field).
+  # The upload messages are the Markdown editor's.
+  image_field:
+    hint: "A JPEG, PNG, WebP or other picture, up to %{max}. It's uploaded as soon as it's chosen and drawn in black and white."
+    preview: "The tile's photo"
+    uploaded: "Uploaded %{name}."
+    remove: "Remove photo"
+    removed: "Photo removed."
   markdown_editor:
     toolbar: "Formatting"
     shortcut: "%{label} (Ctrl+%{key} or ⌘%{key})"
@@ -359,6 +397,59 @@ en:
       progress: "%{done} of %{count} done"
       empty: "Nothing on the list"
       all_done: "All done"
+    # A countdown tile (Countdown). The big number's words go under it.
+    countdown:
+      no_date: "No date set"
+      today: "Today!"
+      days:
+        one: "%{count} day"
+        other: "%{count} days"
+      hours:
+        one: "%{count} hour"
+        other: "%{count} hours"
+      minutes:
+        one: "%{count} minute"
+        other: "%{count} minutes"
+      # Joins days and hours: "3 days and 4 hours".
+      and: "%{first} and %{second}"
+      unit:
+        days:
+          one: "day"
+          other: "days"
+        hours:
+          one: "hour"
+          other: "hours"
+        minutes:
+          one: "minute"
+          other: "minutes"
+      until: "until %{label}"
+      to_go: "to go"
+      ago: "ago"
+      since: "since %{label}"
+      sentence:
+        until: "%{time} until %{label}"
+        to_go: "%{time} to go"
+        today: "%{label} is today!"
+        since: "%{label} was %{time} ago"
+        ago: "%{time} ago"
+    # A rotation tile.
+    rotation:
+      empty: "No entries yet"
+      upcoming: "Next: %{entry}"
+      # The whole list's current entry, for a screen reader of the preview.
+      current: "now"
+    # A QR code tile.
+    qr_code:
+      empty: "Nothing to encode yet"
+      too_long: "Too long for a QR code"
+      network: "Network: %{name}"
+      password: "Password: %{password}"
+      label:
+        wifi: "QR code to join %{name}"
+        link: "QR code"
+    # A photo tile with no photo to draw.
+    photo:
+      missing: "No photo"
     tokens:
       greeting:
         morning: "Good morning"

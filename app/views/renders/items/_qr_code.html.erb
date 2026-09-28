@@ -1,0 +1,35 @@
+<%# A QR code a phone's camera opens: a Wi-Fi network to join, or a link
+    or any text. Optionally the network's name and password, or the text,
+    written under it for anyone without a camera. %>
+<% if item.view == "wifi" %>
+  <% network = WifiNetwork.new(ssid: item.setting("ssid"), password: item.setting("password"),
+                               security: item.setting("security"), hidden: item.setting("hidden")) %>
+  <% text  = network.to_s if network.valid? %>
+  <% label = t("renders.qr_code.label.wifi", name: network.ssid) %>
+<% else %>
+  <% text  = item.setting("text").to_s.strip.presence %>
+  <% label = t("renders.qr_code.label.link") %>
+<% end %>
+<div class="qr-tile">
+  <% if text.nil? %>
+    <p class="t-sm"><%= t("renders.qr_code.empty") %></p>
+  <% else %>
+    <% if item.shows?("qr_code") %>
+      <%= tile_qr_code(text, module_px: item.size_of("qr_code"), label:) ||
+            tag.p(t("renders.qr_code.too_long"), class: "t-sm") %>
+    <% end %>
+    <% if item.view == "wifi" %>
+      <% if item.shows?("network") %>
+        <div class="qr-tile-text t-sm"><%= t("renders.qr_code.network", name: network.ssid) %></div>
+      <% end %>
+      <% if item.shows?("password") && !network.open? %>
+        <div class="qr-tile-text t-sm"><%= t("renders.qr_code.password", password: network.password) %></div>
+      <% end %>
+    <% elsif item.shows?("text") %>
+      <div class="qr-tile-text t-sm"><%= text %></div>
+    <% end %>
+  <% end %>
+  <% if item.setting("caption").present? %>
+    <div class="qr-tile-caption t-sm"><%= item.setting("caption") %></div>
+  <% end %>
+</div>
