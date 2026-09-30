@@ -493,4 +493,26 @@ class DashboardItemsControllerTest < ActionDispatch::IntegrationTest
 
     assert_equal [ sources(:one) ], @dashboard_item.reload.sources
   end
+
+  test "a data tile's inspector takes its template, and lists its filters and its source's values" do
+    source = Source.create!(name: "Outside", refresh_seconds: 900, providable: JsonProvider.new(url: "https://x.example"),
+                            payload: { "data" => { "state" => "12" } })
+    @dashboard_item.update!(kind: "data", view: "lines", sources: [ source ], settings: { "lines" => "{state}°" })
+
+    get edit_dashboard_item_url(@dashboard_item)
+
+    assert_select "select[name=?] option[selected]", "dashboard_item[source_ids][]", "Outside"
+    assert_select "textarea[name=?][aria-describedby=?]", "dashboard_item[settings][lines]",
+                  "dashboard_item_settings_lines_hint", "{state}°"
+    assert_select "[data-views=big_stat] input[name=?]", "dashboard_item[settings][value]"
+    assert_select "details summary", "Formatting a value"
+    assert_select "details dt code", "{path|round} or {path|round:1}"
+    assert_select "details table td code", "{state}"
+  end
+
+  test "a data tile without a source says where its values will come from" do
+    get edit_dashboard_item_url(@dashboard_item, kind: "data")
+
+    assert_select "details p", /Choose a source and save the tile/
+  end
 end

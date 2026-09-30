@@ -308,7 +308,8 @@ body {
 .card--center .card-body,
 .card--countdown .card-body,
 .card--qr_code .card-body,
-.card--rotation:has(.rotation-entry) .card-body {
+.card--rotation:has(.rotation-entry) .card-body,
+.card--data:has(.data-value) .card-body {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1010,6 +1011,21 @@ body {
   padding-top: var(--pad-tight);
   overflow-wrap: anywhere;
 }
+
+/* ============================================================
+   Data tiles
+   ============================================================ */
+
+.data-rows { list-style: none; }
+.data-line { overflow-wrap: anywhere; }
+/* Each entry of a list, ruled off from the next. */
+.data-rows--list > li {
+  padding: var(--pad-tight) 0;
+  border-bottom: var(--rule) solid var(--ink);
+}
+.data-rows--list > li:first-child { padding-top: 0; }
+.data-rows--list > li:last-child { border-bottom: none; }
+.data-caption { overflow-wrap: anywhere; }
 
 /* ============================================================
    Setup screen for a panel that has not been claimed yet

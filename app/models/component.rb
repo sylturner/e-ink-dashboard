@@ -85,6 +85,9 @@ class Component
   # A number drawn as the tile's main thing: a countdown's.
   NUMBER_SIZES = { "small" => "t-lg", "medium" => "t-xl", "large" => "t-xxl" }.freeze
 
+  # A data tile's lines. Medium is the tile's own text size (its look).
+  DATA_LINE_SIZES = { "small" => "t-xs", "medium" => nil, "large" => "t-md" }.freeze
+
   REGISTRY = {
     "clock" => {
       label: "Clock",
@@ -325,6 +328,33 @@ class Component
         "wifi" => [ Part.new(key: "qr_code", sizes: QR_SIZES), Part.new(key: "network"),
                     Part.new(key: "password", default: false) ],
         "link" => [ Part.new(key: "qr_code", sizes: QR_SIZES), Part.new(key: "text", default: false) ]
+      }
+    },
+
+    # Values from a JSON source (JsonProvider), drawn through the tokens of
+    # its lines (DataTemplate): once, or for each entry of a list in the
+    # data. Or one value, big.
+    "data" => {
+      label: "Data",
+      views: { "lines" => "Lines", "big_stat" => "Big number" },
+      source_types: %w[JsonProvider],
+      multi_source: false,
+      settings: [
+        Setting.new(key: "lines", type: :text, label: "Lines", default: "", views: %w[lines],
+                    hint: "One per line, with {paths} into the data: {state}, {attributes.temperature}. " \
+                          "A line whose values are all empty isn't drawn."),
+        Setting.new(key: "list_path", type: :string, label: "Repeat for each of", default: "", views: %w[lines],
+                    hint: "A list in the data, like departures, or $ when the data is itself a list. " \
+                          "Its entries' paths start inside each one. Blank draws the lines once."),
+        Setting.new(key: "list_limit", type: :integer, label: "Most entries", default: 5, views: %w[lines]),
+        Setting.new(key: "value", type: :string, label: "Number", default: "", views: %w[big_stat],
+                    hint: "A {path} into the data, with any text around it: {state}°."),
+        Setting.new(key: "caption", type: :string, label: "Under it", default: "", views: %w[big_stat],
+                    hint: "Text and {paths}, like {attributes.friendly_name}.")
+      ],
+      parts: {
+        "lines" => [ Part.new(key: "lines", sizes: DATA_LINE_SIZES) ],
+        "big_stat" => [ Part.new(key: "value", sizes: NUMBER_SIZES, default_size: "medium"), Part.new(key: "caption") ]
       }
     },
 

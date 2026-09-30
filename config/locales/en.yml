@@ -36,6 +36,9 @@ en:
         items: "Checklist"
       device:
         image_format: "Format"
+      json_provider:
+        url: "URL"
+        headers: "Request headers"
     errors:
       models:
         app_setting:
@@ -48,6 +51,10 @@ en:
               too_many: "can have at most %{count} items"
               blank_item: "can't have a blank item"
               long_item: "items can be at most %{count} characters"
+        json_provider:
+          attributes:
+            headers:
+              invalid_lines: "need to be Name: value, one per line (not %{lines})"
         device:
           attributes:
             image_format:
@@ -171,6 +178,10 @@ en:
         label: "What it counts to"
         number: "Number"
         sentence: "Sentence"
+      data:
+        caption: "Text under it"
+        lines: "Lines"
+        value: "Number"
       newspaper:
         bylines: "Feed and time"
         dateline: "Date line"
@@ -224,6 +235,48 @@ en:
     live_bitmap_hint: "Opening the live bitmap renders a fresh frame if one is due, and counts as a check-in for the panel."
   # A headline template's fields (news_templates/_fields): in a news tile's
   # inspector, and for new tiles on the Settings page.
+  # A JSON source's form (sources/providers/_json_provider).
+  json_providers:
+    url: "URL"
+    url_hint: "An address that answers with JSON. Save it, then use Test on the source list to fetch it and see what it holds."
+    headers: "Request headers (optional)"
+    headers_hint: "One per line, as Name: value, such as Authorization: Bearer and a Home Assistant token. They're kept with the source, where anyone who can open this app can read them."
+  # The values a JSON source's last fetch held (data_paths/_list), on its
+  # page and under a data tile's options, and the filters a data tile's
+  # tokens take (DataTemplate::FILTERS).
+  data_paths:
+    heading: "Values in the last fetch"
+    summary: "Values in the data"
+    hint: "Draw one on a data tile with its token. In a list the tile repeats for, leave off the list's path and number: {departures.0.time} is {time}."
+    token: "Token"
+    value: "Now"
+    empty: "The last fetch held no values."
+    not_fetched: "Not fetched yet. Use Test on the source list to fetch it."
+    no_source: "Choose a source and save the tile to list the values in its data."
+    filters:
+      summary: "Formatting a value"
+      root_html: "Inside a list the tile repeats for, <code>{$.path}</code> reaches outside the entry, from the top of the data."
+      round:
+        token: "{path|round} or {path|round:1}"
+        draws: "A number rounded to whole numbers, or to so many places"
+      upcase:
+        token: "{path|upcase}"
+        draws: "In capitals"
+      downcase:
+        token: "{path|downcase}"
+        draws: "In lower case"
+      time:
+        token: "{path|time}"
+        draws: "A time on the panels' clock: 7:36 PM. A time without an offset is taken to be in the panels' time zone."
+      date:
+        token: "{path|date}"
+        draws: "A date: Sep 28"
+      age:
+        token: "{path|age}"
+        draws: "How long since a time: 5m, 3h, 2d"
+      until:
+        token: "{path|until}"
+        draws: "How long until a time: 5m, 3h, 2d"
   news_templates:
     legend: "Each headline"
     settings_legend: "New news tiles"
@@ -450,6 +503,12 @@ en:
     # A photo tile with no photo to draw.
     photo:
       missing: "No photo"
+    # A data tile (DataTilesHelper).
+    data:
+      no_source: "Choose a JSON source"
+      not_fetched: "Waiting for the first fetch"
+      no_template: "Nothing to draw yet: add lines in the tile's options"
+      empty: "Nothing in the data to draw"
     tokens:
       greeting:
         morning: "Good morning"

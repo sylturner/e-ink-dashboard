@@ -137,6 +137,12 @@
           </div>
         <% end %>
       <% end %>
+
+      <%# Help for a component's options, when it has any. %>
+      <% help = "dashboard_items/help/#{item.kind}" %>
+      <% if lookup_context.exists?(help, [], true) %>
+        <%= render help, item: %>
+      <% end %>
     </fieldset>
   <% end %>
 

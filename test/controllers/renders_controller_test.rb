@@ -593,6 +593,67 @@ class RendersControllerTest < ActionDispatch::IntegrationTest
     assert_select ".card--photo figure.photo-tile--fill img[src^=?]", "data:image/jpeg;base64,"
   end
 
+  def json_source(data)
+    Source.create!(name: "Transit", refresh_seconds: 900, fetched_at: NOW,
+                   providable: JsonProvider.new(url: "https://api.example.com/stop"), payload: { "data" => data })
+  end
+
+  TRANSIT = {
+    "stop" => "Main St",
+    "temperature" => 21.456,
+    "departures" => [
+      { "route" => "7", "to" => "Downtown", "at" => "2026-09-06T09:12:00-04:00" },
+      { "route" => "12", "to" => "Airport", "at" => "2026-09-06T09:30:00-04:00" },
+      { "route" => "7", "to" => "Downtown", "at" => "2026-09-06T09:45:00-04:00" }
+    ]
+  }.freeze
+
+  test "a data tile draws its lines once from the data" do
+    render_tile("data", "lines", { "lines" => "{stop}\n{temperature|round}° {missing}\nNot {missing}" },
+                sources: [ json_source(TRANSIT) ])
+
+    assert_select ".card--data ul.data-rows:not(.data-rows--list) li .data-line", 2
+    assert_select ".data-line", "Main St"
+    assert_select ".data-line", "21°"
+  end
+
+  test "a data tile repeats its lines for each entry of a list, up to its limit" do
+    render_tile("data", "lines", { "lines" => "{route} {to}\n{at|time} · in {at|until}", "list_path" => "departures",
+                                   "list_limit" => "2" }, sources: [ json_source(TRANSIT) ])
+
+    assert_select "ul.data-rows--list > li", 2
+    assert_select "ul.data-rows--list > li:first-child .data-line" do |lines|
+      assert_equal [ "7 Downtown", "9:12 AM · in 12m" ], lines.map(&:text)
+    end
+    assert_select "ul.data-rows--list > li:last-child .data-line", "9:30 AM · in 30m"
+  end
+
+  test "a data tile draws one value big, with a caption" do
+    render_tile("data", "big_stat", { "value" => "{temperature|round:1}°", "caption" => "at {stop}" },
+                sources: [ json_source(TRANSIT) ])
+
+    assert_select ".card--data .data-value.t-xl[data-fit-type]", "21.5°"
+    assert_select ".data-caption", "at Main St"
+  end
+
+  test "a data tile says what it's waiting for" do
+    render_tile("data", "lines", { "lines" => "{stop}" })
+    assert_select ".card--data p", "Choose a JSON source"
+
+    @dashboard.dashboard_items.where(kind: "data").destroy_all
+    source = json_source(TRANSIT).tap { it.update!(payload: nil, fetched_at: nil) }
+    render_tile("data", "lines", { "lines" => "{stop}" }, sources: [ source ])
+    assert_select ".card--data p", "Waiting for the first fetch"
+
+    @dashboard.dashboard_items.where(kind: "data").destroy_all
+    render_tile("data", "big_stat", {}, sources: [ source.tap { it.update!(payload: { "data" => {} }) } ])
+    assert_select ".card--data p", "Nothing to draw yet: add lines in the tile's options"
+
+    @dashboard.dashboard_items.where(kind: "data").destroy_all
+    render_tile("data", "lines", { "lines" => "{stop}", "list_path" => "stop" }, sources: [ source ])
+    assert_select ".card--data p", "Nothing in the data to draw"
+  end
+
   def news_source(name, items)
     Source.create!(name: name, refresh_seconds: 1800, fetched_at: NOW,
                    providable: RssProvider.new(feed_url: "https://example.com/#{name.parameterize}.xml"),

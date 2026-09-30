@@ -445,6 +445,48 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "a JSON source's form takes a URL and headers, and says the headers aren't secret" do
+    get new_source_url(type: "JsonProvider")
+
+    assert_response :success
+    assert_select "input[type=url][name=?][aria-describedby=?]", "source[provider][url]", "source_provider_url_hint"
+    assert_select "textarea[name=?][aria-describedby=?]", "source[provider][headers]", "source_provider_headers_hint"
+    assert_select "#source_provider_headers_hint", /anyone who can open this app/
+    assert_select "#json_paths_heading", 0, "an unsaved source has fetched nothing"
+  end
+
+  test "creates a JSON source, and refuses headers it can't send" do
+    assert_difference [ "Source.count", "JsonProvider.count" ], 1 do
+      post sources_url(type: "JsonProvider"), params: {
+        source: { name: "Outside", refresh_seconds: 900,
+                  provider: { url: "https://ha.local/api/states/sensor.outside", headers: "Authorization: Bearer x" } }
+      }
+    end
+    assert_equal({ "Authorization" => "Bearer x" }, Source.order(:id).last.providable.header_hash)
+
+    assert_no_difference "Source.count" do
+      post sources_url(type: "JsonProvider"), params: {
+        source: { name: "Bad", refresh_seconds: 900, provider: { url: "https://x.example", headers: "no colon" } }
+      }
+    end
+    assert_response :unprocessable_content
+    assert_select ".invalid-feedback", /Name: value/
+  end
+
+  test "a JSON source's edit page lists the values in its last fetch" do
+    source = Source.create!(name: "Outside", refresh_seconds: 900, providable: JsonProvider.new(url: "https://x.example"))
+
+    get edit_source_url(source)
+    assert_select "#json_paths_heading", "Values in the last fetch"
+    assert_select "section p", /Not fetched yet/
+
+    source.update!(payload: { "data" => { "state" => "12", "attributes" => { "unit" => "°C" } } })
+    get edit_source_url(source)
+    assert_select "section table tbody tr", 2
+    assert_select "section table td code", "{attributes.unit}"
+    assert_select "section table td", "°C"
+  end
+
   test "a note has nothing to test or refresh on a schedule" do
     note = sources(:four)
 

@@ -1,0 +1,38 @@
+<%# Values from a JSON source through the tile's template
+    (DataTilesHelper): its lines, once or for each entry of a list in the
+    data, or one value drawn big with a caption under it. %>
+<% source = item.sources.first %>
+<% root   = data["data"] %>
+<% if source.nil? %>
+  <p class="t-sm"><%= t("renders.data.no_source") %></p>
+<% elsif !data.key?("data") %>
+  <p class="t-sm"><%= t("renders.data.not_fetched") %></p>
+<% elsif item.view == "big_stat" %>
+  <% value   = data_line(item.setting("value"), root, root:, now:) %>
+  <% caption = data_line(item.setting("caption"), root, root:, now:) %>
+  <% if item.setting("value").blank? %>
+    <p class="t-sm"><%= t("renders.data.no_template") %></p>
+  <% else %>
+    <% if item.shows?("value") %>
+      <%= tag.div value, class: [ "data-value", item.size_of("value") ], data: fit_type_data %>
+    <% end %>
+    <% if item.shows?("caption") && caption %>
+      <div class="data-caption t-sm"><%= caption %></div>
+    <% end %>
+  <% end %>
+<% else %>
+  <% formats = data_formats(item.setting("lines")) %>
+  <% entries = DataTemplate.entries(root, item.setting("list_path"), limit: item.setting("list_limit")) %>
+  <% rows    = entries.map { |entry| formats.filter_map { data_line(it, entry, root:, now:) } }.reject(&:empty?) %>
+  <% if formats.empty? %>
+    <p class="t-sm"><%= t("renders.data.no_template") %></p>
+  <% elsif rows.empty? %>
+    <p class="t-sm"><%= t("renders.data.empty") %></p>
+  <% elsif item.shows?("lines") %>
+    <%= tag.ul class: [ "data-rows", ("data-rows--list" if item.setting("list_path").present?), item.size_of("lines") ] do %>
+      <% rows.each do |lines| %>
+        <li><% lines.each do |line| %><div class="data-line"><%= line %></div><% end %></li>
+      <% end %>
+    <% end %>
+  <% end %>
+<% end %>
