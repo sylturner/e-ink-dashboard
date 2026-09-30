@@ -112,6 +112,29 @@ class Api::DisplaysControllerTest < ActionDispatch::IntegrationTest
     assert_equal @current.filename, body["filename"]
   end
 
+  test "a check-in once a scheduled time comes switches the panel and renders it" do
+    office = @device.device_dashboards.create!(dashboard: dashboards(:two), position: 1)
+    office.schedule_slots.create!(days: ScheduleSlot::DAYS.to_a, from_time: "11:00", until_time: "18:00")
+    @device.update!(default_dashboard: dashboards(:one))
+    pacific = ActiveSupport::TimeZone["America/Los_Angeles"]
+    # Frames from before the switch, on the clock traveled to below.
+    @composed.update!(rendered_at: pacific.local(2026, 9, 27, 10))
+    @current.update!(rendered_at: pacific.local(2026, 9, 28, 10, 55))
+
+    travel_to pacific.local(2026, 9, 28, 11, 0, 5) do
+      body = check_in
+
+      assert_equal dashboards(:two), @device.reload.dashboard
+      assert_equal @composed.filename, body["filename"]
+      assert_nil @device.refresh_requested_at
+    end
+
+    travel_to pacific.local(2026, 9, 28, 17, 58) do
+      assert_equal 2.minutes + Device::SCHEDULE_WAKE_MARGIN, check_in["refresh_rate"],
+                   "it wakes for the switch back at 18:00, not at the daytime rate"
+    end
+  end
+
   test "a render that fails falls back to the last frame" do
     body = check_in(headers: { "Update-Source" => "button" }, composer: { raises: RuntimeError.new("Chrome is gone") })
 

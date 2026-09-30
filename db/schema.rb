@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_27_182100) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_29_120000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -119,6 +119,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_27_182100) do
     t.string "claim_code"
     t.datetime "created_at", null: false
     t.integer "dashboard_id"
+    t.integer "default_dashboard_id"
     t.string "dither", default: "floyd_steinberg", null: false
     t.datetime "enrolled_at"
     t.string "firmware_version"
@@ -133,6 +134,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_27_182100) do
     t.datetime "refresh_requested_at"
     t.integer "refresh_seconds", default: 300
     t.integer "rotation", default: 0
+    t.string "schedule_cue"
     t.boolean "show_navigation", default: false, null: false
     t.string "time_zone"
     t.string "token"
@@ -141,6 +143,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_27_182100) do
     t.integer "wifi_rssi"
     t.index ["claim_code"], name: "index_devices_on_claim_code", unique: true
     t.index ["dashboard_id"], name: "index_devices_on_dashboard_id"
+    t.index ["default_dashboard_id"], name: "index_devices_on_default_dashboard_id"
     t.index ["mac_address"], name: "index_devices_on_mac_address", unique: true
     t.index ["token"], name: "index_devices_on_token", unique: true
   end
@@ -182,6 +185,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_27_182100) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "schedule_slots", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.json "days", default: [], null: false
+    t.integer "device_dashboard_id", null: false
+    t.integer "from_minute", null: false
+    t.integer "until_minute", null: false
+    t.datetime "updated_at", null: false
+    t.index ["device_dashboard_id"], name: "index_schedule_slots_on_device_dashboard_id"
+  end
+
   create_table "sources", force: :cascade do |t|
     t.datetime "attempted_at"
     t.datetime "created_at", null: false
@@ -214,6 +227,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_27_182100) do
   add_foreign_key "device_dashboards", "dashboards"
   add_foreign_key "device_dashboards", "devices"
   add_foreign_key "devices", "dashboards"
+  add_foreign_key "devices", "dashboards", column: "default_dashboard_id"
   add_foreign_key "frames", "dashboards"
   add_foreign_key "frames", "devices"
+  add_foreign_key "schedule_slots", "device_dashboards"
 end

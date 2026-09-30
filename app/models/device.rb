@@ -21,6 +21,10 @@ class Device < ApplicationRecord
   # A LiPo's voltage from empty to full, for estimating its charge.
   BATTERY_VOLTS = 3.30..4.20
 
+  # How long after a scheduled switch a panel wakes for it, so a clock
+  # that runs a little fast doesn't wake it just before.
+  SCHEDULE_WAKE_MARGIN = 10
+
   # The settings a frame is rendered from: changing one leaves the frame
   # on the panel out of date. Rotation isn't used when rendering.
   FRAME_SETTINGS = %w[dashboard_id width height bit_depth image_format dither time_zone show_navigation].freeze
@@ -44,6 +48,11 @@ class Device < ApplicationRecord
   # The one currently on the panel. Kept in sync below so it is always
   # one of `dashboards`, or nil when none are assigned.
   belongs_to :dashboard, optional: true
+
+  # When its dashboards should go on it by themselves (DashboardSchedule),
+  # and what it shows between those times. Blank keeps what it shows.
+  has_many :schedule_slots, through: :device_dashboards
+  belongs_to :default_dashboard, class_name: "Dashboard", optional: true
 
   has_many :frames, dependent: :destroy
 
@@ -135,7 +144,8 @@ class Device < ApplicationRecord
 
   # The active dashboard is meaningless unless it is also assigned, so
   # reconcile the two rather than rejecting the save: fall back to the
-  # first assignment, or to nil when the last one goes away.
+  # first assignment, or to nil when the last one goes away. The
+  # schedule's default is dropped when it's no longer assigned.
   #
   # Public because assignments are usually created and destroyed through
   # DeviceDashboard, which never saves the device itself.
@@ -150,7 +160,30 @@ class Device < ApplicationRecord
       assigned.first
     end
 
-    update_column(:dashboard_id, wanted) unless wanted == dashboard_id
+    changes = { dashboard_id: wanted, default_dashboard_id: (default_dashboard_id if assigned.include?(default_dashboard_id)) }
+    changes = changes.reject { |name, value| self[name] == value }
+    update_columns(changes) if changes.any?
+  end
+
+  # The panel's schedule, read on its own clock. Empty when it has none.
+  def schedule
+    DashboardSchedule.new(schedule_slots.includes(:device_dashboard).to_a,
+                          zone: local_time.time_zone, default_dashboard_id:)
+  end
+
+  # Puts the dashboard the schedule wants on the panel, once each time a
+  # new stretch of it begins: a switch by hand, or by the dial, lasts
+  # until the next one. Asks for a new frame when it switches, and
+  # returns whether it did.
+  def apply_schedule!(at = Time.current)
+    cue = schedule.cue_at(at)
+    return false if cue.nil? || cue.key == schedule_cue
+
+    switch = cue.dashboard_id.present? && cue.dashboard_id != dashboard_id
+    changes = { schedule_cue: cue.key }
+    changes.merge!(dashboard_id: cue.dashboard_id, refresh_requested_at: Time.current) if switch
+    update_columns(changes)
+    switch
   end
 
   # Moves the panel `steps` through its dashboards: forward for a positive
@@ -189,13 +222,20 @@ class Device < ApplicationRecord
     at.in_time_zone(time_zone.presence || Time.zone)
   end
 
+  # How long the panel sleeps after checking in at `at`: its daytime or
+  # nighttime rate, cut short to wake it just after the schedule's next
+  # switch.
   def sleep_seconds(at = Time.current)
     return UNCLAIMED_SLEEP unless claimed?
 
     daytime = (active_from_hour...active_until_hour).cover?(local_time(at).hour)
-    value   = daytime ? refresh_seconds : night_refresh_seconds
+    value   = (daytime ? refresh_seconds : night_refresh_seconds).to_i
 
-    value.to_i.clamp(MIN_SLEEP, MAX_SLEEP)
+    if (switch = schedule.next_switch(at))
+      value = [ value, (switch.at - at).ceil + SCHEDULE_WAKE_MARGIN ].min
+    end
+
+    value.clamp(MIN_SLEEP, MAX_SLEEP)
   end
 
   # When the panel should check in again: the sleep it was given the last

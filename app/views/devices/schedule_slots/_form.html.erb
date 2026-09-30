@@ -1,0 +1,53 @@
+<%# A time on a panel's schedule, for its new and edit pages. %>
+<div class="card">
+  <div class="card-body">
+    <%= form_with model: [ device, slot ] do |f| %>
+      <%= f.error_messages %>
+
+      <div class="mb-3">
+        <%= f.label :device_dashboard_id, t("devices.schedule.dashboard") %>
+        <%= f.collection_select :device_dashboard_id, device.device_dashboards.includes(:dashboard), :id, ->(it) { it.dashboard.name } %>
+        <%= f.invalid_feedback :device_dashboard %>
+      </div>
+
+      <fieldset class="mb-3">
+        <legend class="form-label fs-6"><%= t("devices.schedule.days_legend") %></legend>
+        <div class="d-flex flex-wrap column-gap-3 row-gap-1">
+          <%= f.collection_checkboxes :days, schedule_day_options, :last, :first do |b| %>
+            <div class="form-check form-check-inline me-0">
+              <%= b.checkbox class: class_names("form-check-input", "is-invalid": slot.errors[:days].any?),
+                             aria: { label: b.object.second } %>
+              <%= b.label class: "form-check-label" %>
+            </div>
+          <% end %>
+        </div>
+        <% if slot.errors[:days].any? %>
+          <div class="invalid-feedback d-block"><%= slot.errors.full_messages_for(:days).to_sentence %></div>
+        <% end %>
+      </fieldset>
+
+      <div class="row g-3 mb-3">
+        <div class="col-6">
+          <%= f.label :from_time, t("devices.schedule.from") %>
+          <%= f.time_field :from_time, value: slot.from_time, required: true,
+                           aria: { describedby: f.field_id(:from_time, :hint) } %>
+          <%= f.invalid_feedback :from_time %>
+        </div>
+        <div class="col-6">
+          <%= f.label :until_time, t("devices.schedule.until") %>
+          <%= f.time_field :until_time, value: slot.until_time, required: true,
+                           aria: { describedby: f.field_id(:from_time, :hint) } %>
+          <%= f.invalid_feedback :until_time %>
+        </div>
+        <div id="<%= f.field_id(:from_time, :hint) %>" class="form-text mt-1">
+          <%= t("devices.schedule.times_hint", zone: device.time_zone.presence || AppSetting.current.time_zone) %>
+        </div>
+      </div>
+
+      <div class="d-flex flex-wrap gap-2">
+        <%= f.submit t(slot.new_record? ? "devices.schedule.submit_new" : "devices.schedule.submit_edit") %>
+        <%= link_to "Cancel", edit_device_path(device), class: "btn btn-app-outline" %>
+      </div>
+    <% end %>
+  </div>
+</div>

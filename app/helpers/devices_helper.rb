@@ -77,7 +77,89 @@ module DevicesHelper
     [ *hours, current ].compact.uniq.sort.map { [ format("%02d:00", it), it ] }
   end
 
+  # The days of the week in the order the app's week starts, as
+  # [abbreviation, full name, Date#wday], for a slot's day checkboxes.
+  def schedule_day_options
+    ScheduleSlot::DAYS.to_a.rotate(Date::DAYS_INTO_WEEK.fetch(Date.beginning_of_week)).map do |wday|
+      [ t("date.abbr_day_names")[wday], t("date.day_names")[wday], wday ]
+    end
+  end
+
+  # When a slot comes round: "Weekdays, 6:00 AM to 11:00 AM".
+  def schedule_slot_when(slot)
+    t("devices.schedule.when", days: schedule_slot_days(slot.days), times: schedule_slot_times(slot))
+  end
+
+  # "Every day", "Weekdays", "Mondays" or "Mon, Wed, Fri".
+  def schedule_slot_days(days)
+    days = days.sort
+    return t("devices.schedule.days.every_day") if days == ScheduleSlot::DAYS.to_a
+    return t("devices.schedule.days.weekdays") if days == ScheduleSlot::WEEKDAYS
+    return t("devices.schedule.days.weekends") if days == ScheduleSlot::WEEKEND
+    return t("devices.schedule.days.one", day: t("date.day_names")[days.first]) if days.one?
+
+    schedule_day_options.filter_map { |abbr, _, wday| abbr if days.include?(wday) }.join(", ")
+  end
+
+  # "6:00 AM to 11:00 AM", "10:00 PM to 6:00 AM the next day" or "All day",
+  # on the app's clock.
+  def schedule_slot_times(slot)
+    from, till = slot.from_minute, slot.until_minute
+    return t("devices.schedule.times.all_day") if from.zero? && till.zero?
+
+    key = till <= from && till.nonzero? ? "overnight" : "range"
+    t("devices.schedule.times.#{key}", from: schedule_clock(from), until: schedule_clock(till))
+  end
+
+  # The schedule's line on a device's status: whether the panel is showing
+  # what the schedule wants, and its next switch. Nil without a schedule.
+  def device_schedule(device, now = Time.current)
+    schedule = device.schedule
+    return if schedule.empty?
+
+    names = device.dashboards.to_h { [ it.id, it.name ] }
+    cue = schedule.cue_at(now)
+    lines = []
+
+    if cue.dashboard_id && cue.dashboard_id != device.dashboard_id
+      lines << if cue.key == device.schedule_cue
+        t("devices.schedule.status.by_hand", dashboard: names[cue.dashboard_id])
+      else
+        t("devices.schedule.status.pending", dashboard: names[cue.dashboard_id])
+      end
+    end
+
+    upcoming = schedule.changes(now).find { it.cue.dashboard_id && it.cue.dashboard_id != cue.dashboard_id }
+    lines << if upcoming
+      t("devices.schedule.status.next", dashboard: names[upcoming.cue.dashboard_id],
+                                        at: schedule_switch_time(device.local_time(upcoming.at), device.local_time(now)))
+    else
+      t("devices.schedule.status.no_switches")
+    end
+
+    safe_join(lines, " ")
+  end
+
+  # When a switch comes, from `now`: "at 11:00 AM", "tomorrow at 6:00 AM",
+  # "Monday at 12:00 PM", or "next Monday at 12:00 PM" a week out.
+  def schedule_switch_time(at, now)
+    time = panel_time(at, :time)
+    days = (at.to_date - now.to_date).to_i
+
+    case days
+    when 0 then t("devices.schedule.at.today", time:)
+    when 1 then t("devices.schedule.at.tomorrow", time:)
+    when 2..6 then t("devices.schedule.at.this_week", time:, day: t("date.day_names")[at.wday])
+    else t("devices.schedule.at.next_week", time:, day: t("date.day_names")[at.wday])
+    end
+  end
+
   private
+    # A slot's minute after midnight on the app's clock.
+    def schedule_clock(minute)
+      panel_time(Time.utc(2000, 1, 1, *minute.divmod(60)), :time)
+    end
+
     # An icon tells a card's battery and signal lines apart at a glance;
     # screen readers get a label before each.
     def not_reporting(icon = nil)

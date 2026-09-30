@@ -83,6 +83,7 @@ class DevicesController < ApplicationController
       @saved_device = @device.changed? ? Device.find(@device.id) : @device
       @assignments  = @saved_device.device_dashboards.includes(:dashboard)
       @assignable_dashboards = Dashboard.where.not(id: @assignments.map(&:dashboard_id)).order(:name)
+      @schedule_slots = @saved_device.schedule_slots.includes(device_dashboard: :dashboard).order(:from_minute, :until_minute, :id)
       @frame_rendered_at = @saved_device.frames.rendered.maximum(:rendered_at)
     end
 
@@ -95,9 +96,10 @@ class DevicesController < ApplicationController
     end
 
     # Telemetry and assignments are left out: the panel reports the one,
-    # and DeviceDashboardsController changes the other.
+    # and DeviceDashboardsController changes the other. The schedule's
+    # default is saved from its own card.
     def device_params
-      params.expect(device: [ :name, :dashboard_id, :width, :height, :bit_depth, :image_format, :dither, :rotation, :show_navigation,
+      params.expect(device: [ :name, :dashboard_id, :default_dashboard_id, :width, :height, :bit_depth, :image_format, :dither, :rotation, :show_navigation,
                               :refresh_seconds, :night_refresh_seconds, :active_from_hour, :active_until_hour, :time_zone ])
     end
 end

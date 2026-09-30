@@ -12,6 +12,8 @@ class Dashboard < ApplicationRecord
   # Only so destroying a dashboard clears it off any panel showing it;
   # `devices` above is the assignment relationship.
   has_many :showing_devices, class_name: "Device", dependent: :nullify
+  # Likewise for panels whose schedule falls back to it.
+  has_many :defaulting_devices, class_name: "Device", foreign_key: :default_dashboard_id, dependent: :nullify
 
   # Frames rendered from it, the newest of which is its thumbnail. They
   # belong to their panels, so they outlive the dashboard.
