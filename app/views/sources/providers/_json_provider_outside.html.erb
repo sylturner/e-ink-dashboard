@@ -1,0 +1,10 @@
+<%# What the source's last fetch held, by the paths a data tile's
+    template draws them with. %>
+<% if source.persisted? %>
+  <section class="card mt-3" aria-labelledby="json_paths_heading">
+    <div class="card-body">
+      <h2 id="json_paths_heading" class="h5 mb-1"><%= t("data_paths.heading") %></h2>
+      <%= render "data_paths/list", payload: source.payload %>
+    </div>
+  </section>
+<% end %>

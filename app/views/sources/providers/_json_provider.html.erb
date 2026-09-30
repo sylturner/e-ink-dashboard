@@ -1,0 +1,16 @@
+<div class="mb-3">
+  <%= f.label :url, t("json_providers.url") %>
+  <%= f.url_field :url, placeholder: "https://homeassistant.local:8123/api/states/sensor.outside",
+                  aria: { describedby: f.field_id(:url, :hint) } %>
+  <%= f.invalid_feedback :url %>
+  <div id="<%= f.field_id(:url, :hint) %>" class="form-text"><%= t("json_providers.url_hint") %></div>
+</div>
+
+<div class="mb-3">
+  <%= f.label :headers, t("json_providers.headers") %>
+  <%= f.textarea :headers, rows: 3, spellcheck: false, autocomplete: "off",
+                 placeholder: "Authorization: Bearer …",
+                 aria: { describedby: f.field_id(:headers, :hint) } %>
+  <%= f.invalid_feedback :headers %>
+  <div id="<%= f.field_id(:headers, :hint) %>" class="form-text"><%= t("json_providers.headers_hint") %></div>
+</div>

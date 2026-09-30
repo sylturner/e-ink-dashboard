@@ -1,0 +1,33 @@
+<%# locals: (payload:) %>
+<%# The values in a JSON source's last fetch (DataPath.leaves), each by
+    the token that draws it, on its source's page and under a data
+    tile's options. %>
+<% payload = {} unless payload.is_a?(Hash) %>
+<% if payload.key?("data") %>
+  <% leaves = DataPath.leaves(payload["data"], limit: DataTemplate::PATH_LIMIT) %>
+  <p class="form-text mt-0"><%= t("data_paths.hint") %></p>
+  <% if leaves.any? %>
+    <div class="table-responsive">
+      <table class="table table-sm small mb-0">
+        <thead>
+          <tr>
+            <th scope="col"><%= t("data_paths.token") %></th>
+            <th scope="col"><%= t("data_paths.value") %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% leaves.each do |path, value| %>
+            <tr>
+              <td class="text-break"><code><%= path.empty? ? "{$}" : "{#{path}}" %></code></td>
+              <td class="text-break"><%= DataTemplate.text(value).truncate(60) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <p class="form-text"><%= t("data_paths.empty") %></p>
+  <% end %>
+<% else %>
+  <p class="form-text mt-0"><%= t("data_paths.not_fetched") %></p>
+<% end %>

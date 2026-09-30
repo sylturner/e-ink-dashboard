@@ -1,0 +1,24 @@
+<%# Under a data tile's options: the filters its tokens take, and the
+    values its source's last fetch held. %>
+<details class="form-text mb-3">
+  <summary><%= t("data_paths.filters.summary") %></summary>
+  <dl class="token-list mb-0 mt-1">
+    <% DataTemplate::FILTERS.each do |filter| %>
+      <dt><code><%= t("data_paths.filters.#{filter}.token") %></code></dt>
+      <dd><%= t("data_paths.filters.#{filter}.draws") %></dd>
+    <% end %>
+  </dl>
+  <p class="mb-0 mt-1"><%= t("data_paths.filters.root_html") %></p>
+</details>
+<details class="form-text mb-3">
+  <summary><%= t("data_paths.summary") %></summary>
+  <div class="mt-1">
+    <%# A tile switched from another kind still has that kind's sources
+        until it's saved. %>
+    <% if (source = item.sources.find { it.providable_type == "JsonProvider" }) %>
+      <%= render "data_paths/list", payload: source.payload %>
+    <% else %>
+      <p class="mb-0"><%= t("data_paths.no_source") %></p>
+    <% end %>
+  </div>
+</details>

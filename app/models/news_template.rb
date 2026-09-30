@@ -29,12 +29,6 @@ class NewsTemplate
   LINE_COUNT    = 3
   FORMAT_LENGTH = 200
 
-  TOKEN = /\{([^{}\s]+)\}/
-
-  # What a line's leftover separators look like once its tokens are
-  # empty: "The Paper · " or " · 2h".
-  DANGLING = /\A[\s·•|,\-–—]+|[\s·•|,\-–—]+\z/
-
   Image = Data.define(:placement, :size) do
     def shown?
       placement != NONE
@@ -103,22 +97,20 @@ class NewsTemplate
     other.is_a?(NewsTemplate) && to_h == other.to_h
   end
 
-  # Fills a line's tokens from a NewsFeed entry. `named` resolves the
-  # named tokens that need a view (a date on the panel's clock); anything
-  # else is read from the entry, then its fields. Nil when nothing
-  # resolved, so a line of empty tokens isn't drawn as bare separators.
+  # Fills a line's tokens (TokenLine) from a NewsFeed entry. `named`
+  # resolves the named tokens that need a view (a date on the panel's
+  # clock); anything else is read from the entry, then its fields. Nil
+  # when nothing resolved, so a line of empty tokens isn't drawn as bare
+  # separators.
   def self.fill(tokens, entry, named: {})
-    fields   = entry["fields"].is_a?(Hash) ? entry["fields"] : {}
-    resolved = false
+    fields = entry["fields"].is_a?(Hash) ? entry["fields"] : {}
 
-    text = tokens.gsub(TOKEN) do
-      name  = $1
-      value = named.key?(name) ? named[name] : (FIELDS.include?(name) ? entry[name] : fields[name])
-      resolved ||= value.present?
-      value.to_s
+    TokenLine.fill(tokens) do |name|
+      if named.key?(name) then named[name]
+      elsif FIELDS.include?(name) then entry[name]
+      else DataPath.dig(fields, name)
+      end
     end
-
-    text.gsub(DANGLING, "").squish.presence if resolved
   end
 
   private
