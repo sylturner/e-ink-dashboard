@@ -24,6 +24,10 @@ class Api::DisplaysController < Api::BaseController
 
     record_telemetry
 
+    # A scheduled switch asks for a new frame, so it's composed below. A
+    # turn of the dial at the same time steps on from it.
+    current_device.apply_schedule!
+
     steps = navigate_steps + (special_function? ? 1 : 0)
     if steps.nonzero?
       current_device.step_dashboard!(steps)

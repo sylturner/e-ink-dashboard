@@ -4,6 +4,9 @@ class DeviceDashboard < ApplicationRecord
   belongs_to :device
   belongs_to :dashboard
 
+  # The times it goes on the panel by itself.
+  has_many :schedule_slots, dependent: :destroy
+
   validates :device_id, uniqueness: { scope: :dashboard_id }
 
   # Assignments are usually changed without touching the device row --

@@ -36,6 +36,11 @@ en:
         items: "Checklist"
       device:
         image_format: "Format"
+        default_dashboard: "Default dashboard"
+      schedule_slot:
+        device_dashboard: "Dashboard"
+        from_time: "From"
+        until_time: "Until"
     errors:
       models:
         app_setting:
@@ -189,6 +194,54 @@ en:
     # The Devices page banner. The server is the address a panel is
     # pointed at.
     index_description: "Your e-paper panels. A new panel adds itself the first time it connects, then waits here for a dashboard. To add a TRMNL, set its API Server to %{server} in its Wi-Fi setup."
+    # A panel's schedule (DashboardSchedule): the card on its page, the
+    # page for each slot, and the line in its status.
+    schedule:
+      heading: "Schedule"
+      add: "Add a time"
+      new_title: "New time"
+      edit_title: "Edit time"
+      dashboard: "Dashboard"
+      days_legend: "Days"
+      from: "From"
+      until: "Until"
+      times_hint: "In the panel's time zone, %{zone}. An end at or before the start runs into the next day, so 00:00 to 00:00 is all day."
+      submit_new: "Add to the schedule"
+      submit_edit: "Save time"
+      now: "Now"
+      empty: "Switch dashboards by the time of day or the day of the week: one for the morning, another from 11:00, groceries on Monday afternoons."
+      hint: "When times overlap, the one that started last wins until it ends. The panel wakes up for each switch. Switching by hand, or with a dial, lasts until the next one."
+      default_label: "Between these times, show"
+      default_blank: "No change"
+      default_submit: "Save"
+      when: "%{days}, %{times}"
+      days:
+        every_day: "Every day"
+        weekdays: "Weekdays"
+        weekends: "Weekends"
+        one: "%{day}s"
+      times:
+        all_day: "all day"
+        range: "%{from} to %{until}"
+        overnight: "%{from} to %{until} the next day"
+      at:
+        today: "at %{time}"
+        tomorrow: "tomorrow at %{time}"
+        this_week: "%{day} at %{time}"
+        next_week: "next %{day} at %{time}"
+      status:
+        pending: "Switches to %{dashboard} when it next wakes."
+        by_hand: "Switched by hand from %{dashboard}."
+        next: "Next: %{dashboard} %{at}."
+        no_switches: "Nothing else is scheduled."
+    # Flash messages from Devices::ScheduleSlotsController.
+    schedule_slots:
+      create:
+        notice: "%{dashboard} was added to the schedule. It takes effect when the panel next wakes."
+      update:
+        notice: "The time for %{dashboard} was saved. It takes effect when the panel next wakes."
+      destroy:
+        notice: "The time for %{dashboard} was removed from the schedule."
     # Beside links to a panel's live frame URL: the builder's device list
     # and the device page.
     live_bitmap_hint: "Opening the live bitmap renders a fresh frame if one is due, and counts as a check-in for the panel."

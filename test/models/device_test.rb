@@ -173,6 +173,104 @@ class DeviceTest < ActiveSupport::TestCase
     end
   end
 
+  # --- the schedule ---
+
+  # The Kitchen dashboard mornings, the Office one from 11:00 to 18:00, on
+  # the panel's own clock (Los Angeles).
+  def schedule_kitchen_and_office(default: nil)
+    @device.dashboards = [ @kitchen, @office ]
+    @device.update!(default_dashboard: default)
+    kitchen, office = @device.device_dashboards.partition { it.dashboard == @kitchen }.map(&:first)
+
+    kitchen.schedule_slots.create!(days: ScheduleSlot::DAYS.to_a, from_time: "06:00", until_time: "11:00")
+    office.schedule_slots.create!(days: ScheduleSlot::DAYS.to_a, from_time: "11:00", until_time: "18:00")
+    @device.reload
+  end
+
+  def pacific(hour, minute = 0, second = 0)
+    ActiveSupport::TimeZone["America/Los_Angeles"].local(2026, 9, 28, hour, minute, second)
+  end
+
+  test "without a schedule nothing is switched" do
+    assert @device.schedule.empty?
+    assert_not @device.apply_schedule!(pacific(9))
+    assert_equal @kitchen, @device.reload.dashboard
+  end
+
+  test "the schedule switches the panel once each stretch begins, and asks for a frame" do
+    schedule_kitchen_and_office
+    @device.update_columns(refresh_requested_at: nil)
+
+    assert @device.apply_schedule!(pacific(11, 1))
+    assert_equal @office, @device.reload.dashboard
+    assert_not_nil @device.refresh_requested_at
+
+    assert_not @device.apply_schedule!(pacific(12)), "it's the same stretch"
+  end
+
+  test "reading the schedule on the panel's clock, not the app's" do
+    schedule_kitchen_and_office
+
+    # 11:30 in New York is 8:30 in Los Angeles.
+    @device.apply_schedule!(ActiveSupport::TimeZone["America/New_York"].local(2026, 9, 28, 11, 30))
+    assert_equal @kitchen, @device.reload.dashboard
+  end
+
+  test "a switch by hand lasts until the next stretch begins" do
+    schedule_kitchen_and_office
+    @device.apply_schedule!(pacific(7))
+    @device.update!(dashboard: @office)
+
+    assert_not @device.apply_schedule!(pacific(9))
+    assert_equal @office, @device.reload.dashboard
+
+    @device.update!(dashboard: @kitchen)
+    assert @device.apply_schedule!(pacific(11))
+    assert_equal @office, @device.reload.dashboard
+  end
+
+  test "between times it shows the default, or keeps what it shows" do
+    schedule_kitchen_and_office
+    @device.apply_schedule!(pacific(12))
+
+    assert_not @device.apply_schedule!(pacific(19))
+    assert_equal @office, @device.reload.dashboard
+
+    @device.update!(default_dashboard: @kitchen)
+    @device.apply_schedule!(pacific(12, 30))
+    assert @device.apply_schedule!(pacific(20))
+    assert_equal @kitchen, @device.reload.dashboard
+  end
+
+  test "the default is dropped when it's unassigned" do
+    schedule_kitchen_and_office(default: @office)
+    assert_equal @office, @device.default_dashboard
+
+    @device.device_dashboards.find_by(dashboard: @office).destroy
+    assert_nil @device.reload.default_dashboard
+    assert_equal 1, @device.schedule_slots.count
+  end
+
+  test "destroying a dashboard clears it as a panel's default" do
+    schedule_kitchen_and_office(default: @office)
+    @office.destroy
+
+    assert_nil @device.reload.default_dashboard_id
+  end
+
+  test "the panel sleeps no later than just after the next switch" do
+    schedule_kitchen_and_office
+
+    # Daytime is 300s, so a switch 2 minutes off cuts it short...
+    assert_equal 120 + Device::SCHEDULE_WAKE_MARGIN, @device.sleep_seconds(pacific(10, 58))
+    # ...but never below the minimum, or when the rate comes first.
+    assert_equal CheckInSchedule::MIN_SLEEP, @device.sleep_seconds(pacific(10, 59, 30))
+    assert_equal 300, @device.sleep_seconds(pacific(9))
+
+    # At night the hourly rate gives way to the morning's switch.
+    assert_equal 30.minutes + Device::SCHEDULE_WAKE_MARGIN, @device.sleep_seconds(pacific(5, 30))
+  end
+
   test "sleep_seconds switches between day and night rates" do
     @device.update!(time_zone: "America/New_York", active_from_hour: 6,
                     active_until_hour: 23, refresh_seconds: 300,

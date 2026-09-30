@@ -197,6 +197,53 @@ class DevicesControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "the device page's schedule card lists its times and what it shows between them" do
+    office = @device.device_dashboards.create!(dashboard: dashboards(:two), position: 1)
+    slot = office.schedule_slots.create!(days: ScheduleSlot::DAYS.to_a, from_time: "00:00", until_time: "00:00")
+
+    get edit_device_url(@device)
+
+    assert_select ".device-schedule" do
+      assert_select "h2", "Schedule"
+      assert_select "a[href=?]", new_device_schedule_slot_path(@device), "Add a time"
+      assert_select ".schedule-slots li", 1 do
+        assert_select ".badge", "Now"
+        assert_select "div", "Every day, all day"
+        assert_select "a[href=?]", edit_device_schedule_slot_path(@device, slot), "Edit Office, Every day, all day"
+        assert_select "form[action=?] button", device_schedule_slot_path(@device, slot), "Remove Office, Every day, all day"
+      end
+      assert_select "form.schedule-default select[name=?]", "device[default_dashboard_id]" do
+        assert_select "option", 3
+        assert_select "option[value='']", "No change"
+      end
+    end
+    assert_select ".device-status dd", /Switches to Office when it next wakes\./
+  end
+
+  test "a panel without a schedule offers one" do
+    get edit_device_url(@device)
+
+    assert_select ".device-schedule .schedule-slots", 0
+    assert_select ".device-schedule p", /groceries on Monday afternoons/
+    assert_select ".device-status dt", { text: "Schedule", count: 0 }
+  end
+
+  test "a panel with nothing assigned has no schedule card" do
+    @device.device_dashboards.destroy_all
+
+    get edit_device_url(@device)
+    assert_select ".device-schedule", 0
+  end
+
+  test "the schedule's default is saved from its card" do
+    office = @device.device_dashboards.create!(dashboard: dashboards(:two), position: 1)
+
+    patch device_url(@device), params: { device: { default_dashboard_id: office.dashboard_id } }
+
+    assert_redirected_to edit_device_path(@device)
+    assert_equal dashboards(:two), @device.reload.default_dashboard
+  end
+
   test "what the panel reports isn't editable" do
     get edit_device_url(@device)
 

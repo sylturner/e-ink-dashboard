@@ -35,6 +35,9 @@ Rails.application.routes.draw do
     member { post :refresh }
     # Read-only, for the admin pages.
     resource :last_frame, only: :show, module: :devices
+    # The times its dashboards go on it by themselves. They're listed on
+    # the device's page.
+    resources :schedule_slots, except: %i[index show], module: :devices
   end
   # A device's edit page is its home. Old links to a show page land there.
   get "devices/:id", to: redirect("/devices/%{id}/edit"), constraints: { id: /\d+/ }

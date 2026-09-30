@@ -1,0 +1,47 @@
+<%# The device page's Schedule card: the times its dashboards go on it by
+    themselves (DashboardSchedule), and what it shows between them. %>
+<% current_slot_id = device.schedule.cue_at(Time.current)&.slot&.id %>
+<section class="card device-schedule" aria-labelledby="device-schedule-heading">
+  <div class="card-header d-flex flex-wrap align-items-center gap-2">
+    <h2 id="device-schedule-heading" class="h6 mb-0 me-auto"><%= t("devices.schedule.heading") %></h2>
+    <%= link_to new_device_schedule_slot_path(device), class: "btn btn-sm btn-app-outline" do %>
+      <%= ui_icon "cil-plus", classes: "icon me-1" %><%= t("devices.schedule.add") %>
+    <% end %>
+  </div>
+
+  <% if slots.any? %>
+    <ul class="list-group list-group-flush schedule-slots">
+      <% slots.each do |slot| %>
+        <% label = "#{slot.dashboard.name}, #{schedule_slot_when(slot)}" %>
+        <li class="list-group-item d-flex flex-wrap align-items-center column-gap-3 row-gap-2">
+          <div class="me-auto">
+            <span class="fw-semibold"><%= slot.dashboard.name %></span>
+            <% if slot.id == current_slot_id %>
+              <%= status_badge t("devices.schedule.now"), :success %>
+            <% end %>
+            <div class="small text-body-secondary"><%= schedule_slot_when(slot) %></div>
+          </div>
+          <%= link_to edit_device_schedule_slot_path(device, slot), class: "btn btn-sm btn-app-outline" do %>
+            Edit<span class="visually-hidden"> <%= label %></span>
+          <% end %>
+          <%= button_to device_schedule_slot_path(device, slot), method: :delete, class: "btn btn-sm btn-app-outline" do %>
+            Remove<span class="visually-hidden"> <%= label %></span>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+
+  <div class="<%= class_names("card-body", "border-top": slots.any?) %>">
+    <p class="small text-body-secondary"><%= t(slots.any? ? "devices.schedule.hint" : "devices.schedule.empty") %></p>
+
+    <%= form_with model: device, class: "schedule-default" do |f| %>
+      <%= f.label :default_dashboard_id, t("devices.schedule.default_label") %>
+      <div class="input-group">
+        <%= f.collection_select :default_dashboard_id, assignments.map(&:dashboard), :id, :name,
+                                include_blank: t("devices.schedule.default_blank") %>
+        <%= f.submit t("devices.schedule.default_submit") %>
+      </div>
+    <% end %>
+  </div>
+</section>

@@ -20,6 +20,11 @@
             <%= device.dashboard ? link_to(device.dashboard.name, edit_dashboard_path(device.dashboard)) : "Nothing yet. Assign a dashboard below." %>
           </dd>
 
+          <% if (schedule = device_schedule(device)) %>
+            <dt class="col-sm-4"><%= t("devices.schedule.heading") %></dt>
+            <dd class="col-sm-8"><%= schedule %></dd>
+          <% end %>
+
           <dt class="col-sm-4">Frame rendered</dt>
           <dd class="col-sm-8"><%= relative_time_tag(@frame_rendered_at) %></dd>
 
@@ -98,7 +103,7 @@
         <% elsif @assignments.size > 1 %>
           <p class="small text-body-secondary">
             A panel shows one of its dashboards at a time. A switch reaches the
-            panel when it next wakes.
+            panel when it next wakes<%= ", and lasts until the schedule's next one" if @schedule_slots.any? %>.
           </p>
         <% end %>
 
@@ -119,6 +124,10 @@
         <% end %>
       </div>
     </section>
+
+    <% if @assignments.any? %>
+      <%= render "devices/schedule", device:, slots: @schedule_slots, assignments: @assignments %>
+    <% end %>
   </div>
 
   <div class="col-xl-5">

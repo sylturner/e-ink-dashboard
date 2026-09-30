@@ -1,0 +1,7 @@
+<%= page_title t("devices.schedule.new_title"), parent: [ @device.name, edit_device_path(@device) ], crumb: "New time" %>
+
+<div class="row">
+  <div class="col-lg-8 col-xl-6">
+    <%= render "form", device: @device, slot: @slot %>
+  </div>
+</div>
