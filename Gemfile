@@ -70,7 +70,7 @@ gem "ferrum", "~> 0.18.0"
 
 gem "feedjira", "~> 4.0"
 
-gem "icalendar", "~> 2.12"
+gem "icalendar", "~> 2.13"
 gem "icalendar-recurrence", "~> 1.2"
 
 gem "nokogiri", "~> 1.19"
