@@ -66,7 +66,7 @@ group :test do
   gem "selenium-webdriver"
 end
 
-gem "ferrum", "~> 0.18.0"
+gem "ferrum", "~> 0.19.1"
 
 gem "feedjira", "~> 4.0"
 
